@@ -22,6 +22,7 @@ import { ScanlineOverlay } from "../components/ScanlineOverlay";
 import { SevBars } from "../components/SevBars";
 import { SourceTag } from "../components/SourceTag";
 import { TierEmpty, TierHeader } from "../components/TierHeader";
+import { useNetra, useRankedIncidents } from "../store/useNetra";
 import styles from "./Kit.module.css";
 
 interface Sample {
@@ -133,6 +134,7 @@ export default function Kit() {
         <div>
           <h1 className={styles.title}>Design kit</h1>
           <p className={styles.sub}>Every dashboard component in every state. Temporary page for review.</p>
+          <EngineDebug />
         </div>
         <div className={styles.controls}>
           <span className={styles.caption}>THEME</span>
@@ -376,6 +378,21 @@ export default function Kit() {
         </Section>
       </div>
     </div>
+  );
+}
+
+/** One line proving the data engine is running. */
+function EngineDebug() {
+  const ranked = useRankedIncidents();
+  const expired = useNetra((s) => s.expired.length);
+  const judgedNormal = useNetra((s) => s.health?.judgedNormalToday ?? 0);
+  const health = useNetra((s) => s.health);
+  const tiers = TIER_ORDER.map((t) => `${t} ${ranked.filter((i) => i.rank.tier === t).length}`).join(" / ");
+  return (
+    <p className={styles.debug}>
+      ENGINE: {ranked.length} OPEN ({tiers}) · {expired} EXPIRED · {judgedNormal} JUDGED NORMAL ·{" "}
+      {health ? `${health.eventsPerSec} EVENTS/S · P95 ${(health.freshnessMs.p95 / 1000).toFixed(1)}S` : "NO HEALTH YET"}
+    </p>
   );
 }
 

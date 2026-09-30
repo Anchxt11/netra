@@ -1,4 +1,6 @@
 import { Link, NavLink } from "react-router-dom";
+import { Chip } from "../../components/Chip";
+import { useNetra } from "../../store/useNetra";
 import styles from "./TopBar.module.css";
 
 const NAV = [
@@ -8,13 +10,16 @@ const NAV = [
 ];
 
 export function TopBar() {
+  const simulated = useNetra((s) => s.simulated);
+
   return (
-    <header className={styles.bar}>
+    <header className={styles.row}>
       <div className={styles.side} />
 
-      <div className={styles.centre}>
+      {/* The glass bar only wraps the logo and the three links. */}
+      <div className={styles.bar}>
         <Link to="/" className={styles.logo} aria-label="NETRA home">
-          <img src="/brand/netra-wordmark-cropped.svg" alt="NETRA" />
+          <span className={styles.mark} aria-hidden="true" />
         </Link>
         <nav aria-label="Main">
           <ul className={styles.nav}>
@@ -33,8 +38,14 @@ export function TopBar() {
         </nav>
       </div>
 
-      {/* Status strip: filled by the OSD once the data layer exists. */}
-      <div className={`${styles.side} ${styles.status}`} />
+      {/* Status strip: the live indicator, clock and freshness join this later. */}
+      <div className={`${styles.side} ${styles.status}`}>
+        {simulated && (
+          <Chip tone="muted" dashed>
+            SIMULATED FEED
+          </Chip>
+        )}
+      </div>
     </header>
   );
 }

@@ -1,16 +1,14 @@
-.bar {
+/* Knobs */
+.row {
+  --logo-color: var(--text-hi);  /* colour of the NETRA eye mark */
+  --logo-height: 24px;
+}
+
+.row {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 18px;
-  height: 56px;
-  padding: 0 18px;
-  border-radius: 18px;
-  background: var(--glass-fill);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-hi);
   position: sticky;
   top: 12px;
   z-index: 10;
@@ -24,13 +22,22 @@
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
 }
 
-.centre {
+/* The compact centred glass bar. */
+.bar {
   display: flex;
   align-items: center;
-  gap: 22px;
+  gap: 16px;
+  height: 52px;
+  padding: 0 7px 0 16px;
+  border-radius: var(--r-glass);
+  background: var(--glass-fill);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-hi);
 }
 
 .logo {
@@ -39,10 +46,14 @@
   border-radius: 6px;
 }
 
-.logo img {
+/* The logo PNG is used as a stencil, so its colour comes from --logo-color. */
+.mark {
   display: block;
-  height: 18px;
-  width: auto;
+  height: var(--logo-height);
+  aspect-ratio: 499 / 271;
+  background: var(--logo-color);
+  -webkit-mask: url("/brand/netra-mark.png") center / contain no-repeat;
+  mask: url("/brand/netra-mark.png") center / contain no-repeat;
 }
 
 .nav {
@@ -76,5 +87,5 @@
 .active,
 .active:hover {
   background: var(--rust);
-  color: #1a0906;
+  color: var(--on-rust);
 }

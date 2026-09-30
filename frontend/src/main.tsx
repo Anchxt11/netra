@@ -6,6 +6,9 @@ import "./styles/tokens.css";
 import "./styles/console.css";
 import "./styles/global.css";
 import { router } from "./app/router";
+import { startNetra } from "./store/useNetra";
+
+startNetra();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
