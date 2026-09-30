@@ -2,15 +2,15 @@
 // carrying pale-yellow events (heat-1: the data is fresh) to "YOUR NETWORK".
 // Drawn on canvas with d3-geo. Geometry from docs/reference/landing-step1.html (a 760px stage).
 import { useEffect, useRef } from "react";
+import type { MotionValue } from "motion/react";
 import { geoDistance, geoGraticule10, geoOrthographic, geoPath } from "d3-geo";
-import { ARCS, TARGET, buildLandDots, type LonLat } from "./globeData";
+import { ARCS, HOME_ROTATION, TARGET, buildLandDots, type LonLat } from "./globeData";
 import styles from "./Globe.module.css";
 
 const BASE = 760; // reference stage size; everything scales from it
 const MAX_DPR = 1.5;
 const FPS = 30;
-const TILT = -18;
-const HOME_LON = -62;
+const [HOME_LON, TILT] = HOME_ROTATION;
 const SWAY_DEG = 22; // the globe turns slowly left and right, like an eye scanning
 const SWAY_PERIOD_S = 40;
 const EVENT_TRAVEL_S = 5; // seconds for an event to travel its arc
@@ -19,9 +19,20 @@ const HALF_PI = Math.PI / 2;
 
 let landCache: LonLat[] | null = null;
 
-export function Globe() {
+interface Props {
+  /** 0 to 1: how much the globe sways. Scrolling to step 2 brings it to rest before the dive. */
+  sway?: MotionValue<number>;
+  /** The globe layer's opacity: nothing is drawn once it has faded out. */
+  visible?: MotionValue<number>;
+}
+
+export function Globe({ sway, visible }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const swayRef = useRef(sway);
+  const visibleRef = useRef(visible);
+  swayRef.current = sway;
+  visibleRef.current = visible;
 
   useEffect(() => {
     const wrap = wrapRef.current;
@@ -52,7 +63,8 @@ export function Globe() {
       const cx = size / 2;
       const cy = size / 2;
       const R = 292 * k;
-      const lon = still ? HOME_LON : HOME_LON + SWAY_DEG * Math.sin((2 * Math.PI * tSec) / SWAY_PERIOD_S);
+      const amp = swayRef.current?.get() ?? 1;
+      const lon = still ? HOME_LON : HOME_LON + amp * SWAY_DEG * Math.sin((2 * Math.PI * tSec) / SWAY_PERIOD_S);
       const proj = geoOrthographic().scale(R).translate([cx, cy]).rotate([lon, TILT]).clipAngle(90);
       const centre: LonLat = [-lon, -TILT];
       const path = geoPath(proj, ctx);
@@ -169,6 +181,7 @@ export function Globe() {
       raf = requestAnimationFrame(loop);
       if (now - last < 1000 / FPS) return;
       last = now;
+      if ((visibleRef.current?.get() ?? 1) < 0.01) return; // faded out: skip the work
       draw((now - t0) / 1000, false);
     };
 

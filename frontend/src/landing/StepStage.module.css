@@ -5,6 +5,11 @@
   flex: none;
 }
 
+.layer {
+  position: absolute;
+  inset: 0;
+}
+
 .readout {
   position: absolute;
   display: flex;

@@ -1,6 +1,6 @@
 // Globe data: dotted land from world-atlas, and the illustrative attack arcs.
 // Locations are illustrative only (the generator has no geolocation) and are never labelled.
-import { geoEquirectangular, geoInterpolate, geoPath } from "d3-geo";
+import { geoEquirectangular, geoInterpolate, geoOrthographic, geoPath } from "d3-geo";
 import { feature } from "topojson-client";
 import type { Topology, GeometryObject } from "topojson-specification";
 import landTopo from "world-atlas/land-110m.json";
@@ -9,6 +9,16 @@ export type LonLat = [number, number];
 
 /** "YOUR NETWORK": where the arcs land. */
 export const TARGET: LonLat = [77.2, 28.6];
+
+/** The globe's resting rotation: [longitude, tilt]. */
+export const HOME_ROTATION: [number, number] = [-62, -18];
+
+/** Where the target sits on the stage at rest, as a share of the stage (0 to 1): the dive zooms here. */
+export function targetOnStage(): { x: number; y: number } {
+  const proj = geoOrthographic().scale(292).translate([380, 380]).rotate(HOME_ROTATION);
+  const p = proj(TARGET) ?? [380, 380];
+  return { x: p[0] / 760, y: p[1] / 760 };
+}
 
 const SOURCES: LonLat[] = [
   [4.9, 52.4], [8.7, 50.1], [37.6, 55.8], [3.4, 6.5], [28.0, -26.2],

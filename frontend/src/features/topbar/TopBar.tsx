@@ -6,7 +6,7 @@ import styles from "./TopBar.module.css";
 const NAV = [
   { to: "/live", label: "DASHBOARD", end: true },
   { to: "/engines", label: "ENGINES", end: false },
-  { to: "/", label: "KNOW MORE", end: true },
+  { to: "/", label: "HOME", end: true },
 ];
 
 export function TopBar() {

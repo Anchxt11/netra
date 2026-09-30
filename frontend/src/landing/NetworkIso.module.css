@@ -1,0 +1,100 @@
+.network {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.floor line {
+  stroke: rgba(255, 120, 90, 0.14);
+  stroke-width: 1;
+}
+
+/* host blocks: wireframe with a faint rust fill, lit from the upper left */
+.faceTop,
+.faceLeft,
+.faceRight {
+  stroke: rgba(255, 130, 100, 0.8);
+  stroke-width: 1.2;
+  stroke-linejoin: round;
+}
+
+.faceTop {
+  fill: rgba(255, 74, 38, 0.16);
+}
+
+.faceLeft {
+  fill: rgba(255, 74, 38, 0.07);
+}
+
+.faceRight {
+  fill: rgba(255, 74, 38, 0.11);
+}
+
+.hostLabel {
+  font-family: var(--font-data);
+  font-size: 12px;
+  text-anchor: middle;
+  fill: var(--text);
+}
+
+/* streams: dashes march toward the hosts (still with reduced motion) */
+.stream,
+.hotStream {
+  fill: none;
+  stroke-width: 1.5;
+  stroke-dasharray: 6 8;
+  animation: flow 1.2s linear infinite;
+}
+
+.stream {
+  stroke: rgba(255, 74, 38, 0.6);
+}
+
+.hotStream {
+  stroke: var(--heat-1);
+  stroke-width: 2.2;
+  filter: drop-shadow(0 0 6px rgba(255, 217, 90, 0.6));
+}
+
+@keyframes flow {
+  to {
+    stroke-dashoffset: -28;
+  }
+}
+
+.event {
+  fill: #ffe9a8;
+}
+
+.eventGlow {
+  fill: rgba(255, 217, 90, 0.2);
+}
+
+.bracket {
+  fill: none;
+  stroke: var(--text-hi);
+  stroke-width: 1.4;
+  stroke-dasharray: 10 22; /* on a 32px square: a 5px arm either side of each corner */
+  stroke-dashoffset: 5;
+}
+
+/* rule and AI tags */
+.tags {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tag {
+  height: 24px;
+  padding: 0 10px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
