@@ -1,10 +1,14 @@
 .ring {
   position: relative;
   flex: none;
+  width: var(--ring-size, 184px);
+  height: var(--ring-size, 184px);
 }
 
 .ring svg {
   display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .centre {
@@ -15,6 +19,11 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
+}
+
+/* The number scales with the ring: 40px at 184px. */
+.centre .time {
+  font-size: calc(var(--ring-size, 184px) * 0.217);
 }
 
 .label,

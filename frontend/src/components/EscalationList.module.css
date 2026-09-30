@@ -1,0 +1,50 @@
+.list {
+  container: escalation / inline-size;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 150, 120, 0.2) transparent;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 56px 52px minmax(0, 1fr) 30px;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px dashed rgba(255, 120, 90, 0.13);
+  font-size: 12.5px;
+  line-height: 1.25;
+  color: var(--text);
+}
+
+.time {
+  font-family: var(--font-data);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.tag {
+  width: 100%;
+}
+
+.points {
+  font-family: var(--font-data);
+  font-size: 12px;
+  text-align: right;
+  color: var(--text);
+}
+
+/* Narrow panel: drop the time column so the sentences keep their room. */
+@container escalation (max-width: 380px) {
+  .row {
+    grid-template-columns: 52px minmax(0, 1fr) 30px;
+  }
+
+  .time {
+    display: none;
+  }
+}

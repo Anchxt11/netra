@@ -1,14 +1,25 @@
 /*
-  1440x900: 356 | 722 | 310, no page scroll. Below 1440 wide the centre shrinks;
-  below 900 tall the page scrolls vertically (never sideways).
-  90px = top padding 12 + top bar 52 + gap 12 + bottom padding 14.
+  1440x900: 356 | 722 | 310, no page scroll. Narrower screens: slimmer side columns and the
+  centre shrinks; below 900 tall the page scrolls vertically (never sideways).
+  82px = header top padding 12 + header 44 + gap 12 + bottom padding 14.
 */
 .dash {
+  --col-left: 356px;
+  --col-right: 310px;
+  --col-involved: 258px;
   display: grid;
-  grid-template-columns: 356px minmax(0, 1fr) 310px;
+  grid-template-columns: var(--col-left) minmax(0, 1fr) var(--col-right);
   gap: var(--gap);
-  height: calc(100vh - 90px);
+  height: calc(100vh - 82px);
   min-height: 806px;
+}
+
+@media (max-width: 1400px) {
+  .dash {
+    --col-left: 330px;
+    --col-right: 280px;
+    --col-involved: 220px;
+  }
 }
 
 .left,
@@ -19,9 +30,10 @@
   min-width: 0;
 }
 
+/* The focus card may grow on narrow screens; the fixes row takes what is left. */
 .centre {
   display: grid;
-  grid-template-rows: 212px 262px minmax(0, 1fr);
+  grid-template-rows: minmax(212px, auto) 262px minmax(0, 1fr);
   gap: var(--gap);
 }
 
@@ -32,7 +44,7 @@
 
 .middle {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 258px;
+  grid-template-columns: minmax(0, 1fr) var(--col-involved);
   gap: var(--gap);
   min-height: 0;
 }

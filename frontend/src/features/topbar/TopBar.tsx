@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { OsdChips, OsdStatus } from "./Osd";
 import styles from "./TopBar.module.css";
@@ -11,9 +12,17 @@ const NAV = [
 export function TopBar() {
   // The landing page stays minimal: no status readouts there.
   const landing = useLocation().pathname === "/";
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 4);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
-    <header className={styles.row}>
+    <header className={`${styles.row} ${scrolled ? styles.scrolled : ""}`}>
       <div className={styles.side}>{!landing && <OsdStatus />}</div>
 
       {/* The glass bar only wraps the logo and the three links. */}

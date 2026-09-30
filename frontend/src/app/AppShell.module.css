@@ -5,7 +5,7 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  padding: 12px var(--page-pad) var(--page-pad);
+  padding: 0 var(--page-pad) var(--page-pad); /* top padding lives in the pinned header */
   gap: var(--gap);
 }
 

@@ -1,0 +1,51 @@
+.wrap {
+  position: relative;
+  width: 34px;
+  height: 100%;
+  min-height: 120px;
+}
+
+.bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 16px;
+  display: flex;
+  flex-direction: column-reverse;
+  border-radius: 4px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.bar i {
+  display: block;
+  flex: none;
+  border-top: 2px solid var(--bg);
+  transition: height 300ms ease;
+}
+
+.rule {
+  background: var(--rule);
+}
+
+.ai {
+  background: var(--ai);
+}
+
+.mark {
+  position: absolute;
+  left: -3px;
+  right: -3px;
+  border-top: 1px dashed rgba(255, 241, 234, 0.6);
+}
+
+.label {
+  position: absolute;
+  left: 20px;
+  transform: translateY(50%);
+  font-family: var(--font-data);
+  font-size: 9.5px;
+  line-height: 1;
+  color: var(--muted);
+}

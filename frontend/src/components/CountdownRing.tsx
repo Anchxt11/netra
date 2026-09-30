@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { heatColor } from "../lib/heat";
 import { formatClock, formatCountdown } from "../lib/time";
 import { NumText } from "./NumText";
@@ -7,9 +8,11 @@ interface Props {
   remaining: number; // share of the window left, 0 to 1
   timeLeftMs: number;
   staleBy: string; // ISO deadline
+  /** Pixel size. Leave it out to size the ring from CSS with --ring-size (default 184px). */
   size?: number;
 }
 
+const BOX = 184; // drawing size; the SVG scales to the rendered size
 const SEGMENTS = 48;
 const STEP = 360 / SEGMENTS; // 7.5° per segment
 const GAP = 2; // degrees between segments
@@ -22,11 +25,10 @@ function arc(cx: number, cy: number, r: number, fromDeg: number, toDeg: number) 
   return `M${p(fromDeg)} A${r},${r} 0 0 1 ${p(toDeg)}`;
 }
 
+const PATHS = Array.from({ length: SEGMENTS }, (_, i) => arc(BOX / 2, BOX / 2, 80, i * STEP + GAP / 2, (i + 1) * STEP - GAP / 2));
+
 /** 48 arc segments; the lit share is the time left, coloured by heat. */
-export function CountdownRing({ remaining, timeLeftMs, staleBy, size = 184 }: Props) {
-  const c = size / 2;
-  const r = (size * 80) / 184;
-  const stroke = (size * 9) / 184;
+export function CountdownRing({ remaining, timeLeftMs, staleBy, size }: Props) {
   const lit = Math.ceil(remaining * SEGMENTS);
   const color = heatColor(remaining);
   const time = formatCountdown(timeLeftMs);
@@ -35,24 +37,18 @@ export function CountdownRing({ remaining, timeLeftMs, staleBy, size = 184 }: Pr
   return (
     <div
       className={styles.ring}
-      style={{ width: size, height: size }}
+      style={size ? ({ "--ring-size": `${size}px` } as CSSProperties) : undefined}
       role="img"
       aria-label={`Time left ${time}, data goes stale at ${staleAt}`}
     >
-      <svg width={size} height={size} aria-hidden="true">
-        {Array.from({ length: SEGMENTS }, (_, i) => (
-          <path
-            key={i}
-            d={arc(c, c, r, i * STEP + GAP / 2, (i + 1) * STEP - GAP / 2)}
-            stroke={i < lit ? color : "var(--unlit)"}
-            strokeWidth={stroke}
-            fill="none"
-          />
+      <svg viewBox={`0 0 ${BOX} ${BOX}`} aria-hidden="true">
+        {PATHS.map((d, i) => (
+          <path key={i} d={d} stroke={i < lit ? color : "var(--unlit)"} strokeWidth={9} fill="none" />
         ))}
       </svg>
       <div className={styles.centre} aria-hidden="true">
         <span className={styles.label}>TIME LEFT</span>
-        <NumText value={time} size="xl" color="var(--text-hi)" />
+        <NumText value={time} size="xl" color="var(--text-hi)" className={styles.time} />
         <span className={styles.stale}>STALE AT {staleAt}</span>
       </div>
     </div>

@@ -5,27 +5,13 @@ import * as echarts from "echarts/core";
 import { BarChart, LineChart } from "echarts/charts";
 import { GridComponent, MarkLineComponent, TooltipComponent } from "echarts/components";
 import { CanvasRenderer } from "echarts/renderers";
+import { themeColors } from "./cssColors";
 
 echarts.use([BarChart, LineChart, GridComponent, MarkLineComponent, TooltipComponent, CanvasRenderer]);
 export { echarts };
 
-const read = (styles: CSSStyleDeclaration, name: string) => styles.getPropertyValue(name).trim();
-
 /** Colours by role, read from the element's CSS tokens. */
-export function chartColors(el: Element = document.documentElement) {
-  const s = getComputedStyle(el);
-  return {
-    rule: read(s, "--rule"),
-    ai: read(s, "--ai"),
-    ok: read(s, "--ok"),
-    rust: read(s, "--rust"),
-    fail: read(s, "--fail"),
-    text: read(s, "--text"),
-    textHi: read(s, "--text-hi"),
-    muted: read(s, "--muted"),
-    heat: [read(s, "--heat-1"), read(s, "--heat-2"), read(s, "--heat-3"), read(s, "--heat-4")],
-  };
-}
+export const chartColors = themeColors;
 
 export function chartTheme(el?: Element) {
   const c = chartColors(el);

@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { Panel } from "../components/Panel";
 import { Queue } from "../features/queue/Queue";
 import { IncidentFocusStub } from "../features/detail/IncidentFocusStub";
+import { IncidentFocus } from "../features/detail/IncidentFocus";
+import { EscalationPanel, InvolvedPanel } from "../features/detail/DetailPanels";
 import { JudgedNormalDetail } from "../features/detail/JudgedNormalDetail";
 import { useNetra, useRankedIncidents } from "../store/useNetra";
 import styles from "./LiveDashboard.module.css";
@@ -51,11 +53,23 @@ export function LiveDashboard() {
         </div>
       ) : (
         <div className={styles.centre}>
-          <IncidentFocusStub incident={selectedIncident} />
-          <div className={styles.middle}>
-            <Upcoming title="How it escalated" />
-            <Upcoming title="Who is involved" />
-          </div>
+          {selectedIncident ? (
+            <>
+              <IncidentFocus incident={selectedIncident} />
+              <div className={styles.middle}>
+                <EscalationPanel incident={selectedIncident} />
+                <InvolvedPanel incident={selectedIncident} />
+              </div>
+            </>
+          ) : (
+            <>
+              <IncidentFocusStub incident={undefined} />
+              <div className={styles.middle}>
+                <Upcoming title="How it escalated" />
+                <Upcoming title="Who is involved" />
+              </div>
+            </>
+          )}
           <Upcoming title="Recommended fixes" meta="FROM A FIXED LIST OF 14, NOTHING RUNS WITHOUT APPROVAL" />
         </div>
       )}
