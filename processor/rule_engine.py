@@ -37,8 +37,15 @@ def match(value, expected, modifier):
     if modifier=='regex': return re.search(str(expected),str(value or '')) is not None
     raise ValueError(f'Unsupported modifier: {modifier}')
 
-def detection_match(event,detection):
-    return all(match(value_at(event,*split_modifier(k)[:1]),v,split_modifier(k)[1]) for k,v in detection.items())
+def _check_criteria(event, detection):
+    for k, v in detection.items():
+        field, modifier = split_modifier(k)
+        yield match(value_at(event, field), v, modifier)
+
+def detection_match(event, detection, condition='all'):
+    if condition == 'any':
+        return any(_check_criteria(event, detection))
+    return all(_check_criteria(event, detection))
 
 class RuleEngine:
     def __init__(self,rules):
@@ -55,7 +62,7 @@ class RuleEngine:
         now=time.time() if now is None else now
         hits=[]
         for rule in self.rules:
-            if not detection_match(event,rule.detection): continue
+            if not detection_match(event, rule.detection, rule.condition): continue
             if rule.timeframe is not None and rule.count is not None:
                 key=(rule.id,str(event.get('ip','-')))
                 window=self.windows[key]; window.append(now)

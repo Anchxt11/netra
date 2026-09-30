@@ -14,4 +14,5 @@ services:
       PROCESSOR_GROUP_ID: netra-processor
       RULES_DIR: /app/rules/sigma
       SCORER: dummy
+      LOG_LEVEL: INFO
     restart: unless-stopped

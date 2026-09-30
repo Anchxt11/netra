@@ -1,0 +1,8 @@
+id: http_flood
+title: HTTP flood / DDoS detected from one IP
+severity: critical
+detection:
+  event_type: http_request
+condition: all
+timeframe: 30
+count: 200

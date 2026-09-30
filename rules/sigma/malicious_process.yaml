@@ -1,0 +1,7 @@
+id: malicious_process
+title: Malicious command execution detected
+severity: critical
+detection:
+  event_type: process_start
+  process|regex: "(cat /etc/shadow|nc -e|ncat |curl.*\\| *sh|chmod.*tmp|crontab|tar.*tgz.*/var)"
+condition: all
