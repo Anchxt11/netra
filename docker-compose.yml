@@ -70,5 +70,35 @@ services:
     volumes:
       - ./data:/data
 
+    # Columnar store. Consumes events.raw -> netra.events_raw
+  # and events.enriched -> netra.events
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.8
+    container_name: clickhouse
+    depends_on:
+      redpanda:
+        condition: service_healthy
+      topic-init:
+        condition: service_completed_successfully
+    environment:
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-netra}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-netra}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+    ports:
+      - "127.0.0.1:8123:8123"
+      - "127.0.0.1:9000:9000"
+    ulimits:
+      nofile: { soft: 262144, hard: 262144 }
+    volumes:
+    - ./clickhouse/init:/docker-entrypoint-initdb.d:ro
+    - clickhouse-data:/var/lib/clickhouse
+    healthcheck:
+      test: ["CMD-SHELL", "clickhouse-client -u $$CLICKHOUSE_USER --password $$CLICKHOUSE_PASSWORD -q 'EXISTS TABLE netra.events_errors_mv' | grep -q 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+
 volumes:
   redpanda-data:
+  clickhouse-data:

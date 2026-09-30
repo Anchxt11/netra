@@ -1,0 +1,9 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+COPY web_traffic_sim.py .
+
+RUN pip install --no-cache-dir confluent-kafka
+
+CMD ["python", "web_traffic_sim.py"]
