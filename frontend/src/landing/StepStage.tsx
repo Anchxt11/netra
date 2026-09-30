@@ -8,6 +8,7 @@ import { useNetra } from "../store/useNetra";
 import { Globe } from "./Globe";
 import { GlobeHud } from "./GlobeHud";
 import { NetworkIso } from "./NetworkIso";
+import { CorrelateLayer } from "./CorrelateLayer";
 import styles from "./StepStage.module.css";
 
 const RULE_COUNT = Object.keys(RULES).length;
@@ -49,6 +50,7 @@ export function StepStage({ t, still }: Props) {
       </motion.div>
 
       <NetworkIso t={t} />
+      <CorrelateLayer t={t} />
 
       <Readout label="EVENTS / S" value={eps !== undefined ? String(eps) : "PENDING"} pos="tl" />
       <Readout label="EVENTS TODAY" value={today !== undefined ? today.toLocaleString("en-GB") : "PENDING"} pos="tr" />

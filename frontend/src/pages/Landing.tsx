@@ -1,7 +1,7 @@
 // Landing (/): a scroll story. The stage stays pinned while scrolling moves through the steps.
 // Minimal by design: NETRA, one line, one button; then, per step, a title, one sentence and a
 // tiny colour key. Spec: docs/PAGES.md section 4.
-import { useRef, useState } from "react";
+import { useRef, useState, type CSSProperties } from "react";
 import {
   AnimatePresence,
   motion,
@@ -19,16 +19,17 @@ import { STEPS, pad2, type KeySwatch } from "../landing/steps";
 import styles from "./Landing.module.css";
 
 // Steps built so far. The scroll only reaches these, so the story never shows an empty step.
-const BUILT_STEPS = 2;
+const BUILT_STEPS = 3;
 // Scroll distance per step, in viewport heights: enough room for each step to settle.
 const PER_STEP_VH = 120;
 
-const SWATCH: Record<KeySwatch, string> = {
-  heat: "var(--heat-1)",
-  rule: "var(--rule)",
-  ai: "var(--ai)",
-  rust: "var(--rust)",
-  ok: "var(--ok)",
+const SWATCH: Record<KeySwatch, CSSProperties> = {
+  heat: { background: "var(--heat-1)" },
+  rule: { background: "var(--rule)" },
+  ai: { background: "var(--ai)" },
+  rust: { background: "var(--rust)" },
+  ring: { border: "1.5px solid var(--rust)", borderRadius: "50%" },
+  ok: { background: "var(--ok)" },
 };
 
 // Default export so the router can lazy-load it (the globe libraries stay out of the dashboard).
@@ -93,7 +94,7 @@ export default function Landing() {
                     <ul className={styles.key}>
                       {cardStep.key.map((k) => (
                         <li key={k.text}>
-                          <i style={{ background: SWATCH[k.swatch] }} aria-hidden="true" />
+                          <i style={SWATCH[k.swatch]} aria-hidden="true" />
                           {k.text}
                         </li>
                       ))}

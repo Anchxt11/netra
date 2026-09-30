@@ -10,6 +10,8 @@ import styles from "./NetworkIso.module.css";
 const pts = (list: Pt[]) => list.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
 const toPts = (path: Path) => pts(pathPoints(path));
 const pct = (v: number) => `${(v / 760) * 100}%`;
+/** The server the attack is aimed at: it stays in focus from step 3. */
+const FOCUS_HOST = "auth-01";
 
 function Block({ host }: { host: Host }) {
   const { b, c, d, A, B, C, D } = blockCorners(host);
@@ -37,13 +39,19 @@ interface Props {
 }
 
 export function NetworkIso({ t }: Props) {
+  // Step 2 reveals (t 0.48 to 0.88), and step 3's hand-over (t just past 1): the step 2 notes go,
+  // the streams stop and the other servers dim, leaving auth-01 (logins) in focus.
   const drawing = useTransform(t, [0.48, 0.6], [0, 1]);
-  const labels = useTransform(t, [0.56, 0.64], [0, 1]);
-  const hot = useTransform(t, [0.6, 0.68], [0, 1]);
-  const bracketOpacity = useTransform(t, [0.66, 0.74], [0, 1]);
-  const ruleTag = useTransform(t, [0.72, 0.8], [0, 1]);
-  const aiTag = useTransform(t, [0.8, 0.88], [0, 1]);
+  const labels = useTransform(t, [0.56, 0.64, 1.04, 1.16], [0, 1, 1, 0]);
+  const focusLabel = useTransform(t, [0.56, 0.64], [0, 1]);
+  const hot = useTransform(t, [0.6, 0.68, 1.04, 1.18], [0, 1, 1, 0]);
+  const bracketOpacity = useTransform(t, [0.66, 0.74, 1.02, 1.12], [0, 1, 1, 0]);
+  const ruleTag = useTransform(t, [0.72, 0.8, 1.02, 1.12], [0, 1, 1, 0]);
+  const aiTag = useTransform(t, [0.8, 0.88, 1.02, 1.12], [0, 1, 1, 0]);
+  const streams = useTransform(t, [1.04, 1.18], [1, 0]);
+  const others = useTransform(t, [1.04, 1.22], [1, 0.18]);
   const streamStart = iso(-2, -6.5);
+  const focus = HOSTS.find((h) => h.name === FOCUS_HOST);
 
   return (
     <div className={styles.network} aria-hidden="true">
@@ -58,15 +66,23 @@ export function NetworkIso({ t }: Props) {
         </g>
 
         {/* incoming streams: dashes march toward the servers */}
-        {STREAMS.map((s) => (
-          <polyline key={s.id} points={toPts(s.path)} className={styles.stream} />
-        ))}
-        <polyline points={toPts(HOT)} className={styles.stream} />
+        <motion.g style={{ opacity: streams }}>
+          {STREAMS.map((s) => (
+            <polyline key={s.id} points={toPts(s.path)} className={styles.stream} />
+          ))}
+          <polyline points={toPts(HOT)} className={styles.stream} />
+        </motion.g>
         <motion.polyline points={toPts(HOT)} className={styles.hotStream} style={{ opacity: hot }} />
 
-        {HOSTS.map((h) => (
-          <Block key={h.name} host={h} />
-        ))}
+        {HOSTS.map((h) =>
+          h.name === FOCUS_HOST ? (
+            <Block key={h.name} host={h} />
+          ) : (
+            <motion.g key={h.name} style={{ opacity: others }}>
+              <Block host={h} />
+            </motion.g>
+          ),
+        )}
 
         {/* the suspicious event, and the bracket that locks onto it */}
         <motion.g style={{ opacity: hot }}>
@@ -84,8 +100,11 @@ export function NetworkIso({ t }: Props) {
       </motion.svg>
 
       {/* plain-language labels */}
+      <motion.div className={styles.labels} style={{ opacity: focusLabel }}>
+        {focus && <HostLabel host={focus} />}
+      </motion.div>
       <motion.div className={styles.labels} style={{ opacity: labels }}>
-        {HOSTS.map((h) => (
+        {HOSTS.filter((h) => h.name !== FOCUS_HOST).map((h) => (
           <HostLabel key={h.name} host={h} />
         ))}
         <p className={styles.note} style={{ left: pct(streamStart.x + 12), top: pct(streamStart.y - 18) }}>

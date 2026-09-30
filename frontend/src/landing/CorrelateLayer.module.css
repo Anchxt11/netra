@@ -1,0 +1,101 @@
+.layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* addresses: rust rings, as on the dashboard graph */
+.address {
+  fill: var(--bg);
+  stroke: #ff7a55;
+  stroke-width: 1.6;
+}
+
+.addressLabel {
+  font-family: var(--font-data);
+  font-size: 11px;
+  text-anchor: middle;
+  fill: var(--muted);
+}
+
+.link {
+  stroke: var(--rust);
+  stroke-opacity: 0.55;
+  stroke-width: 1.2;
+}
+
+/* the targeted account: solid rust with a dark label */
+.account {
+  fill: var(--rust);
+  filter: drop-shadow(0 0 10px rgba(255, 74, 38, 0.45));
+}
+
+.accountText {
+  font-family: var(--font-data);
+  font-weight: 500;
+  font-size: 12px;
+  text-anchor: middle;
+  fill: var(--on-rust);
+}
+
+/* ONE INCIDENT card */
+.card {
+  fill: rgba(18, 12, 11, 0.88);
+  stroke: rgba(255, 150, 120, 0.35);
+  stroke-width: 1;
+}
+
+.cardLabel {
+  font-family: var(--font-data);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  fill: var(--rust);
+}
+
+.cardTitle {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 15px;
+  fill: var(--text-hi);
+}
+
+.cardMeta {
+  font-family: var(--font-data);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  fill: var(--muted);
+}
+
+/* warning signs: violet = a rule, cyan = the AI engine */
+.chipRule,
+.chipAi {
+  stroke-width: 1;
+}
+
+.chipRule {
+  fill: rgba(169, 139, 255, 0.12);
+  stroke: rgba(169, 139, 255, 0.55);
+}
+
+.chipAi {
+  fill: rgba(82, 216, 255, 0.12);
+  stroke: rgba(82, 216, 255, 0.55);
+}
+
+.chipTextRule,
+.chipTextAi {
+  font-family: var(--font-data);
+  font-size: 10px;
+  text-anchor: middle;
+}
+
+.chipTextRule { fill: var(--rule); }
+.chipTextAi { fill: var(--ai); }
+
+.note {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  fill: var(--text);
+}
