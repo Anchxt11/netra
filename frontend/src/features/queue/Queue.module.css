@@ -118,6 +118,22 @@
 }
 
 .judged {
+  position: relative;
+  overflow: hidden;
+}
+
+.judged > span {
+  position: relative; /* text stays above the flash */
+}
+
+.groupFlash {
+  position: absolute;
+  inset: 0;
+  background: var(--ok);
+  pointer-events: none;
+}
+
+.judged {
   color: var(--ok);
 }
 

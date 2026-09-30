@@ -29,14 +29,20 @@ function buildElements(entities: Incident["entities"], w: number, h: number) {
   // The target sits in the centre: the attacked user, or the host when no user is involved.
   const target = users.length > 0 ? `u:${users[0]}` : hosts.length > 0 ? `h:${hosts[0]}` : null;
 
-  users.forEach((u, i) => {
-    const pos = i === 0 ? { x: cx, y: cy } : polar(cx, cy, R * 0.48, 200 + (i - 1) * (140 / Math.max(1, users.length - 1)));
+  if (users.length > 0) {
     els.push({
-      data: { id: `u:${u}`, label: u, w: u.length * 6.3 + 14 },
-      classes: i === 0 ? "user target" : "user",
-      position: pos,
+      data: { id: `u:${users[0]}`, label: users[0], w: users[0].length * 6.3 + 14 },
+      classes: "user target",
+      position: { x: cx, y: cy },
     });
-  });
+  }
+  // Other targeted accounts collapse into one node, so a campaign stays readable.
+  const others = users.length - 1;
+  const groupId = "u:others";
+  if (others > 0) {
+    const label = `+${others} ${others === 1 ? "ACCOUNT" : "ACCOUNTS"}`;
+    els.push({ data: { id: groupId, label, w: label.length * 6.3 + 14 }, classes: "user", position: polar(cx, cy, R * 0.55, 150) });
+  }
 
   hosts.forEach((hst, i) => {
     const centred = users.length === 0 && i === 0;
@@ -48,12 +54,13 @@ function buildElements(entities: Incident["entities"], w: number, h: number) {
   ips.forEach((ip, i) => {
     const pos = polar(cx, cy, R, -90 + (i * 360) / Math.max(1, ips.length) + (ips.length > 3 ? 12 : 0));
     els.push({ data: { id: `i:${ip}`, label: `.${ip.split(".").pop()}` }, classes: "ip", position: pos });
-    // Addresses point at the attacked accounts (spread over them when there are several).
-    const to = users.length > 1 ? `u:${users[i % users.length]}` : target;
-    if (to) els.push({ data: { id: `e:${ip}>${to}`, source: `i:${ip}`, target: to } });
+    // Addresses point at the attacked account, and faintly at the other accounts they tried.
+    if (target) els.push({ data: { id: `e:${ip}>${target}`, source: `i:${ip}`, target } });
+    if (others > 0) els.push({ data: { id: `e:${ip}>${groupId}`, source: `i:${ip}`, target: groupId }, classes: "faint" });
   });
 
-  return { els, shown: ips.length + users.length + hosts.length, total: entities.ips.length + users.length + hosts.length };
+  const shownUsers = Math.min(users.length, 2);
+  return { els, shown: ips.length + shownUsers + hosts.length, total: entities.ips.length + shownUsers + hosts.length };
 }
 
 function stylesheet(c: Colors): StylesheetStyle[] {
@@ -107,6 +114,10 @@ function stylesheet(c: Colors): StylesheetStyle[] {
     {
       selector: "edge",
       style: { width: 1, "line-color": c.rust, "line-opacity": 0.45, "curve-style": "straight" },
+    },
+    {
+      selector: "edge.faint",
+      style: { "line-opacity": 0.18 },
     },
     {
       selector: "edge.toHost",

@@ -1,0 +1,86 @@
+/* Tucked into the bottom-right corner, in the page margin. Opens on hover or keyboard focus. */
+.dock {
+  position: fixed;
+  right: var(--page-pad);
+  bottom: 3px;
+  z-index: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 20px;
+  padding: 0 10px;
+  border-radius: var(--r-chip);
+  background: rgba(18, 12, 11, 0.9);
+  border: 1px solid var(--glass-border);
+  font-family: var(--font-data);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  cursor: default;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--rust);
+}
+
+.buttons {
+  display: flex;
+  gap: 6px;
+  padding: 5px;
+  border-radius: var(--r-chip);
+  background: var(--glass-fill);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-hi);
+  opacity: 0;
+  transform: translateX(8px);
+  pointer-events: none;
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.dock:hover .buttons,
+.dock:focus-within .buttons {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.button {
+  height: 26px;
+  padding: 0 12px;
+  border-radius: var(--r-chip);
+  border: 1px solid rgba(255, 150, 120, 0.3);
+  background: transparent;
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--text);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.button:hover:not(:disabled) {
+  border-color: rgba(255, 150, 120, 0.6);
+  color: var(--text-hi);
+}
+
+.button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.running {
+  border-color: var(--rust);
+  color: var(--text-hi);
+}

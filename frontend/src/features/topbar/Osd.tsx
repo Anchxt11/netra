@@ -28,7 +28,7 @@ function FeedTrace() {
   const label = feed === "live" ? "LIVE" : feed === "stalled" ? "FEED STALLED" : "FEED DOWN";
 
   return (
-    <span className={`${styles.feed} ${failing ? styles.failing : ""}`} role="status" aria-label={`Feed ${label.toLowerCase()}`}>
+    <span className={`${styles.feed} ${failing ? styles.failing : ""}`} role="status" aria-label={`Live feed status: ${label}`}>
       <svg width={TRACE_W} height={TRACE_H} aria-hidden="true">
         <line x1="0" y1={TRACE_H - 0.5} x2={TRACE_W} y2={TRACE_H - 0.5} className={styles.base} />
         {failing ? (

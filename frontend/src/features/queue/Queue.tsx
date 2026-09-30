@@ -76,6 +76,8 @@ export function Queue() {
 
   const isSelected = (sel: Selection) => selection?.kind === sel?.kind && selection?.id === sel?.id;
   const latestBenign = benign[0];
+  const firstBenign = useRef<string | undefined>(undefined);
+  if (firstBenign.current === undefined && latestBenign) firstBenign.current = latestBenign.id;
 
   // Up and Down arrows move the selection through the rows.
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
@@ -149,6 +151,17 @@ export function Queue() {
           disabled={!latestBenign}
           onClick={() => latestBenign && select({ kind: "benign", id: latestBenign.id })}
         >
+          {/* A newly judged-normal item flashes the group once (not on first load). */}
+          {latestBenign && latestBenign.id !== firstBenign.current && (
+            <motion.i
+              key={latestBenign.id}
+              className={styles.groupFlash}
+              initial={{ opacity: 0.5 }}
+              animate={{ opacity: 0 }}
+              transition={{ duration: 1.4, ease: "easeOut" }}
+              aria-hidden="true"
+            />
+          )}
           <span className={styles.groupName}>JUDGED NORMAL {judgedCount}</span>
           {latestBenign && (
             <span className={styles.latest}>

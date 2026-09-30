@@ -17,6 +17,7 @@ import {
   randomIp,
   type Ctx,
 } from "./catalog";
+import { CREDENTIAL_STUFFING, FEED_FAILURE, FLASH_CROWD, type ScenarioName } from "./scenarios/demo";
 import { assessRisk, type Tier } from "../lib/rank";
 import { remainingShare } from "../lib/heat";
 
@@ -53,6 +54,11 @@ class MockEngine {
   private timers: number[] = [];
   private nextSpawnAt = 0;
   private nextBenignAt = 0;
+  // Demo mode
+  private scriptTimers: number[] = [];
+  private baseEps = 214;
+  private boost: { start: number; rampMs: number; factor: number; holdUntil: number; end: number } | null = null;
+  private holdSpawnsUntil = 0; // background incidents pause while a scripted story plays
 
   constructor() {
     this.health = this.initialHealth(Date.now());
@@ -85,6 +91,128 @@ class MockEngine {
   stop() {
     this.timers.forEach((t) => window.clearInterval(t));
     this.timers = [];
+    this.scriptTimers.forEach((t) => window.clearTimeout(t));
+    this.scriptTimers = [];
+  }
+
+  // ---------------------------------------------------------------- demo mode
+
+  /** Start the same seeded morning again, as if the page had just loaded. */
+  reset() {
+    this.stop();
+    this.r = createRng(SEED);
+    this.live.clear();
+    this.nextNumber = 131;
+    this.nextBenign = 1;
+    this.baseEps = 214;
+    this.boost = null;
+    this.holdSpawnsUntil = 0;
+    this.health = this.initialHealth(Date.now());
+    this.start(this.emit);
+  }
+
+  /** Play a scripted scenario. Returns the incident it will create, if any. */
+  run(name: ScenarioName): string | null {
+    if (name === "credential_stuffing") return this.runCredentialStuffing();
+    if (name === "flash_crowd") this.runFlashCrowd();
+    if (name === "feed_failure") this.runFeedFailure();
+    return null;
+  }
+
+  private later(ms: number, fn: () => void) {
+    this.scriptTimers.push(window.setTimeout(fn, ms));
+  }
+
+  private runCredentialStuffing(): string {
+    const s = CREDENTIAL_STUFFING;
+    const t0 = Date.now();
+    const id = String(this.nextNumber++).padStart(4, "0");
+    this.holdSpawnsUntil = t0 + s.endsAt + 10_000;
+    this.boost = { start: t0, rampMs: s.rampMs, factor: 1.8, holdUntil: t0 + s.endsAt, end: t0 + s.endsAt + 6000 };
+    let live: Live | null = null;
+
+    for (const step of s.signals) {
+      this.later(step.at, () => {
+        const now = Date.now();
+        if (!live) {
+          // 8 s: the incident appears, detected by rule, and this minute's detections jump.
+          const scen = SCENARIOS.credential_stuffing;
+          live = {
+            incident: {
+              id,
+              attackType: "credential_stuffing",
+              name: scen.name,
+              mitre: { ...scen.mitre },
+              severity: scen.severity,
+              attentionScore: 0,
+              detectedBy: "rule",
+              createdAt: iso(now),
+              staleBy: iso(now + s.windowMin * 60_000),
+              status: "open",
+              entities: { users: [...s.users], ips: [...s.ips], hosts: ["auth-01"] },
+              signals: [],
+              fixes: [],
+            },
+            ctx: this.makeCtx("credential_stuffing"),
+            pending: [],
+            nextSignalAt: Infinity,
+            noFix: false,
+            jitter: [0, 0, 0],
+          };
+          this.live.set(id, live);
+          const perMin = this.health.detectionsPerMin;
+          perMin[perMin.length - 1] = { t: perMin[perMin.length - 1].t, ...s.spike };
+          this.health.detections = this.sumDetections(perMin);
+        }
+        const inc = live.incident;
+        this.addSignal(inc, step.ruleId, step.sentence, step.points, now);
+        if ("takeover" in step && step.takeover) {
+          inc.name = s.takeoverName;
+          inc.severity = 5;
+        }
+        if (inc.fixes.length === 0) inc.fallback = this.fallbackFor(inc); // CRIE not confident yet
+        this.emit({ type: "incident.upsert", payload: structuredClone(inc) });
+      });
+    }
+
+    // 17 s: CRIE's top three arrive.
+    this.later(s.fixesAt, () => {
+      if (!live || live.incident.status !== "open") return;
+      live.incident.fixes = structuredClone(s.fixes);
+      delete live.incident.fallback;
+      this.emit({ type: "incident.upsert", payload: structuredClone(live.incident) });
+    });
+    return id;
+  }
+
+  private runFlashCrowd() {
+    const s = FLASH_CROWD;
+    const t0 = Date.now();
+    this.holdSpawnsUntil = t0 + s.durationMs + 5000;
+    this.boost = { start: t0, rampMs: 1500, factor: s.factor, holdUntil: t0 + s.durationMs - 3000, end: t0 + s.durationMs };
+    // After 6 s it is judged normal: no incident is created.
+    this.later(s.judgedAt, () => this.addBenign("flash_crowd", Date.now(), true, s.factor));
+  }
+
+  private runFeedFailure() {
+    const s = FEED_FAILURE;
+    this.setFeed("stalled");
+    this.later(s.downAt, () => this.setFeed("down"));
+    this.later(s.recoverAt, () => this.setFeed("live"));
+  }
+
+  private setFeed(feed: PipelineHealth["feed"]) {
+    this.health.feed = feed;
+    if (feed === "live") this.health.lastEventAt = iso(Date.now());
+    this.emit({ type: "health", payload: structuredClone(this.health) });
+  }
+
+  private boostFactor(now: number): number {
+    const b = this.boost;
+    if (!b || now >= b.end) return 1;
+    if (now < b.start + b.rampMs) return 1 + (b.factor - 1) * ((now - b.start) / b.rampMs);
+    if (now < b.holdUntil) return b.factor;
+    return 1 + (b.factor - 1) * (1 - (now - b.holdUntil) / (b.end - b.holdUntil));
   }
 
   decide(d: Decision) {
@@ -109,6 +237,13 @@ class MockEngine {
   private tick() {
     const now = Date.now();
 
+    // Feed stalled or down: nothing new arrives. Health keeps reporting, so the failure shows.
+    if (this.health.feed !== "live") {
+      this.updateHealth(now);
+      this.emit({ type: "health", payload: structuredClone(this.health) });
+      return;
+    }
+
     for (const live of [...this.live.values()]) {
       const inc = live.incident;
       if (Date.parse(inc.staleBy) <= now) {
@@ -124,12 +259,13 @@ class MockEngine {
     }
 
     const open = this.live.size;
-    if (open < OPEN_MIN || (now >= this.nextSpawnAt && open < this.r.int(OPEN_MIN, OPEN_MAX))) {
+    const quiet = now < this.holdSpawnsUntil;
+    if (!quiet && (open < OPEN_MIN || (now >= this.nextSpawnAt && open < this.r.int(OPEN_MIN, OPEN_MAX)))) {
       this.spawn(now);
     }
     if (now >= this.nextSpawnAt) this.nextSpawnAt = now + this.r.int(6, 15) * 1000;
 
-    if (now >= this.nextBenignAt) {
+    if (!quiet && now >= this.nextBenignAt) {
       this.addBenign(this.r.pick<BenignKind>(["flash_crowd", "nightly_backup"]), now, true);
       this.nextBenignAt = now + this.r.int(120, 240) * 1000;
     }
@@ -236,23 +372,7 @@ class MockEngine {
       sentence = RULES[ruleId].sentence(live.ctx);
       points = RULES[ruleId].points ?? 20;
     }
-
-    const score = Math.min(100, inc.attentionScore + points);
-    const signal: Signal = {
-      id: `${inc.id}-s${inc.signals.length + 1}`,
-      ts: iso(ts),
-      ruleId: ruleId.startsWith("ATDE") ? "ATDE" : ruleId,
-      sentence,
-      points,
-      level: levelFor(score),
-      eventIds: Array.from({ length: this.r.int(1, 3) }, () => this.uuid()),
-    };
-    inc.signals.push(signal);
-    inc.attentionScore = score;
-
-    const hasAi = inc.signals.some((s) => s.ruleId === "ATDE");
-    const hasRule = inc.signals.some((s) => s.ruleId !== "ATDE");
-    inc.detectedBy = hasAi && hasRule ? "both" : hasAi ? "ai" : "rule";
+    this.addSignal(inc, ruleId.startsWith("ATDE") ? "ATDE" : ruleId, sentence, points, ts);
 
     // Escalations the rules document calls out.
     if (ruleId === "BF-4") inc.severity = 5;
@@ -261,6 +381,25 @@ class MockEngine {
       inc.mitre = { id: "T1190", name: "Exploit Public-Facing Application", tactic: "Initial Access" };
     }
     this.recommend(live);
+  }
+
+  /** Append one signal: attention climbs, the level follows the running score, detectedBy updates. */
+  private addSignal(inc: Incident, ruleId: string, sentence: string, points: number, ts: number) {
+    const score = Math.min(100, inc.attentionScore + points);
+    const signal: Signal = {
+      id: `${inc.id}-s${inc.signals.length + 1}`,
+      ts: iso(ts),
+      ruleId,
+      sentence,
+      points,
+      level: levelFor(score),
+      eventIds: Array.from({ length: this.r.int(1, 3) }, () => this.uuid()),
+    };
+    inc.signals.push(signal);
+    inc.attentionScore = score;
+    const hasAi = inc.signals.some((s) => s.ruleId === "ATDE");
+    const hasRule = inc.signals.some((s) => s.ruleId !== "ATDE");
+    inc.detectedBy = hasAi && hasRule ? "both" : hasAi ? "ai" : "rule";
   }
 
   /** Simulated CRIE: the scenario's top fixes, or MITRE's mitigations when nothing is confident. */
@@ -347,14 +486,14 @@ class MockEngine {
 
   // ---------------------------------------------------------------- benign anomalies
 
-  private addBenign(kind: BenignKind, ts: number, count: boolean) {
+  private addBenign(kind: BenignKind, ts: number, count: boolean, trafficX?: number) {
     const def = BENIGN[kind];
     const anomaly: BenignAnomaly = {
       id: `b${this.nextBenign++}`,
       kind,
       name: def.name,
       ts: iso(ts),
-      sentence: def.sentence(this.r.int(3, 5)),
+      sentence: def.sentence(trafficX ?? this.r.int(3, 5)),
       checks: def.checks.map((label) => ({ label, passed: true })),
     };
     if (count) this.health.judgedNormalToday += 1;
@@ -408,8 +547,13 @@ class MockEngine {
   private updateHealth(now: number) {
     const h = this.health;
     const r = this.r;
-    h.lastEventAt = iso(now);
-    h.eventsPerSec = Math.max(180, Math.min(260, h.eventsPerSec + r.int(-8, 8)));
+    this.baseEps = Math.max(180, Math.min(260, this.baseEps + r.int(-8, 8)));
+    if (h.feed === "live") {
+      h.lastEventAt = iso(now);
+      h.eventsPerSec = Math.round(this.baseEps * this.boostFactor(now));
+    } else {
+      h.eventsPerSec = 0; // nothing is arriving
+    }
     h.eventsToday += h.eventsPerSec;
     const p95 = Math.max(900, Math.min(2400, h.freshnessMs.p95 + r.int(-120, 120)));
     h.freshnessMs = { p50: Math.round(p95 * 0.45), p95 };
@@ -438,6 +582,10 @@ export function createMockSource(): DataSource {
     },
     sendDecision(decision: Decision) {
       engine.decide(decision);
+    },
+    demo: {
+      run: (name) => engine.run(name),
+      reset: () => engine.reset(),
     },
   };
 }

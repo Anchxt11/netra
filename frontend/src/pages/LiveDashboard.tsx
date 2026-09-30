@@ -10,6 +10,7 @@ import { JudgedNormalDetail } from "../features/detail/JudgedNormalDetail";
 import { Fixes } from "../features/fixes/Fixes";
 import { Toast } from "../components/Toast";
 import { RightColumn } from "../features/health/RightColumn";
+import { DemoDock } from "../features/demo/DemoDock";
 import { useNetra, useRankedIncidents } from "../store/useNetra";
 import styles from "./LiveDashboard.module.css";
 
@@ -78,6 +79,7 @@ export function LiveDashboard() {
         </div>
       )}
       <Toast />
+      <DemoDock />
 
       <div className={styles.right}>
         <RightColumn />

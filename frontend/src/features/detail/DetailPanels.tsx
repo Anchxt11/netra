@@ -16,7 +16,7 @@ export function EscalationPanel({ incident }: { incident: Incident }) {
   return (
     <Panel title="How it escalated" meta={meta} corners={["tl"]} className={styles.panel}>
       <div className={styles.escalation}>
-        <EscalationList signals={incident.signals} />
+        <EscalationList key={incident.id} signals={incident.signals} />
         <EvidenceBar signals={incident.signals} attention={incident.attentionScore} />
       </div>
     </Panel>

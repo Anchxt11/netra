@@ -4,6 +4,7 @@ import { create } from "zustand";
 import type { BenignAnomaly, Incident, PipelineHealth } from "../data/types";
 import { createDataSource, type ConnectionStatus, type DataSource, type Decision, type ServerMessage } from "../data/source";
 import { rankIncidents } from "../lib/rank";
+import { SCENARIO_LENGTH_MS, type ScenarioName } from "../data/scenarios/demo";
 
 const MAX_EXPIRED = 50;
 const MAX_BENIGN = 20;
@@ -46,6 +47,11 @@ interface NetraState {
   selection: Selection;
   decisions: Record<string, DecisionRecord>; // by incident id
   toast: Toast | null;
+  /** Demo mode: can the source play scripted scenarios, and which one is playing. */
+  demoAvailable: boolean;
+  demo: { running: ScenarioName | null; focusId: string | null };
+  runScenario: (name: ScenarioName) => void;
+  resetDemo: () => void;
   select: (selection: Selection) => void;
   /** Approve or reject a fix. Updates the screen at once, then the source confirms. */
   decide: (decision: Decision) => void;
@@ -94,7 +100,35 @@ export const useNetra = create<NetraState>()((set) => ({
     source?.sendDecision(d);
   },
   dismissToast: () => set({ toast: null }),
+
+  demoAvailable: false,
+  demo: { running: null, focusId: null },
+  runScenario: (name) => {
+    if (!source?.demo || useNetra.getState().demo.running) return;
+    const focusId = source.demo.run(name);
+    set({ demo: { running: name, focusId } });
+    window.clearTimeout(demoTimer);
+    demoTimer = window.setTimeout(() => set((s) => ({ demo: { ...s.demo, running: null } })), SCENARIO_LENGTH_MS[name]);
+  },
+  resetDemo: () => {
+    if (!source?.demo) return;
+    window.clearTimeout(demoTimer);
+    set({
+      incidents: {},
+      expired: [],
+      benign: [],
+      health: null,
+      epsHistory: [],
+      selection: null,
+      decisions: {},
+      toast: null,
+      demo: { running: null, focusId: null },
+    });
+    source.demo.reset(); // replays the same seeded start
+  },
 }));
+
+let demoTimer = 0;
 
 function apply(msg: ServerMessage) {
   switch (msg.type) {
@@ -130,7 +164,7 @@ function apply(msg: ServerMessage) {
 export function startNetra() {
   if (source) return;
   source = createDataSource();
-  useNetra.setState({ simulated: source.kind === "mock" });
+  useNetra.setState({ simulated: source.kind === "mock", demoAvailable: Boolean(source.demo) });
   source.connect(apply, (connection) => useNetra.setState({ connection }));
   window.setInterval(() => useNetra.setState((s) => ({ now: Date.now() + s.clockOffsetMs })), 1000);
 }

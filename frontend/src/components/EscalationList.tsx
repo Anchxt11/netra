@@ -7,11 +7,13 @@ import styles from "./EscalationList.module.css";
 /** The incident's story in time order: when, who found it (rule ID or ATDE), what, how many points. */
 export function EscalationList({ signals }: { signals: Signal[] }) {
   const listRef = useRef<HTMLOListElement>(null);
+  const shown = useRef(signals.length);
 
-  // When a new signal arrives and the list overflows, keep the newest in view.
+  // When a new signal arrives (not on first show) and the list overflows, keep the newest in view.
   useEffect(() => {
     const el = listRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (el && signals.length > shown.current) el.scrollTop = el.scrollHeight;
+    shown.current = signals.length;
   }, [signals.length]);
 
   return (
