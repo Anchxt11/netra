@@ -1,0 +1,8 @@
+id: excessive_requests
+title: Excessive HTTP requests from one IP
+severity: medium
+detection:
+  event_type: http_request
+condition: all
+timeframe: 60
+count: 100

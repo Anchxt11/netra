@@ -1,0 +1,8 @@
+id: suspicious_login
+title: Failed login involving an admin account
+severity: medium
+detection:
+  event_type: login
+  status: failure
+  user|contains: admin
+condition: all

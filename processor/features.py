@@ -1,0 +1,22 @@
+from typing import Any
+
+def build_features(event: dict[str, Any]) -> dict[str, Any]:
+    path=str(event.get('path') or '').lower()
+    process=str(event.get('process') or '').lower()
+    return {
+        'is_failure': event.get('status') == 'failure',
+        'is_http': event.get('event_type') == 'http_request',
+        'is_login': event.get('event_type') == 'login',
+        'is_process_start': event.get('event_type') == 'process_start',
+        'is_server_error': int(event.get('http_status') or 0) >= 500,
+        'response_ms': int(event.get('response_ms') or 0),
+        'bytes_out': int(event.get('bytes_out') or 0),
+        'method': event.get('method') or '',
+        'path': event.get('path') or '',
+        'source': event.get('source') or '',
+        'event_type': event.get('event_type') or '',
+        'path_has_admin': '/admin' in path,
+        'process_has_sudo': 'sudo' in process,
+        'process_has_useradd': 'useradd' in process,
+        'process_has_net_user': 'net user' in process,
+    }
