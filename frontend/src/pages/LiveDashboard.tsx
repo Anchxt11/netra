@@ -9,6 +9,7 @@ import { EscalationPanel, InvolvedPanel } from "../features/detail/DetailPanels"
 import { JudgedNormalDetail } from "../features/detail/JudgedNormalDetail";
 import { Fixes } from "../features/fixes/Fixes";
 import { Toast } from "../components/Toast";
+import { RightColumn } from "../features/health/RightColumn";
 import { useNetra, useRankedIncidents } from "../store/useNetra";
 import styles from "./LiveDashboard.module.css";
 
@@ -79,9 +80,7 @@ export function LiveDashboard() {
       <Toast />
 
       <div className={styles.right}>
-        <Upcoming title="Threat scope" />
-        <Upcoming title="Detections / min" meta="LAST 30 MIN" />
-        <Upcoming title="System" meta="CAN YOU TRUST THIS?" />
+        <RightColumn />
       </div>
     </div>
   );

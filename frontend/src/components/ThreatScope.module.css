@@ -1,0 +1,157 @@
+.scope {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.svg {
+  display: block;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  overflow: visible;
+}
+
+.ring {
+  fill: none;
+  stroke: rgba(255, 120, 90, 0.45);
+  stroke-width: 1;
+}
+
+.ringDashed {
+  fill: none;
+  stroke: rgba(255, 120, 90, 0.25);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+}
+
+.ringLabel {
+  font-family: var(--font-data);
+  font-size: 8.5px;
+  fill: var(--muted);
+}
+
+.tick {
+  stroke: rgba(255, 120, 90, 0.22);
+  stroke-width: 1;
+}
+
+.tickLong {
+  stroke: rgba(255, 120, 90, 0.4);
+  stroke-width: 1;
+}
+
+.edge {
+  stroke: rgba(255, 120, 90, 0.13);
+  stroke-width: 1;
+}
+
+.cross {
+  stroke: rgba(255, 120, 90, 0.5);
+  stroke-width: 1;
+}
+
+.family {
+  font-family: var(--font-data);
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-anchor: middle;
+  fill: var(--text);
+}
+
+/* sweep */
+.sweep {
+  animation: sweep 4s linear infinite;
+}
+
+@keyframes sweep {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.wedge {
+  fill: var(--rust);
+  opacity: 0.12;
+}
+
+.sweepLine {
+  stroke: var(--rust);
+  stroke-opacity: 0.7;
+  stroke-width: 1.2;
+}
+
+/* blips */
+.blip {
+  cursor: pointer;
+  outline: none;
+}
+
+.hit {
+  fill: transparent;
+}
+
+.focusRing {
+  fill: none;
+  stroke: var(--rust);
+  stroke-width: 2;
+  opacity: 0;
+}
+
+.blip:focus-visible .focusRing {
+  opacity: 1;
+}
+
+.blip:hover circle:nth-child(3) {
+  stroke: var(--text-hi);
+  stroke-width: 1;
+}
+
+/* selected */
+.bracket {
+  fill: none;
+  stroke: var(--text-hi);
+  stroke-width: 1.2;
+  stroke-dasharray: 7 10;
+  stroke-dashoffset: 3;
+}
+
+.label {
+  font-family: var(--font-data);
+  font-size: 9.5px;
+  fill: var(--text-hi);
+}
+
+.trail {
+  stroke: var(--text-hi);
+  stroke-opacity: 0.55;
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+/* legend */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2px 8px;
+  padding-top: 4px;
+  font-family: var(--font-data);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.heatKey {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.heatKey i {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+}
