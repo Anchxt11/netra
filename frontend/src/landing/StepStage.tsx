@@ -9,6 +9,10 @@ import { Globe } from "./Globe";
 import { GlobeHud } from "./GlobeHud";
 import { NetworkIso } from "./NetworkIso";
 import { CorrelateLayer } from "./CorrelateLayer";
+import { PixelMorph } from "./PixelMorph";
+import { PrioritiseLayer } from "./PrioritiseLayer";
+import { correlatePoints } from "./correlateGeometry";
+import { prioritisePoints } from "./prioritiseGeometry";
 import styles from "./StepStage.module.css";
 
 const RULE_COUNT = Object.keys(RULES).length;
@@ -39,6 +43,9 @@ export function StepStage({ t, still }: Props) {
   const hudOpacity = useTransform(t, [0.08, 0.24], [1, 0]);
   // With reduced motion the globe simply fades; otherwise its pixels become the drawing, then hand over.
   const canvasOpacity = useTransform(t, still ? [0.3, 0.5] : [0.54, 0.64], [1, 0]);
+  // Step 3 to 4: the same break-apart, from the correlation drawing to the ring and queue.
+  const morph34 = useTransform(t, [2.1, 2.5], [0, 1]);
+  const morph34Visible = useTransform(t, [2.03, 2.08, 2.54, 2.64], [0, 1, 1, 0]);
 
   return (
     <div className={styles.stage}>
@@ -51,6 +58,14 @@ export function StepStage({ t, still }: Props) {
 
       <NetworkIso t={t} />
       <CorrelateLayer t={t} />
+
+      {/* Step 3 to 4: the drawing breaks into pixels that re-form as the ring and the queue. */}
+      {!still && (
+        <motion.div className={styles.layer} style={{ opacity: morph34Visible }}>
+          <PixelMorph from={correlatePoints} to={prioritisePoints} progress={morph34} visible={morph34Visible} />
+        </motion.div>
+      )}
+      <PrioritiseLayer t={t} still={still} />
 
       <Readout label="EVENTS / S" value={eps !== undefined ? String(eps) : "PENDING"} pos="tl" />
       <Readout label="EVENTS TODAY" value={today !== undefined ? today.toLocaleString("en-GB") : "PENDING"} pos="tr" />

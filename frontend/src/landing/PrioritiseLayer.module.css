@@ -1,0 +1,117 @@
+.layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.ring {
+  position: absolute;
+}
+
+.svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* tier scale */
+.tierOff {
+  fill: transparent;
+  stroke: rgba(255, 150, 120, 0.25);
+}
+
+.tierOn {
+  fill: rgba(255, 241, 234, 0.06);
+  stroke: var(--text-hi);
+}
+
+.tierNow {
+  fill: var(--rust);
+  stroke: var(--rust);
+}
+
+.tierText {
+  font-family: var(--font-data);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-anchor: middle;
+  fill: var(--muted);
+}
+
+.tierTextOn {
+  fill: var(--text-hi);
+}
+
+.tierTextNow {
+  fill: var(--on-rust);
+  font-weight: 500;
+}
+
+/* mini queue */
+.queueTitle {
+  font-family: var(--font-data);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  fill: var(--text);
+}
+
+.rule {
+  stroke: rgba(255, 120, 90, 0.3);
+}
+
+.row {
+  fill: rgba(255, 255, 255, 0.03);
+  stroke: rgba(255, 150, 120, 0.12);
+}
+
+.rowMine {
+  fill: var(--rust);
+  stroke: var(--rust);
+}
+
+.rowName,
+.rowNameMine {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 13.5px;
+}
+
+.rowName { fill: var(--text); }
+.rowNameMine { fill: var(--on-rust); }
+
+.rowTier,
+.rowTierMine {
+  font-family: var(--font-data);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+}
+
+.rowTier { fill: var(--muted); }
+.rowTierMine { fill: var(--on-rust); }
+
+.rowTime,
+.rowTimeMine {
+  font-family: var(--font-data);
+  font-weight: 500;
+  font-size: 11.5px;
+  text-anchor: end;
+}
+
+.rowTime { fill: var(--text); }
+.rowTimeMine { fill: var(--on-rust); }
+
+.barTrack { fill: rgba(255, 255, 255, 0.08); }
+.barTrackMine { fill: rgba(26, 9, 6, 0.25); }
+
+.note {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  text-anchor: middle;
+  fill: var(--text);
+}
+
+.left {
+  text-anchor: start;
+}

@@ -19,12 +19,13 @@ import { STEPS, pad2, type KeySwatch } from "../landing/steps";
 import styles from "./Landing.module.css";
 
 // Steps built so far. The scroll only reaches these, so the story never shows an empty step.
-const BUILT_STEPS = 3;
+const BUILT_STEPS = 4;
 // Scroll distance per step, in viewport heights: enough room for each step to settle.
 const PER_STEP_VH = 120;
 
 const SWATCH: Record<KeySwatch, CSSProperties> = {
   heat: { background: "var(--heat-1)" },
+  cold: { background: "var(--heat-4)" },
   rule: { background: "var(--rule)" },
   ai: { background: "var(--ai)" },
   rust: { background: "var(--rust)" },

@@ -1,6 +1,6 @@
 // The five landing steps. One sentence each, plus a tiny colour key where the drawing needs one,
 // so a first-time viewer can read the picture without jargon.
-export type KeySwatch = "heat" | "rule" | "ai" | "rust" | "ring" | "ok";
+export type KeySwatch = "heat" | "cold" | "rule" | "ai" | "rust" | "ring" | "ok";
 
 export interface Step {
   n: number;
@@ -31,7 +31,16 @@ export const STEPS: Step[] = [
       { swatch: "rule", text: "Warning sign, from a rule or the AI" },
     ],
   },
-  { n: 4, label: "PRIORITISE", caption: "Every incident gets a deadline before its data goes stale." },
+  {
+    n: 4,
+    label: "PRIORITISE",
+    caption: "Every incident gets a deadline before its data goes stale. The closer it gets, the higher it climbs.",
+    key: [
+      { swatch: "heat", text: "Plenty of time left" },
+      { swatch: "cold", text: "Going cold: act now" },
+      { swatch: "rust", text: "The incident we are following" },
+    ],
+  },
   { n: 5, label: "RECOMMEND", caption: "The top 3 fixes, explained. Nothing runs until an analyst approves." },
 ];
 

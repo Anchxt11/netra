@@ -41,9 +41,10 @@ interface Props {
 export function NetworkIso({ t }: Props) {
   // Step 2 reveals (t 0.48 to 0.88), and step 3's hand-over (t just past 1): the step 2 notes go,
   // the streams stop and the other servers dim, leaving auth-01 (logins) in focus.
-  const drawing = useTransform(t, [0.48, 0.6], [0, 1]);
+  // Step 4 hand-over (t just past 2): the drawing turns to pixels, so it fades as they appear.
+  const drawing = useTransform(t, [0.48, 0.6, 2.04, 2.1], [0, 1, 1, 0]);
   const labels = useTransform(t, [0.56, 0.64, 1.04, 1.16], [0, 1, 1, 0]);
-  const focusLabel = useTransform(t, [0.56, 0.64], [0, 1]);
+  const focusLabel = useTransform(t, [0.56, 0.64, 2.04, 2.1], [0, 1, 1, 0]);
   const hot = useTransform(t, [0.6, 0.68, 1.04, 1.18], [0, 1, 1, 0]);
   const bracketOpacity = useTransform(t, [0.66, 0.74, 1.02, 1.12], [0, 1, 1, 0]);
   const ruleTag = useTransform(t, [0.72, 0.8, 1.02, 1.12], [0, 1, 1, 0]);

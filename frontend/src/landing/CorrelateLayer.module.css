@@ -32,6 +32,18 @@
   filter: drop-shadow(0 0 10px rgba(255, 74, 38, 0.45));
 }
 
+.plate {
+  fill: rgba(14, 9, 8, 0.92);
+  stroke: rgba(255, 150, 120, 0.3);
+  stroke-width: 1;
+}
+
+.plateText {
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  fill: var(--text-hi);
+}
+
 .accountText {
   font-family: var(--font-data);
   font-weight: 500;
