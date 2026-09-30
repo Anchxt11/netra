@@ -1,0 +1,82 @@
+.layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.card {
+  position: absolute;
+}
+
+/* The approve button pressing itself. */
+.card button {
+  transition: transform 120ms ease, filter 120ms ease;
+}
+
+.pressing button:first-of-type {
+  transform: scale(0.94);
+  filter: brightness(1.2);
+}
+
+.svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* fixes 2 and 3 */
+.mini {
+  fill: rgba(255, 255, 255, 0.03);
+  stroke: rgba(255, 150, 120, 0.18);
+}
+
+.settled {
+  opacity: 0.5;
+  transition: opacity 300ms ease;
+}
+
+.miniRank {
+  font-family: var(--font-data);
+  font-weight: 500;
+  font-size: 12px;
+  fill: var(--muted);
+}
+
+.miniName {
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  fill: var(--text);
+}
+
+.miniConfidence {
+  font-family: var(--font-data);
+  font-size: 11.5px;
+  text-anchor: end;
+  fill: var(--ai);
+}
+
+/* callouts */
+.leader {
+  stroke: rgba(245, 227, 220, 0.35);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.leaderDot {
+  fill: var(--text-hi);
+}
+
+.callout {
+  font-family: var(--font-ui);
+  font-size: 13.5px;
+  fill: var(--text);
+}
+
+.learn {
+  font-family: var(--font-ui);
+  font-size: 13.5px;
+  fill: var(--ok);
+}

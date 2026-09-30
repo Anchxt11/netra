@@ -41,7 +41,15 @@ export const STEPS: Step[] = [
       { swatch: "rust", text: "The incident we are following" },
     ],
   },
-  { n: 5, label: "RECOMMEND", caption: "The top 3 fixes, explained. Nothing runs until an analyst approves." },
+  {
+    n: 5,
+    label: "RECOMMEND",
+    caption: "The top 3 fixes, explained. Nothing runs until an analyst approves.",
+    key: [
+      { swatch: "ai", text: "Produced by the AI engine" },
+      { swatch: "ok", text: "Approved by a person" },
+    ],
+  },
 ];
 
 export const pad2 = (n: number) => String(n).padStart(2, "0");

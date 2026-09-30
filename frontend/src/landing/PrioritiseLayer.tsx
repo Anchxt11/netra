@@ -23,8 +23,9 @@ const OTHERS = [
 const pct = (v: number) => `${(v / 760) * 100}%`;
 
 export function PrioritiseLayer({ t, still }: { t: MotionValue<number>; still?: boolean }) {
-  // Arrives as the pixels land; with reduced motion (no pixels) it simply fades in sooner.
-  const layer = useTransform(t, still ? [2.1, 2.3] : [2.48, 2.6], [0, 1]);
+  // Arrives as the pixels land (with reduced motion, no pixels: it simply fades in sooner),
+  // and hands over to step 5's pixels just past t = 3.
+  const layer = useTransform(t, still ? [2.1, 2.3, 3.04, 3.1] : [2.48, 2.6, 3.04, 3.1], [0, 1, 1, 0]);
   // The clock runs down as you scroll: 98% of the window left, down to 6%.
   const drain = useTransform(t, [2.56, 2.94], [0.98, 0.06]);
   const [remaining, setRemaining] = useState(0.98);

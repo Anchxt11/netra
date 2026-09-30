@@ -175,6 +175,23 @@
   color: var(--text);
 }
 
+/* step 5: the final call to action, inside the step card */
+.finalCta {
+  margin-top: 20px;
+}
+
+/* closing band, after the story */
+.band {
+  padding: 44px 0 30px;
+  text-align: center;
+  font-family: var(--font-data);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+  margin-top: 24px;
+}
+
 /* stage */
 .stageWrap {
   position: relative;

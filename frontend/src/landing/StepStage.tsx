@@ -13,6 +13,8 @@ import { PixelMorph } from "./PixelMorph";
 import { PrioritiseLayer } from "./PrioritiseLayer";
 import { correlatePoints } from "./correlateGeometry";
 import { prioritisePoints } from "./prioritiseGeometry";
+import { RecommendLayer } from "./RecommendLayer";
+import { recommendPoints } from "./recommendGeometry";
 import styles from "./StepStage.module.css";
 
 const RULE_COUNT = Object.keys(RULES).length;
@@ -46,6 +48,9 @@ export function StepStage({ t, still }: Props) {
   // Step 3 to 4: the same break-apart, from the correlation drawing to the ring and queue.
   const morph34 = useTransform(t, [2.1, 2.5], [0, 1]);
   const morph34Visible = useTransform(t, [2.03, 2.08, 2.54, 2.64], [0, 1, 1, 0]);
+  // Step 4 to 5: again, from the ring and queue to the fix card.
+  const morph45 = useTransform(t, [3.1, 3.5], [0, 1]);
+  const morph45Visible = useTransform(t, [3.03, 3.08, 3.54, 3.64], [0, 1, 1, 0]);
 
   return (
     <div className={styles.stage}>
@@ -66,6 +71,14 @@ export function StepStage({ t, still }: Props) {
         </motion.div>
       )}
       <PrioritiseLayer t={t} still={still} />
+
+      {/* Step 4 to 5: the ring and queue break into pixels that re-form as the fix card. */}
+      {!still && (
+        <motion.div className={styles.layer} style={{ opacity: morph45Visible }}>
+          <PixelMorph from={prioritisePoints} to={recommendPoints} progress={morph45} visible={morph45Visible} seed={23} />
+        </motion.div>
+      )}
+      <RecommendLayer t={t} still={still} />
 
       <Readout label="EVENTS / S" value={eps !== undefined ? String(eps) : "PENDING"} pos="tl" />
       <Readout label="EVENTS TODAY" value={today !== undefined ? today.toLocaleString("en-GB") : "PENDING"} pos="tr" />

@@ -19,7 +19,7 @@ import { STEPS, pad2, type KeySwatch } from "../landing/steps";
 import styles from "./Landing.module.css";
 
 // Steps built so far. The scroll only reaches these, so the story never shows an empty step.
-const BUILT_STEPS = 4;
+const BUILT_STEPS = 5;
 // Scroll distance per step, in viewport heights: enough room for each step to settle.
 const PER_STEP_VH = 120;
 
@@ -51,8 +51,13 @@ export default function Landing() {
   const cardOpacity = useTransform(t, [0.3, 0.46], [0, 1]);
   const cardY = useTransform(t, [0.3, 0.46], still ? [0, 0] : [16, 0]);
   const cardStep = STEPS[Math.max(1, current)];
+  // Step 5: once the fix is approved, the final call to action appears in the step card.
+  const finalCta = useTransform(t, [3.84, 3.92], [0, 1]);
+  const [ctaLive, setCtaLive] = useState(false);
+  useMotionValueEvent(finalCta, "change", (v) => setCtaLive(v > 0.5));
 
   return (
+    <>
     <section ref={scrollRef} className={styles.scroller} style={{ height: `calc(100vh + ${(BUILT_STEPS - 1) * PER_STEP_VH}vh)` }}>
       <div className={styles.landing}>
         <div className={styles.copy}>
@@ -101,6 +106,13 @@ export default function Landing() {
                       ))}
                     </ul>
                   )}
+                  {cardStep.n === STEPS.length && (
+                    <motion.div style={{ opacity: finalCta, pointerEvents: ctaLive ? "auto" : "none" }}>
+                      <Link to="/live" className={`${styles.cta} ${styles.finalCta}`} tabIndex={ctaLive ? 0 : -1}>
+                        OPEN LIVE DASHBOARD
+                      </Link>
+                    </motion.div>
+                  )}
                 </motion.div>
               </AnimatePresence>
             </GlassCard>
@@ -126,5 +138,9 @@ export default function Landing() {
         <StepRail t={t} current={current} built={BUILT_STEPS} />
       </div>
     </section>
+
+    {/* Closing band, after the story. */}
+    <footer className={styles.band}>Built on Microsoft Azure, ONNX Runtime and LightGBM from Microsoft Research.</footer>
+    </>
   );
 }
