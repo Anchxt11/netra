@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RawEvent (topic: events.raw)",
+  "description": "Produced by web_traffic_sim.py. Flat JSON, one object per Kafka message. Contains NO labels.",
+  "type": "object",
+  "required": ["event_id","event_ts","source","user","ip","event_type","severity","status","host",
+               "bytes_out","process","method","path","http_status","user_agent","response_ms"],
+  "additionalProperties": false,
+  "properties": {
+    "event_id":    {"type": "string", "description": "UUID4, unique per event"},
+    "event_ts":    {"type": "string", "description": "UTC ISO-8601, ms precision, ends in Z. e.g. 2026-10-01T09:15:02.417Z"},
+    "source":      {"enum": ["web","auth","endpoint","network"]},
+    "user":        {"type": "string", "description": "username, or \"-\" for anonymous"},
+    "ip":          {"type": "string", "description": "client IPv4 (also the Kafka message key)"},
+    "event_type":  {"enum": ["http_request","login","logout","data_transfer","process_start"]},
+    "severity":    {"enum": ["low","medium"], "description": "generator uses the same rule for all traffic (medium = HTTP 5xx)"},
+    "status":      {"enum": ["success","failure"]},
+    "host":        {"type": "string", "description": "web-01, web-02, auth-01, db-01"},
+    "bytes_out":   {"type": "integer"},
+    "process":     {"type": "string", "description": "command line for process_start, else empty string"},
+    "method":      {"type": "string", "description": "GET/POST/... or empty string"},
+    "path":        {"type": "string", "description": "URL path + query, or empty string"},
+    "http_status": {"type": "integer", "description": "0 when not an HTTP event"},
+    "user_agent":  {"type": "string"},
+    "response_ms": {"type": "integer"}
+  }
+}

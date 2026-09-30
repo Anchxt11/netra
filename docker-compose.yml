@@ -1,0 +1,74 @@
+# Netra stack - Person A. Start with:  docker compose up -d
+# Later additions (ClickHouse, processor, Postgres, API) get added as new services below.
+name: netra
+
+services:
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:v24.3.1
+    container_name: redpanda
+    command:
+      - redpanda
+      - start
+      # two doors into the same broker:
+      #   9092  = for other containers (host name "redpanda")
+      #   19092 = for your laptop (host name "localhost")
+      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr internal://redpanda:9092,external://localhost:19092
+      - --mode dev-container
+      - --smp 1
+      - --memory 1G
+      - --reserve-memory 0M
+      - --overprovisioned
+      - --node-id 0
+      - --check=false
+    ports:
+      - "19092:19092"   # Kafka API for the host (simulator's default --bootstrap)
+      - "19644:9644"    # admin API
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health | grep -E 'Healthy:.+true' || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - redpanda-data:/var/lib/redpanda/data
+
+  # One-shot job: creates the 3 topics, then exits. Safe to re-run.
+  topic-init:
+    image: docker.redpanda.com/redpandadata/redpanda:v24.3.1
+    depends_on:
+      redpanda:
+        condition: service_healthy
+    restart: "no"
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        for t in events.raw events.enriched alerts; do
+          rpk topic create $$t -p 3 -r 1 -c retention.ms=3600000 -X brokers=redpanda:9092 || true
+        done
+        rpk topic list -X brokers=redpanda:9092
+
+  # Optional web UI to look at topics/messages: http://localhost:8080
+  console:
+    image: docker.redpanda.com/redpandadata/console:v2.8.0
+    depends_on:
+      redpanda:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKERS: redpanda:9092
+    ports:
+      - "8080:8080"
+
+  # The simulator as a container (started only with:  docker compose --profile sim up -d)
+  generator:
+    profiles: ["sim"]
+    build: ./simulator
+    depends_on:
+      topic-init:
+        condition: service_completed_successfully
+    command: ["python", "web_traffic_sim.py", "--bootstrap", "redpanda:9092",
+              "--rate", "10", "--labels", "/data/labels.jsonl"]
+    volumes:
+      - ./data:/data
+
+volumes:
+  redpanda-data:
