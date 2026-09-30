@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { Panel } from "../components/Panel";
 import { Queue } from "../features/queue/Queue";
-import { IncidentFocusStub } from "../features/detail/IncidentFocusStub";
+import { IncidentFocusEmpty } from "../features/detail/IncidentFocusEmpty";
 import { IncidentFocus } from "../features/detail/IncidentFocus";
 import { EscalationPanel, InvolvedPanel } from "../features/detail/DetailPanels";
 import { JudgedNormalDetail } from "../features/detail/JudgedNormalDetail";
@@ -14,11 +14,11 @@ import { DemoDock } from "../features/demo/DemoDock";
 import { useNetra, useRankedIncidents } from "../store/useNetra";
 import styles from "./LiveDashboard.module.css";
 
-/** TEMPORARY stand-in for panels built in later steps. */
-function Upcoming({ title, meta, className }: { title: string; meta?: string; className?: string }) {
+/** Before the first incident arrives (for example, a real feed that has just connected). */
+function Waiting({ title, meta }: { title: string; meta?: string }) {
   return (
-    <Panel title={title} meta={meta} className={`${styles.upcoming} ${className ?? ""}`}>
-      <p className={styles.upcomingNote}>Built in a later step.</p>
+    <Panel title={title} meta={meta} className={styles.waiting}>
+      <p className={styles.waitingNote}>Waiting for the first incident.</p>
     </Panel>
   );
 }
@@ -68,12 +68,12 @@ export function LiveDashboard() {
             </>
           ) : (
             <>
-              <IncidentFocusStub incident={undefined} />
+              <IncidentFocusEmpty />
               <div className={styles.middle}>
-                <Upcoming title="How it escalated" />
-                <Upcoming title="Who is involved" />
+                <Waiting title="How it escalated" />
+                <Waiting title="Who is involved" />
               </div>
-              <Upcoming title="Recommended fixes" meta="FROM A FIXED LIST OF 14, NOTHING RUNS WITHOUT APPROVAL" />
+              <Waiting title="Recommended fixes" meta="FROM A FIXED LIST OF 14, NOTHING RUNS WITHOUT APPROVAL" />
             </>
           )}
         </div>

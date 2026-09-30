@@ -1,0 +1,134 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  width: min(1100px, 100%);
+  margin: 0 auto;
+  padding: 28px 8px 40px;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 24px;
+  line-height: 1.2;
+  text-transform: uppercase;
+  color: var(--text-hi);
+}
+
+.sub {
+  max-width: 62ch;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+/* stage area (glass, about 70%) and model card (panel, about 30%) */
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(280px, 3fr);
+  gap: var(--gap);
+  align-items: start;
+}
+
+.walkthrough {
+  padding: 22px 24px;
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.lead {
+  margin-top: 16px;
+  max-width: 60ch;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.stages {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stages li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 40px;
+  border-top: 1px dashed var(--line);
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.n {
+  font-family: var(--font-data);
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+}
+
+.facts {
+  margin: 4px 0 0;
+}
+
+.facts div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--line);
+}
+
+.facts dt {
+  font-family: var(--font-data);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.facts dd {
+  margin: 0;
+  font-family: var(--font-data);
+  font-size: 12px;
+  text-align: right;
+  color: var(--text);
+}
+
+.facts dd.pending {
+  color: var(--muted);
+}
+
+.note {
+  margin-top: 14px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
