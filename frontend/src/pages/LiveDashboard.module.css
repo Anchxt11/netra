@@ -19,6 +19,7 @@
     --col-left: 330px;
     --col-right: 280px;
     --col-involved: 220px;
+    min-height: 900px; /* the taller focus card needs room above the fix cards */
   }
 }
 

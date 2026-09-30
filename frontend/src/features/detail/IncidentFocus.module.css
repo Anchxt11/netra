@@ -29,6 +29,11 @@
   white-space: nowrap;
 }
 
+.approved {
+  height: 20px;
+  margin: -2px 0;
+}
+
 .name {
   margin-top: 10px;
   font-family: var(--font-display);

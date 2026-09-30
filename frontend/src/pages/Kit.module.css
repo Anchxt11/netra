@@ -223,6 +223,20 @@
   color: var(--on-rust);
 }
 
+.fixRow {
+  display: grid;
+  grid-template-columns: repeat(3, 233px);
+  grid-template-rows: 288px;
+  gap: 11px;
+}
+
+.fixRow2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 480px));
+  gap: 11px;
+  margin-top: 12px;
+}
+
 .readoutGrid {
   display: flex;
   flex-direction: column;

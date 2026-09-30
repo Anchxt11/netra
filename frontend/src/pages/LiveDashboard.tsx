@@ -7,6 +7,8 @@ import { IncidentFocusStub } from "../features/detail/IncidentFocusStub";
 import { IncidentFocus } from "../features/detail/IncidentFocus";
 import { EscalationPanel, InvolvedPanel } from "../features/detail/DetailPanels";
 import { JudgedNormalDetail } from "../features/detail/JudgedNormalDetail";
+import { Fixes } from "../features/fixes/Fixes";
+import { Toast } from "../components/Toast";
 import { useNetra, useRankedIncidents } from "../store/useNetra";
 import styles from "./LiveDashboard.module.css";
 
@@ -60,6 +62,7 @@ export function LiveDashboard() {
                 <EscalationPanel incident={selectedIncident} />
                 <InvolvedPanel incident={selectedIncident} />
               </div>
+              <Fixes incident={selectedIncident} />
             </>
           ) : (
             <>
@@ -68,11 +71,12 @@ export function LiveDashboard() {
                 <Upcoming title="How it escalated" />
                 <Upcoming title="Who is involved" />
               </div>
+              <Upcoming title="Recommended fixes" meta="FROM A FIXED LIST OF 14, NOTHING RUNS WITHOUT APPROVAL" />
             </>
           )}
-          <Upcoming title="Recommended fixes" meta="FROM A FIXED LIST OF 14, NOTHING RUNS WITHOUT APPROVAL" />
         </div>
       )}
+      <Toast />
 
       <div className={styles.right}>
         <Upcoming title="Threat scope" />

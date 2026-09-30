@@ -12,6 +12,23 @@ const EPS_HISTORY = 30;
 /** Exactly one thing is selected: an incident, or a judged-normal item. */
 export type Selection = { kind: "incident" | "benign"; id: string } | null;
 
+/** What the analyst decided on one incident's fixes, in this session. */
+export interface DecisionRecord {
+  approved?: { actionId: string; at: number };
+  rejected: string[]; // action ids
+}
+
+export interface Toast {
+  id: number;
+  text: string;
+  tone: "ok" | "neutral";
+}
+
+const TOAST_TEXT = {
+  approve: "Fix approved. Saved as training data for both engines.",
+  reject: "Fix rejected. Saved as training data for both engines.",
+};
+
 interface NetraState {
   /** True on mock data: shows the SIMULATED FEED chip. The only place the source leaks into the UI. */
   simulated: boolean;
@@ -27,8 +44,12 @@ interface NetraState {
   /** Events per second, last 30 health messages: drives the live trace in the top bar. */
   epsHistory: number[];
   selection: Selection;
+  decisions: Record<string, DecisionRecord>; // by incident id
+  toast: Toast | null;
   select: (selection: Selection) => void;
+  /** Approve or reject a fix. Updates the screen at once, then the source confirms. */
   decide: (decision: Decision) => void;
+  dismissToast: () => void;
 }
 
 let source: DataSource | null = null;
@@ -44,8 +65,35 @@ export const useNetra = create<NetraState>()((set) => ({
   health: null,
   epsHistory: [],
   selection: null,
+  decisions: {},
+  toast: null,
   select: (selection) => set({ selection }),
-  decide: (decision) => source?.sendDecision(decision),
+  decide: (d) => {
+    // Optimistic: the analyst sees the result immediately; the source's next messages confirm it.
+    set((s) => {
+      const prev = s.decisions[d.incidentId] ?? { rejected: [] };
+      const record: DecisionRecord =
+        d.decision === "approve"
+          ? { ...prev, approved: { actionId: d.actionId, at: s.now } }
+          : { ...prev, rejected: [...prev.rejected, d.actionId] };
+      const inc = s.incidents[d.incidentId];
+      const health = s.health && {
+        ...s.health,
+        decisions: {
+          approved: s.health.decisions.approved + (d.decision === "approve" ? 1 : 0),
+          rejected: s.health.decisions.rejected + (d.decision === "reject" ? 1 : 0),
+        },
+      };
+      return {
+        decisions: { ...s.decisions, [d.incidentId]: record },
+        incidents: inc && d.decision === "approve" ? { ...s.incidents, [inc.id]: { ...inc, status: "approved" as const } } : s.incidents,
+        health,
+        toast: { id: (s.toast?.id ?? 0) + 1, text: TOAST_TEXT[d.decision], tone: d.decision === "approve" ? "ok" : "neutral" },
+      };
+    });
+    source?.sendDecision(d);
+  },
+  dismissToast: () => set({ toast: null }),
 }));
 
 function apply(msg: ServerMessage) {

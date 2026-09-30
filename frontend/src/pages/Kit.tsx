@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import ReactEChartsCore from "echarts-for-react/esm/core";
-import type { AttackType, DetectedBy, Severity } from "../data/types";
+import type { AttackType, DetectedBy, Fix, Incident, Severity } from "../data/types";
+import { FixCard } from "../components/FixCard";
+import { MitigationsCard } from "../features/fixes/Fixes";
 import { assessRisk, rankIncidents, TIER_ORDER } from "../lib/rank";
 import { chartColors, chartTheme, echarts } from "../lib/echartsTheme";
 import { remainingShare } from "../lib/heat";
@@ -56,6 +58,43 @@ const WORKED = [
   { name: "Brute force", sev: 3, attn: 60, remaining: 0.3, risk: "0.31", tier: "ACT SOON" },
   { name: "Web scan", sev: 2, attn: 40, remaining: 0.5, risk: "0.12", tier: "WATCH" },
 ];
+
+const SAMPLE_FIX: Fix = {
+  actionId: "enable_mfa",
+  name: "Enable MFA",
+  d3fend: { id: null, name: "Multi-factor Authentication" },
+  confidence: 0.88,
+  rank: 1,
+  reasons: [
+    { feature: "unique_users_ip_5m", sentence: "One address tried 34 different accounts", value: 34, contribution: 0.29 },
+    // Negative contribution shown as an outlined bar (kit sample only).
+    { feature: "hour_of_day", sentence: "Attempts during normal working hours", value: 14, contribution: -0.04 },
+  ],
+};
+
+const SAMPLE_INCIDENT: Incident = {
+  id: "0142",
+  attackType: "credential_stuffing",
+  name: "Credential stuffing",
+  mitre: { id: "T1110.004", name: "Credential Stuffing", tactic: "Credential Access" },
+  severity: 4,
+  attentionScore: 60,
+  detectedBy: "rule",
+  createdAt: new Date().toISOString(),
+  staleBy: new Date(Date.now() + 600_000).toISOString(),
+  status: "open",
+  entities: { users: [], ips: [], hosts: [] },
+  signals: [],
+  fixes: [],
+  fallback: {
+    technique: "T1110",
+    mitigations: [
+      { id: "M1032", name: "Multi-factor Authentication" },
+      { id: "M1036", name: "Account Use Policies" },
+      { id: "M1027", name: "Password Policies" },
+    ],
+  },
+};
 
 const SWATCHES = [
   ["--rust", "brand, selection, ACT NOW"],
@@ -353,6 +392,18 @@ export default function Kit() {
               })}
             </tbody>
           </table>
+        </Section>
+
+        <Section title="Fixes" note="Default, approved, locked (another fix approved); then the two MITRE fallbacks." wide>
+          <div className={styles.fixRow}>
+            <FixCard fix={SAMPLE_FIX} onApprove={() => {}} onReject={() => {}} />
+            <FixCard fix={{ ...SAMPLE_FIX, rank: 2, name: "Revoke active sessions", confidence: 0.83 }} approvedAt={now} onApprove={() => {}} onReject={() => {}} />
+            <FixCard fix={{ ...SAMPLE_FIX, rank: 3, name: "Reset credentials", confidence: 0.79, d3fend: { id: null, name: "" } }} locked onApprove={() => {}} onReject={() => {}} />
+          </div>
+          <div className={styles.fixRow2}>
+            <MitigationsCard incident={SAMPLE_INCIDENT} />
+            <MitigationsCard incident={SAMPLE_INCIDENT} crie={{ name: "CRIE", version: "0.0.0", trainedAt: null, status: "pending" }} />
+          </div>
         </Section>
 
         <Section title="Chart theme" note="ECharts with our theme: rules violet under AI cyan, rust marker.">

@@ -1,0 +1,37 @@
+.region {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  z-index: 700;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: var(--r-chip);
+  --c: var(--muted);
+  background: rgba(18, 12, 11, 0.86);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid color-mix(in srgb, var(--c) 45%, transparent);
+  box-shadow: var(--glass-hi);
+  font-size: 13.5px;
+  color: var(--text-hi);
+  white-space: nowrap;
+}
+
+/* Green only for an approval; anything else stays neutral. */
+.ok {
+  --c: var(--ok);
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--c);
+}

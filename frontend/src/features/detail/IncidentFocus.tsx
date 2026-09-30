@@ -35,6 +35,11 @@ export function IncidentFocus({ incident }: { incident: Incident }) {
         <div className={styles.head}>
           <BracketLabel>INCIDENT {incident.id}</BracketLabel>
           <span className={styles.opened}>OPENED {formatClock(incident.createdAt)}</span>
+          {incident.status === "approved" && (
+            <Chip tone="ok" className={styles.approved}>
+              FIX APPROVED
+            </Chip>
+          )}
         </div>
         <h2 className={styles.name}>{incident.name}</h2>
         <div className={styles.chips}>

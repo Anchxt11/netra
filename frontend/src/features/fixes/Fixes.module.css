@@ -1,0 +1,92 @@
+.fixes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  min-width: 0;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  padding-left: 4px;
+}
+
+.meta {
+  font-family: var(--font-data);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.cards {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: minmax(0, 1fr); /* cards fill the space, never push past it */
+  gap: 11px;
+}
+
+.slot {
+  min-width: 0;
+  min-height: 0;
+}
+
+/* One wide card: MITRE mitigations. */
+.fallback {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 18px 22px;
+}
+
+.state {
+  flex: none;
+}
+
+.fallbackText {
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--text);
+  max-width: 62ch;
+}
+
+.mitigations {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  max-width: 520px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13.5px;
+}
+
+.mitigations li {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  align-items: center;
+  height: 32px;
+  border-bottom: 1px dashed var(--line);
+  color: var(--text);
+}
+
+.mid {
+  font-family: var(--font-data);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.pending {
+  font-family: var(--font-data);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
