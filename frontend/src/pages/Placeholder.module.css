@@ -1,0 +1,48 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 28px 8px;
+}
+
+.label {
+  font-family: var(--font-data);
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.label::before {
+  content: "[ ";
+  color: var(--rust);
+}
+
+.label::after {
+  content: " ]";
+  color: var(--rust);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 21px;
+  line-height: 1.25;
+  text-transform: uppercase;
+  color: var(--text-hi);
+}
+
+.sub {
+  max-width: 60ch;
+  font-size: 15px;
+  color: var(--text);
+}
+
+.note {
+  font-family: var(--font-data);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}

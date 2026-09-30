@@ -1,0 +1,48 @@
+.hero {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  text-align: center;
+  padding-bottom: 8vh;
+}
+
+.mark {
+  margin: 0;
+  width: min(640px, 70vw);
+}
+
+.mark img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.line {
+  font-family: var(--font-display);
+  font-size: 15px;
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 20px;
+  margin-top: 10px;
+  border-radius: var(--r-btn);
+  background: var(--rust);
+  color: #1a0906;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.07em;
+}
+
+.cta:hover {
+  background: var(--rust-2);
+}

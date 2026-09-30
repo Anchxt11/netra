@@ -1,0 +1,42 @@
+:root {
+  /* brand and surfaces */
+  --bg:        #0B0605;
+  --rust:      #FF4A26;   /* brand, selection, primary action, ACT NOW */
+  --rust-2:    #E63A1C;   /* end of the selected-row gradient */
+  --text-hi:   #FFF1EA;   /* headings, key numbers */
+  --text:      #F5E3DC;   /* body and data */
+  --muted:     #A8796C;   /* labels, secondary, "PENDING" */
+  --line:      rgba(255, 96, 64, 0.14);  /* panel borders, dividers */
+
+  /* heat = time left to act (warm = fresh). Only on time elements. */
+  --heat-1:    #FFD95A;   /* more than 66% of the window left */
+  --heat-2:    #FF9A3C;   /* 33 to 66% */
+  --heat-3:    #F0502A;   /* 15 to 33% */
+  --heat-4:    #A3261A;   /* under 15%: going cold */
+  --stale:     #4A3F3C;   /* expired */
+
+  /* who found it (cool = the machines) */
+  --rule:      #A98BFF;   /* detected by a rule */
+  --ai:        #52D8FF;   /* produced by an ML model (ATDE detections, CRIE confidence, SHAP) */
+
+  /* system state */
+  --ok:        #3CF29B;   /* healthy, live, judged normal, approve */
+  --fail:      #FF3D7F;   /* our own pipeline is failing. Nothing else is this colour. */
+
+  /* materials */
+  --panel:        rgba(12, 6, 5, 0.80);
+  --glass-fill:   linear-gradient(140deg, rgba(255,120,90,.11), rgba(255,120,90,.025) 60%), rgba(26,11,9,.46);
+  --glass-border: rgba(255, 150, 120, 0.20);
+  --glass-hi:     inset 0 1px 0 rgba(255, 210, 190, 0.10);
+  --glass-blur:   blur(18px) saturate(140%);
+
+  /* type */
+  --font-display: "Michroma", sans-serif;          /* incident names, headlines */
+  --font-ui:      "Chakra Petch", system-ui, sans-serif;
+  --font-data:    "IBM Plex Mono", ui-monospace, monospace;
+  --font-num:     "Doto", "IBM Plex Mono", monospace;  /* big numerals only */
+
+  /* geometry: radius encodes the material */
+  --r-glass: 22px;  --r-panel: 18px;  --r-row: 12px;  --r-btn: 10px;  --r-chip: 999px;
+  --gap: 12px;  --page-pad: 14px;
+}

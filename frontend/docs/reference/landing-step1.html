@@ -1,0 +1,169 @@
+<!doctype html>
+<!--
+  NETRA reference source (landing step 1). Approved visual target: landing-step1.png.
+  Copy exact values (glass recipe, panel styles, pixel-field code, radar and globe maths) from here,
+  but build proper React components. Not production code.
+  Removed to keep this file small: embedded fonts (load them with @fontsource as listed in CLAUDE.md), the d3-geo, d3-array and topojson-client bundles, and the world-atlas land data.
+-->
+<html><head><meta charset="utf-8"><style>
+
+
+
+
+
+
+
+
+
+:root{--bg:#0B0605;--rust:#FF4A26;--text:#F5E3DC;--muted:#A8796C;--line:rgba(255,96,64,.16);--ai:#52D8FF;--rule:#A98BFF;--ok:#3CF29B;--fail:#FF3D7F}
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1440px;height:900px;overflow:hidden;background:var(--bg);color:var(--text);font-family:"Chakra Petch";position:relative}
+#bg{position:absolute;inset:0;width:1440px;height:900px;z-index:0}
+.glow-bg{position:absolute;inset:0;z-index:0;background:
+ radial-gradient(640px 520px at 16% 96%,rgba(255,74,38,.34),transparent 70%),
+ radial-gradient(560px 460px at 88% 10%,rgba(150,40,82,.30),transparent 70%),
+ radial-gradient(380px 300px at 63% 64%,rgba(255,120,50,.12),transparent 70%)}
+.scan{position:absolute;inset:0;z-index:60;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.35) 0 1px,transparent 1px 3px);opacity:.12}
+.abs{position:absolute;z-index:5}
+.glass{background:linear-gradient(140deg,rgba(255,120,90,.11),rgba(255,120,90,.025) 60%),rgba(26,11,9,.46);
+ backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);
+ border:1px solid rgba(255,150,120,.20);box-shadow:inset 0 1px 0 rgba(255,210,190,.10);border-radius:22px}
+.panel{background:rgba(12,6,5,.80);border:1px solid rgba(255,96,64,.14);border-radius:18px}
+.brk{font-family:"IBM Plex Mono";font-weight:500;font-size:12px;letter-spacing:.08em;color:var(--text);text-transform:uppercase;display:flex;gap:10px;align-items:center}
+.brk b{color:var(--rust);font-weight:500}
+.brk .m{color:var(--muted);letter-spacing:.06em;margin-left:auto;font-size:11px}
+.corner{position:absolute;width:12px;height:12px;border-color:rgba(255,120,90,.55);border-style:solid}
+.c1{left:8px;top:8px;border-width:1.5px 0 0 1.5px}.c2{right:8px;top:8px;border-width:1.5px 1.5px 0 0}.c3{left:8px;bottom:8px;border-width:0 0 1.5px 1.5px}.c4{right:8px;bottom:8px;border-width:0 1.5px 1.5px 0}
+.mono{font-family:"IBM Plex Mono"}
+.doto{font-family:"Doto";font-weight:900}
+.chip{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:999px;border:1px solid rgba(255,150,120,.28);font-family:"IBM Plex Mono";font-size:11px;letter-spacing:.03em;color:var(--text);white-space:nowrap;background:rgba(255,255,255,.02)}
+.chip i{width:7px;height:7px;border-radius:2px;display:inline-block}
+.lab{font-family:"IBM Plex Mono";font-size:10.5px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+/* top */
+.top{left:14px;top:12px;width:1412px;height:56px;display:flex;align-items:center;padding:0 10px 0 18px;gap:18px;border-radius:18px}
+.logo{display:flex;align-items:baseline;gap:10px}
+.logo b{font-family:"Michroma";font-size:23px;color:var(--rust);letter-spacing:.04em;text-shadow:0 0 14px rgba(255,74,38,.55)}
+.logo span{font-family:"Tiro Devanagari Hindi";font-size:17px;color:var(--muted)}
+.nav{display:flex;gap:6px;padding:4px;border-radius:999px;background:rgba(0,0,0,.30);border:1px solid rgba(255,150,120,.12)}
+.nav a{white-space:nowrap;font-family:"Chakra Petch";font-weight:600;font-size:12px;letter-spacing:.05em;color:var(--muted);padding:8px 12px;border-radius:999px}
+.nav a.on{background:var(--rust);color:#140806}
+.osd{margin-left:auto;display:flex;align-items:center;gap:10px}
+.live{display:flex;align-items:center;gap:8px;font-family:"IBM Plex Mono";font-weight:500;font-size:12px;letter-spacing:.1em;color:var(--ok)}
+.live i{width:9px;height:9px;border-radius:50%;background:var(--ok);box-shadow:0 0 10px var(--ok)}
+.clock{font-family:"Doto";font-weight:900;font-size:22px;color:var(--text);letter-spacing:.02em}
+.fresh{display:flex;align-items:center;gap:8px}
+.fresh .segs{display:flex;gap:2px}.fresh .segs i{width:5px;height:14px;border-radius:1px}
+/* queue */
+.tier{display:flex;align-items:center;gap:10px;margin:14px 4px 8px}
+.tier b{font-family:"IBM Plex Mono";font-weight:500;font-size:11.5px;letter-spacing:.12em}
+.tier .n{font-family:"Doto";font-weight:900;font-size:15px}
+.tier hr{flex:1;border:0;height:1px}
+.row{display:grid;grid-template-columns:44px 1fr 112px;align-items:center;gap:10px;height:58px;padding:0 12px;border-radius:12px;margin-bottom:6px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.03)}
+.row .sc{font-family:"Doto";font-weight:900;font-size:24px;line-height:1}
+.row .nm{font-size:14px;font-weight:600;line-height:1.15;display:flex;flex-direction:column;gap:5px}
+.row .nm .l2{display:flex;gap:5px;align-items:center}
+.row .src{font-family:"IBM Plex Mono";font-size:10px;letter-spacing:.06em;padding:2px 6px;border-radius:5px}
+.row .att{font-family:"IBM Plex Mono";font-size:10.5px;color:var(--muted)}
+.row .ht{display:flex;flex-direction:column;align-items:flex-end;gap:6px;font-family:"IBM Plex Mono";font-size:13px;font-weight:500}
+.hsegs{display:flex;gap:2px}.hsegs i{width:4px;height:11px;border-radius:1px;background:rgba(255,255,255,.07)}
+.row.sel{background:linear-gradient(120deg,#FF5A2E,#E63A1C);border-color:#FF7A55;box-shadow:0 0 0 1px rgba(255,120,90,.4),0 10px 30px rgba(255,74,38,.25)}
+.row.sel,.row.sel .att,.row.sel .ht{color:#1A0906}
+.row.sel .hsegs i{background:rgba(26,9,6,.22)}.row.sel .hsegs i.l{background:#1A0906!important}
+.row.sel .src,.row.sel .chip{border-color:rgba(26,9,6,.5)!important;color:#1A0906!important;background:rgba(26,9,6,.08)!important}
+.cold{background:var(--rust);color:#1A0906;padding:1px 6px;border-radius:5px}
+.grp{display:flex;align-items:center;gap:10px;height:40px;padding:0 14px;border-radius:12px;background:rgba(255,255,255,.025);margin-top:6px;font-family:"IBM Plex Mono";font-size:11.5px;letter-spacing:.08em}
+/* focus */
+.name{font-family:"Michroma";font-size:21px;line-height:1.25;letter-spacing:.02em;color:#FFF1EA}
+.ro{display:flex;gap:26px;align-items:flex-start;margin-top:14px}
+/* esc */
+.esc{display:grid;grid-template-columns:52px 60px 1fr 34px;gap:8px;align-items:center;font-size:12.5px;line-height:1.22;padding:5px 0;border-bottom:1px dashed rgba(255,120,90,.13)}
+.esc .t{font-family:"IBM Plex Mono";font-size:11px;color:var(--muted)}
+.esc .p{font-family:"IBM Plex Mono";font-size:12px;text-align:right;color:var(--text)}
+.tag{font-family:"IBM Plex Mono";font-size:10.5px;letter-spacing:.04em;padding:3px 0;border-radius:6px;text-align:center}
+/* fixes */
+.fix{position:absolute;top:24px;width:233px;height:284px;padding:16px 16px 14px}
+.fix .hd{display:flex;align-items:center;gap:10px}
+.rank{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:"Doto";font-weight:900;font-size:16px;border:1.5px solid rgba(255,150,120,.4)}
+.fix h4{font-family:"Chakra Petch";font-weight:700;font-size:15px;letter-spacing:.04em;line-height:1.1}
+.fix .d3{font-family:"IBM Plex Mono";font-size:10.5px;color:var(--muted);margin-top:2px}
+.rsn{font-size:12.5px;line-height:1.28;margin-top:10px}
+.rsn .b{display:flex;align-items:center;gap:8px;margin-top:5px}
+.rsn .b i{height:4px;border-radius:2px;background:var(--ai);box-shadow:0 0 8px rgba(82,216,255,.5)}
+.rsn .b span{font-family:"IBM Plex Mono";font-size:11px;color:var(--ai)}
+.btns{position:absolute;left:16px;right:16px;bottom:14px;display:flex;gap:8px}
+.btn{flex:1;height:34px;border-radius:10px;display:grid;place-items:center;font-family:"Chakra Petch";font-weight:700;font-size:12px;letter-spacing:.07em;white-space:nowrap}
+.btn.ok{background:var(--ok);color:#06140C;box-shadow:0 0 18px rgba(60,242,155,.25)}
+.btn.no{border:1px solid rgba(255,150,120,.35);color:var(--text)}
+/* sys */
+.srow{display:flex;align-items:center;gap:10px;height:31px;border-bottom:1px dashed rgba(255,120,90,.12);font-size:12.5px}
+.srow .v{margin-left:auto;font-family:"IBM Plex Mono";font-size:12px}
+.dot{width:8px;height:8px;border-radius:50%}
+
+.hl{font-family:"Michroma";font-size:40px;line-height:1.18;letter-spacing:.01em;color:#FFF1EA}
+.hl em{font-style:normal;color:var(--rust);text-shadow:0 0 22px rgba(255,74,38,.55)}
+.p{font-size:17px;line-height:1.55;color:#E9CFC6;max-width:500px}
+.cta{display:inline-flex;align-items:center;height:48px;padding:0 22px;border-radius:14px;background:var(--rust);color:#1A0906;font-family:"Chakra Petch";font-weight:700;font-size:14px;letter-spacing:.08em;box-shadow:0 0 30px rgba(255,74,38,.35)}
+.cta2{display:inline-flex;align-items:center;height:48px;padding:0 20px;border-radius:14px;border:1px solid rgba(255,150,120,.35);font-family:"Chakra Petch";font-weight:600;font-size:14px;letter-spacing:.08em}
+.hud{font-family:"IBM Plex Mono";font-size:11px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+.hud b{font-family:"Doto";font-weight:900;font-size:22px;color:#FFF1EA;letter-spacing:0;display:block;margin-top:2px}
+.step{display:flex;flex-direction:column;gap:6px;font-family:"IBM Plex Mono";font-size:11px;letter-spacing:.1em;color:var(--muted)}
+.step i{height:3px;border-radius:2px;background:rgba(255,255,255,.1)}
+.step.on{color:#FFF1EA}.step.on i{background:var(--rust);box-shadow:0 0 10px rgba(255,74,38,.6)}
+</style><script>/* d3-array UMD bundle removed: installed automatically with d3-geo */</script><script>/* d3-geo UMD bundle removed: import { geoOrthographic, geoPath, geoContains, geoDistance, geoInterpolate, geoGraticule10 } from "d3-geo" */</script><script>/* topojson-client UMD bundle removed: import { feature } from "topojson-client" */</script></head><body><div class="glow-bg" style="background:radial-gradient(700px 600px at 70% 52%,rgba(255,74,38,.22),transparent 70%),radial-gradient(600px 500px at 8% 100%,rgba(150,40,82,.28),transparent 70%)"></div><canvas id="bg"></canvas><div class="scan"></div><div class="abs glass top" style="justify-content:space-between"><div class="logo"><b>NETRA</b><span>नेत्र</span></div><div style="display:flex;align-items:center;gap:18px"><span class="live"><i></i>LIVE</span><span class="nav"><a>HOW IT WORKS</a><a>ENGINES</a></span><span class="btn ok" style="flex:none;padding:0 16px;height:36px;background:var(--rust);color:#1A0906;box-shadow:none">OPEN LIVE DASHBOARD</span></div></div><div class="abs" style="left:84px;top:196px;width:560px"><div class="brk"><b>[</b>01 / 05<b>]</b><span style="color:#FFF1EA">INGEST</span></div><div class="hl" style="margin-top:26px">SECURITY DECISIONS WHILE THE DATA IS <em>STILL WARM.</em></div><p class="p" style="margin-top:24px">NETRA watches every login, web request and network flow as it happens, ranks each threat by how much time is left to act, and recommends a fix your analyst approves in one click.</p><div style="display:flex;gap:12px;margin-top:34px"><span class="cta">OPEN LIVE DASHBOARD</span><span class="cta2">SEE HOW IT WORKS</span></div><div class="glass" style="margin-top:46px;padding:16px 18px;border-radius:16px;width:470px"><div class="lab" style="color:var(--rust)">STEP 01, INGEST</div><div style="font-size:15px;line-height:1.45;margin-top:6px">Every login, web request and network flow streams in live. Scroll to follow one attack from first signal to approved fix.</div></div></div><svg id="g" class="abs" width="760" height="760" style="left:640px;top:84px"></svg><div class="abs hud" style="left:700px;top:112px">EVENTS / S<b>212</b></div><div class="abs hud" style="left:1260px;top:112px;text-align:right">SOURCES SEEN<b>1,284</b></div><div class="abs hud" style="left:700px;top:736px">DETECTION RULES<b>26</b></div><div class="abs hud" style="left:1236px;top:736px;text-align:right">ATDE MODEL<b style="color:var(--ok)">READY</b></div><div class="abs" style="left:1352px;top:300px;display:flex;flex-direction:column;gap:6px"><span class="doto" style="font-size:22px;padding:2px 6px;border:1px solid rgba(255,120,90,0.8);color:#1A0906;background:var(--rust);border-radius:4px;text-align:center">01</span><span class="doto" style="font-size:22px;padding:2px 6px;border:1px solid rgba(255,120,90,0.25);color:#A8796C;background:transparent;border-radius:4px;text-align:center">02</span><span class="doto" style="font-size:22px;padding:2px 6px;border:1px solid rgba(255,120,90,0.25);color:#A8796C;background:transparent;border-radius:4px;text-align:center">03</span><span class="doto" style="font-size:22px;padding:2px 6px;border:1px solid rgba(255,120,90,0.25);color:#A8796C;background:transparent;border-radius:4px;text-align:center">04</span><span class="doto" style="font-size:22px;padding:2px 6px;border:1px solid rgba(255,120,90,0.25);color:#A8796C;background:transparent;border-radius:4px;text-align:center">05</span></div><div class="abs" style="left:84px;right:84px;bottom:34px;display:grid;grid-template-columns:repeat(5,1fr);gap:14px"><div class="step on"><i></i>01 INGEST</div><div class="step"><i></i>02 DETECT</div><div class="step"><i></i>03 CORRELATE</div><div class="step"><i></i>04 PRIORITISE BY TIME LEFT</div><div class="step"><i></i>05 RECOMMEND, HUMAN APPROVES</div></div><script>
+const c=document.getElementById('bg'),d=2;c.width=1440*d;c.height=900*d;const x=c.getContext('2d');x.scale(d,d);
+function rnd(s){return function(){s=(s*16807)%2147483647;return (s-1)/2147483646}};const r=rnd(42);
+const blobs=[[230,830,560,[255,74,38],1.0],[1270,120,520,[168,46,92],.85],[920,600,300,[255,120,50],.45],[640,90,260,[255,74,38],.25]];
+const cell=9,size=3;
+for(let gy=0;gy<900;gy+=cell){for(let gx=0;gx<1440;gx+=cell){
+ let R=0,G=0,B=0,v=0;
+ for(const [bx,by,br,col,s] of blobs){const dd=Math.hypot(gx-bx,gy-by)/br;const w=Math.max(0,1-dd*dd)*s;v+=w;R+=col[0]*w;G+=col[1]*w;B+=col[2]*w}
+ if(v<=0.02)continue; R/=v;G/=v;B/=v;
+ const t=Math.min(v,1); if(r()>t*1.1+0.08)continue;
+ const a=(0.10+0.45*t)*(0.55+0.45*r());
+ x.fillStyle=`rgba(${R|0},${G|0},${B|0},${a.toFixed(3)})`;x.fillRect(gx,gy,size,size);
+ if(r()<0.012*t){x.fillStyle=`rgba(255,230,210,${(0.5*t).toFixed(2)})`;x.fillRect(gx,gy,size,size)}
+}}
+</script><script>/* LANDJSON = world-atlas/land-110m.json (import it in the app) */ const LANDJSON = null;</script><script>
+const L=topojson.feature(LANDJSON,LANDJSON.objects.land);
+const svg=document.getElementById('g'),W=760,H=760,cx=380,cy=380,R=292;
+const rot=[-62,-18];
+const proj=d3.geoOrthographic().scale(R).translate([cx,cy]).rotate(rot).clipAngle(90);
+const path=d3.geoPath(proj);
+const centre=[-rot[0],-rot[1]];
+let s='';
+s+=`<defs><radialGradient id="gl" cx="50%" cy="50%" r="50%"><stop offset=".7" stop-color="rgba(255,74,38,0)"/><stop offset="1" stop-color="rgba(255,74,38,.13)"/></radialGradient>
+<radialGradient id="sh" cx="42%" cy="38%" r="65%"><stop offset="0" stop-color="rgba(40,14,10,.55)"/><stop offset="1" stop-color="rgba(8,3,2,.85)"/></radialGradient></defs>`;
+s+=`<circle cx="${cx}" cy="${cy}" r="${R+26}" fill="url(#gl)"/>`;
+s+=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="url(#sh)" stroke="rgba(255,120,90,.55)" stroke-width="1.2"/>`;
+s+=`<path d="${path(d3.geoGraticule10())}" fill="none" stroke="rgba(255,120,90,.10)" stroke-width="1"/>`;
+// dotted land (pixel squares)
+const step=1.9;
+for(let lat=-78;lat<=84;lat+=step){const cl=Math.cos(lat*Math.PI/180);const ls=step/Math.max(cl,.25);
+ for(let lon=-180;lon<180;lon+=ls){const p=[lon,lat];
+  if(d3.geoDistance(p,centre)>Math.PI/2-0.02)continue;
+  if(!d3.geoContains(L,p))continue;
+  const [x,y]=proj(p);const d=d3.geoDistance(p,centre)/(Math.PI/2);const a=(0.95-0.65*d*d).toFixed(2);
+  s+=`<rect x="${(x-1.7).toFixed(1)}" y="${(y-1.7).toFixed(1)}" width="3.4" height="3.4" fill="rgba(255,108,70,${a})"/>`;}}
+// outer HUD ring + ticks
+s+=`<circle cx="${cx}" cy="${cy}" r="${R+40}" fill="none" stroke="rgba(255,120,90,.25)" stroke-dasharray="3 6"/>`;
+for(let k=0;k<120;k++){const a=k*3*Math.PI/180,L2=k%10?5:12;s+=`<line x1="${cx+(R+46)*Math.cos(a)}" y1="${cy+(R+46)*Math.sin(a)}" x2="${cx+(R+46+L2)*Math.cos(a)}" y2="${cy+(R+46+L2)*Math.sin(a)}" stroke="rgba(255,120,90,.35)"/>`;}
+// brackets like the Earth reference
+const bx=R+70;s+=`<path d="M${cx-bx+18},${cy-150} H${cx-bx} V${cy+150} H${cx-bx+18}" fill="none" stroke="rgba(255,150,120,.6)" stroke-width="1.5"/>`;
+s+=`<path d="M${cx+bx-18},${cy-150} H${cx+bx} V${cy+150} H${cx+bx-18}" fill="none" stroke="rgba(255,150,120,.6)" stroke-width="1.5"/>`;
+// attack arcs to target
+const T=[77.2,28.6];const src=[[4.9,52.4],[8.7,50.1],[37.6,55.8],[3.4,6.5],[28.0,-26.2],[55.3,25.3],[103.8,1.35],[106.8,-6.2],[121.5,25.0],[30.5,50.4]];
+for(const a of src){const ip=d3.geoInterpolate(a,T);let pts=[];for(let t=0;t<=1.0001;t+=0.02){const q=ip(t);if(d3.geoDistance(q,centre)<Math.PI/2)pts.push(proj(q))}
+ if(pts.length<2)continue;
+ // lift arcs slightly outward from centre for a 3D feel
+ pts=pts.map(([x,y],i)=>{const t=i/(pts.length-1),h=Math.sin(Math.PI*t)*18;const dx=x-cx,dy=y-cy,dd=Math.hypot(dx,dy)||1;return [x+dx/dd*h,y+dy/dd*h]});
+ s+=`<polyline points="${pts.map(p=>p.map(v=>v.toFixed(1)).join(',')).join(' ')}" fill="none" stroke="rgba(255,74,38,.75)" stroke-width="1.3" stroke-dasharray="5 4"/>`;
+ const hd=pts[Math.floor(pts.length*0.62)];s+=`<rect x="${hd[0]-2.5}" y="${hd[1]-2.5}" width="5" height="5" fill="#FFE9A8"/><rect x="${hd[0]-6}" y="${hd[1]-6}" width="12" height="12" fill="rgba(255,217,90,.18)"/>`;
+ const [sx,sy]=pts[0];s+=`<circle cx="${sx}" cy="${sy}" r="3" fill="none" stroke="#FF9A3C"/>`;}
+// target crosshair
+const [tx,ty]=proj(T);
+s+=`<circle cx="${tx}" cy="${ty}" r="26" fill="none" stroke="#FFF1EA" stroke-width="1.2"/><circle cx="${tx}" cy="${ty}" r="5" fill="#FF4A26"/>`;
+s+=`<line x1="${tx-40}" y1="${ty}" x2="${tx-30}" y2="${ty}" stroke="#FFF1EA"/><line x1="${tx+30}" y1="${ty}" x2="${tx+40}" y2="${ty}" stroke="#FFF1EA"/><line x1="${tx}" y1="${ty-40}" x2="${tx}" y2="${ty-30}" stroke="#FFF1EA"/><line x1="${tx}" y1="${ty+30}" x2="${tx}" y2="${ty+40}" stroke="#FFF1EA"/>`;
+s+=`<rect x="${tx+34}" y="${ty-40}" width="132" height="22" rx="4" fill="#FF4A26"/><text x="${tx+100}" y="${ty-25}" fill="#1A0906" font-family="IBM Plex Mono" font-weight="500" font-size="11" text-anchor="middle">YOUR NETWORK</text>`;
+s+=`<rect x="${tx+32}" y="${ty-15}" width="178" height="16" rx="3" fill="rgba(11,6,5,.85)"/><text x="${tx+36}" y="${ty-4}" fill="#F5E3DC" font-family="IBM Plex Mono" font-size="10">web-01 web-02 auth-01 db-01</text>`;
+svg.innerHTML=s;
+</script></body></html>

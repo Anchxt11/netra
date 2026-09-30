@@ -1,0 +1,97 @@
+{
+  "source": "example",
+  "model": {
+    "name": "CRIE",
+    "version": "0.0.0",
+    "trainedAt": null,
+    "trainingData": "confirm with ML pair"
+  },
+  "metrics": {
+    "precisionAt3": null,
+    "acceptanceRate": null
+  },
+  "threshold": 0.5,
+  "samples": [
+    {
+      "incident": {
+        "name": "Credential stuffing",
+        "mitre": "T1110.004",
+        "severity": 4,
+        "keyFeatures": {
+          "failed_logins_ip_5m": 212,
+          "unique_users_ip_5m": 34,
+          "distinct_ips_campaign": 6
+        }
+      },
+      "perAction": [
+        {
+          "actionId": "enable_mfa",
+          "name": "Enable MFA",
+          "confidence": 0.88
+        },
+        {
+          "actionId": "revoke_sessions",
+          "name": "Revoke active sessions",
+          "confidence": 0.83
+        },
+        {
+          "actionId": "reset_credentials",
+          "name": "Reset credentials",
+          "confidence": 0.79
+        },
+        {
+          "actionId": "rate_limit_login",
+          "name": "Rate-limit login endpoint",
+          "confidence": 0.61
+        },
+        {
+          "actionId": "block_ips",
+          "name": "Block source IPs",
+          "confidence": 0.42
+        }
+      ],
+      "top3": [
+        {
+          "actionId": "enable_mfa",
+          "reasons": [
+            {
+              "feature": "unique_users_ip_5m",
+              "sentence": "one address tried 34 different accounts",
+              "value": 34,
+              "contribution": 0.29
+            },
+            {
+              "feature": "distinct_ips_campaign",
+              "sentence": "the attack is spread over 6 addresses",
+              "value": 6,
+              "contribution": 0.21
+            },
+            {
+              "feature": "failed_logins_ip_5m",
+              "sentence": "212 failed logins in 5 minutes",
+              "value": 212,
+              "contribution": 0.12
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fallbackExample": {
+    "technique": "T1110",
+    "mitigations": [
+      {
+        "id": "M1032",
+        "name": "Multi-factor Authentication"
+      },
+      {
+        "id": "M1036",
+        "name": "Account Use Policies"
+      },
+      {
+        "id": "M1027",
+        "name": "Password Policies"
+      }
+    ]
+  }
+}
