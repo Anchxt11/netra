@@ -1,0 +1,10 @@
+.globe {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.globe canvas {
+  display: block;
+}

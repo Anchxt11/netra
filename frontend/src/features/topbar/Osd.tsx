@@ -78,6 +78,19 @@ export function OsdStatus() {
   );
 }
 
+/** The landing page shows live readouts too, so it carries the honesty chip on its own. */
+export function SimulatedChip() {
+  const simulated = useNetra((s) => s.simulated);
+  if (!simulated) return null;
+  return (
+    <div className={styles.chips}>
+      <Chip tone="muted" dashed>
+        SIMULATED FEED
+      </Chip>
+    </div>
+  );
+}
+
 /** Right of the bar: today's counts and the honesty chip. */
 export function OsdChips() {
   const expired = useNetra((s) => s.health?.expiredToday ?? s.expired.length);

@@ -40,7 +40,7 @@ export function AppShell() {
     // reducedMotion="user": motion animations switch off when the OS asks for reduced motion.
     <MotionConfig reducedMotion="user">
       <div className={styles.shell} data-surface={surface}>
-        {!landing && <PixelField intensity={surface === "original" ? 1 : FIELD_INTENSITY} />}
+        <PixelField intensity={surface === "console" ? FIELD_INTENSITY : 1} />
         <TopBar />
         <main className={styles.page}>
           <Outlet />

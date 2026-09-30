@@ -1,17 +1,55 @@
-.hero {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+/*
+  Step 1 layout (1440x900): copy on the left, the globe stage on the right, the step counter
+  at the far right, the step rail along the bottom.
+  82px = header top 12 + header 44 + gap 12 + bottom padding 14.
+*/
+.landing {
+  --stage-size: min(760px, calc(100vh - 150px));
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--stage-size) 56px;
+  grid-template-rows: minmax(0, 1fr) auto;
+  column-gap: 24px;
+  height: calc(100vh - 82px);
+  min-height: 620px;
+  padding: 0 0 0 70px;
+}
+
+/* A soft rust glow behind the globe. */
+.landing::before {
+  content: "";
+  position: absolute;
+  inset: -80px -14px -14px;
+  z-index: -1;
+  background: radial-gradient(700px 600px at 68% 50%, rgba(255, 74, 38, 0.18), transparent 70%);
+  pointer-events: none;
+}
+
+/* copy */
+.copy {
+  align-self: center;
+  display: grid;
+  grid-template-columns: auto 1fr;
   align-items: center;
-  justify-content: center;
-  gap: 22px;
-  text-align: center;
-  padding-bottom: 8vh;
+  column-gap: 12px;
+  max-width: 540px;
+}
+
+.copy > :not(:first-child):not(.stepName) {
+  grid-column: 1 / -1;
+}
+
+.stepName {
+  font-family: var(--font-data);
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--text-hi);
 }
 
 .mark {
-  margin: 0;
-  width: min(640px, 70vw);
+  margin: 34px 0 0;
+  width: min(520px, 100%);
 }
 
 .mark img {
@@ -21,28 +59,129 @@
 }
 
 .line {
+  margin-top: 22px;
   font-family: var(--font-display);
-  font-size: 15px;
-  line-height: 1.4;
-  letter-spacing: 0.04em;
+  font-size: 22px;
+  line-height: 1.35;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
-  color: var(--text);
+  color: var(--text-hi);
+}
+
+.line em {
+  font-style: normal;
+  color: var(--rust);
+  text-shadow: 0 0 22px rgba(255, 74, 38, 0.45);
 }
 
 .cta {
+  justify-self: start;
   display: inline-flex;
   align-items: center;
-  height: 40px;
-  padding: 0 20px;
-  margin-top: 10px;
-  border-radius: var(--r-btn);
+  height: 46px;
+  padding: 0 22px;
+  margin-top: 32px;
+  border-radius: var(--r-chip);
   background: var(--rust);
-  color: #1a0906;
+  color: var(--on-rust);
   font-weight: 700;
-  font-size: 12px;
-  letter-spacing: 0.07em;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  box-shadow: 0 0 30px rgba(255, 74, 38, 0.3);
+  transition: filter 120ms ease;
 }
 
 .cta:hover {
-  background: var(--rust-2);
+  filter: brightness(1.08);
+}
+
+.caption {
+  margin-top: 40px;
+  padding: 14px 18px;
+  border-radius: 16px;
+  max-width: 470px;
+}
+
+.captionLabel {
+  font-family: var(--font-data);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  color: var(--rust);
+}
+
+.caption p {
+  margin-top: 6px;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+/* stage */
+.stageWrap {
+  align-self: center;
+  justify-self: center;
+}
+
+/* step counter: 01 to 05, current solid rust */
+.counter {
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.counter li {
+  padding: 3px 0;
+  text-align: center;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 120, 90, 0.25);
+  font-family: var(--font-num);
+  font-weight: 500;
+  font-size: 17px;
+  color: var(--muted);
+}
+
+.counter li.on {
+  background: var(--rust);
+  border-color: var(--rust);
+  color: var(--on-rust);
+}
+
+/* step rail along the bottom */
+.rail {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin: 0;
+  padding: 0 70px 22px 0;
+  list-style: none;
+}
+
+.rail li {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-family: var(--font-data);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.rail i {
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.rail li.on {
+  color: var(--text-hi);
+}
+
+.rail li.on i {
+  background: var(--rust);
+  box-shadow: 0 0 10px rgba(255, 74, 38, 0.6);
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { OsdChips, OsdStatus } from "./Osd";
+import { OsdChips, OsdStatus, SimulatedChip } from "./Osd";
 import styles from "./TopBar.module.css";
 
 const NAV = [
@@ -47,7 +47,7 @@ export function TopBar() {
         </nav>
       </div>
 
-      <div className={styles.side}>{!landing && <OsdChips />}</div>
+      <div className={styles.side}>{landing ? <SimulatedChip /> : <OsdChips />}</div>
     </header>
   );
 }
