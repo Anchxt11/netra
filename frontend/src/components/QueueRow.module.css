@@ -1,0 +1,107 @@
+.row {
+  display: grid;
+  grid-template-columns: 44px 1fr 100px;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 58px;
+  padding: 0 12px;
+  margin: 0 0 6px;
+  border-radius: var(--r-row);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.row:hover {
+  background: rgba(255, 255, 255, 0.045);
+  border-color: rgba(255, 150, 120, 0.12);
+}
+
+.score {
+  color: var(--text-hi);
+}
+
+.nameCol {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.name {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.mitre {
+  font-family: var(--font-data);
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+.timeCol {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.time,
+.cold {
+  font-family: var(--font-data);
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+/* Going cold: the time becomes a solid rust chip. */
+.cold {
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--rust);
+  color: var(--on-rust);
+}
+
+/* WATCH */
+.dimmed {
+  opacity: 0.62;
+}
+
+/* The one selected row: a rust block with dark text. */
+.selected,
+.selected:hover {
+  background: linear-gradient(120deg, var(--rust), var(--rust-2));
+  border-color: color-mix(in srgb, var(--rust) 70%, white);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--rust) 40%, transparent),
+    0 10px calc(30px * var(--glow)) color-mix(in srgb, var(--rust) calc(25% * var(--glow)), transparent);
+  color: var(--on-rust);
+}
+
+.selected .score,
+.selected .mitre {
+  color: var(--on-rust);
+}
+
+.selected .tag {
+  --c: var(--on-rust);
+}
+
+.selected .cold {
+  background: var(--on-rust);
+  color: var(--rust);
+}

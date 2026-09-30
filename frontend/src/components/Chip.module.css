@@ -1,0 +1,78 @@
+.chip {
+  --c: var(--text);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: var(--r-chip);
+  border: 1px solid color-mix(in srgb, var(--c) 32%, transparent);
+  background: color-mix(in srgb, var(--c) 4%, transparent);
+  color: var(--c);
+  font-family: var(--font-data);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  white-space: nowrap; /* no forced uppercase: chips also carry data like usernames */
+}
+
+.neutral { --c: var(--text); }
+.rust { --c: var(--rust); }
+.soon { --c: var(--text-hi); }
+.watch,
+.muted { --c: var(--muted); }
+.ok { --c: var(--ok); }
+.rule { --c: var(--rule); }
+.ai { --c: var(--ai); }
+.fail { --c: var(--fail); }
+
+.solid {
+  background: var(--c);
+  border-color: var(--c);
+  color: var(--on-rust);
+  font-weight: 500;
+}
+
+.dashed {
+  border-style: dashed;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--c);
+}
+
+.split {
+  display: inline-flex;
+  height: 22px;
+  border-radius: var(--r-chip);
+  overflow: hidden;
+  font-family: var(--font-data);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.splitRule,
+.splitAi {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 9px;
+  border: 1px solid;
+}
+
+.splitRule {
+  color: var(--rule);
+  border-color: color-mix(in srgb, var(--rule) 45%, transparent);
+  background: color-mix(in srgb, var(--rule) 8%, transparent);
+  border-radius: var(--r-chip) 0 0 var(--r-chip);
+}
+
+.splitAi {
+  color: var(--ai);
+  border-color: color-mix(in srgb, var(--ai) 45%, transparent);
+  background: color-mix(in srgb, var(--ai) 8%, transparent);
+  border-left: 0;
+  border-radius: 0 var(--r-chip) var(--r-chip) 0;
+}

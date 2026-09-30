@@ -1,0 +1,9 @@
+.glass {
+  position: relative;
+  background: var(--glass-fill);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-hi);
+  border-radius: var(--r-glass);
+}

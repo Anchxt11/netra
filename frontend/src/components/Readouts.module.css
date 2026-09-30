@@ -1,0 +1,77 @@
+/* Shared by SevBars, AttentionGauge and RiskReadout. */
+
+.label {
+  font-family: var(--font-data);
+  font-size: 10.5px;
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* severity */
+.sev {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.bars i {
+  width: 6px;
+  border-radius: 1px;
+  background: var(--unlit);
+}
+
+.bars i.barOn {
+  background: var(--text-hi);
+}
+
+.sevText {
+  white-space: nowrap;
+  font-family: var(--font-data);
+  font-size: 12px;
+  line-height: 1;
+  color: var(--text);
+}
+
+/* attention */
+.gauge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.gauge svg {
+  display: block;
+  flex: none;
+}
+
+.unit {
+  font-family: var(--font-data);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* risk */
+.riskRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.formula {
+  margin-top: 4px;
+  font-family: var(--font-data);
+  font-size: 10.5px;
+  color: var(--muted);
+  white-space: nowrap;
+}

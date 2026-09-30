@@ -8,6 +8,8 @@ import { RemediationEngine } from "../pages/RemediationEngine";
 
 // The landing page carries the globe libraries, so the dashboard never downloads it.
 const Landing = lazy(() => import("../pages/Landing"));
+// Temporary design review page. Remove with src/pages/Kit.tsx when the dashboard is done.
+const Kit = lazy(() => import("../pages/Kit"));
 
 export const router = createBrowserRouter([
   {
@@ -22,6 +24,14 @@ export const router = createBrowserRouter([
         ),
       },
       { path: "/live", element: <LiveDashboard /> },
+      {
+        path: "/kit",
+        element: (
+          <Suspense fallback={null}>
+            <Kit />
+          </Suspense>
+        ),
+      },
       {
         path: "/engines",
         element: <EnginesLayout />,

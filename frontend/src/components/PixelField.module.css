@@ -1,0 +1,31 @@
+.field {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Soft CSS glow in the same places as the dot blobs, so glass has something to blur. */
+.glow {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(640px 520px at 16% 96%, rgba(255, 74, 38, 0.34), transparent 70%),
+    radial-gradient(560px 460px at 88% 10%, rgba(150, 40, 82, 0.3), transparent 70%),
+    radial-gradient(380px 300px at 63% 64%, rgba(255, 120, 50, 0.12), transparent 70%);
+}
+
+/* Each canvas pixel is scaled to a 9px cell, then the mask keeps only a 3px square of it. */
+.canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  image-rendering: pixelated;
+  -webkit-mask-image: linear-gradient(to right, #000 3px, transparent 3px), linear-gradient(to bottom, #000 3px, transparent 3px);
+  -webkit-mask-size: 9px 9px;
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to right, #000 3px, transparent 3px), linear-gradient(to bottom, #000 3px, transparent 3px);
+  mask-size: 9px 9px;
+  mask-composite: intersect;
+}

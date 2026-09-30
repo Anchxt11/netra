@@ -1,0 +1,48 @@
+.btn {
+  display: inline-grid;
+  place-items: center;
+  height: 34px;
+  padding: 0 16px;
+  border-radius: var(--r-btn);
+  border: 1px solid transparent;
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: filter 120ms ease, background-color 120ms ease, border-color 120ms ease;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.approve {
+  background: var(--ok);
+  color: var(--on-ok);
+  box-shadow: 0 0 calc(18px * var(--glow)) color-mix(in srgb, var(--ok) 25%, transparent);
+}
+
+.primary {
+  background: var(--rust);
+  color: var(--on-rust);
+}
+
+.approve:hover:not(:disabled),
+.primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.reject {
+  background: transparent;
+  border-color: rgba(255, 150, 120, 0.35);
+  color: var(--text);
+}
+
+.reject:hover:not(:disabled) {
+  border-color: rgba(255, 150, 120, 0.6);
+  color: var(--text-hi);
+}

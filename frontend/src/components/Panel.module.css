@@ -1,0 +1,55 @@
+.panel {
+  --corner-color: rgba(255, 120, 90, 0.45);
+  position: relative;
+  padding: 14px 16px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-panel);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.bracket {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-family: var(--font-data);
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.bracket b {
+  font-weight: 500;
+  color: var(--rust);
+}
+
+.meta {
+  margin-left: auto;
+  font-family: var(--font-data);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.corner {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 0 solid var(--corner-color);
+}
+
+.tl { left: 6px; top: 6px; border-width: 1.5px 0 0 1.5px; }
+.tr { right: 6px; top: 6px; border-width: 1.5px 1.5px 0 0; }
+.bl { left: 6px; bottom: 6px; border-width: 0 0 1.5px 1.5px; }
+.br { right: 6px; bottom: 6px; border-width: 0 1.5px 1.5px 0; }

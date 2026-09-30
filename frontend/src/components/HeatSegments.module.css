@@ -1,0 +1,15 @@
+.segs {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.segs i {
+  width: 4px;
+  height: 11px;
+  border-radius: 1px;
+  background: var(--unlit);
+}
+
+.onRust i {
+  background: rgba(26, 9, 6, 0.22);
+}

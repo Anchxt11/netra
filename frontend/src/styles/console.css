@@ -1,0 +1,60 @@
+/*
+  CONSOLE THEME: the quieter, industrial look for the dashboard and engine pages.
+  The landing page keeps the vivid originals from tokens.css. This file only
+  re-tunes those tokens inside [data-surface="console"] (set by AppShell).
+
+  To tweak the dashboard's look, this is the first place to edit. Every
+  component derives its tints from these values, so changing one colour here
+  updates its tags, borders and glows everywhere.
+*/
+
+/* Shared helpers used by components on every surface. */
+:root {
+  --on-rust:  #1A0906;                    /* dark text on solid rust */
+  --on-ok:    #06140C;                    /* dark text on solid green */
+  --unlit:    rgba(255, 255, 255, 0.07);  /* switched-off segments and ring tracks */
+  --glow:     1;                          /* 1 = glows on, 0 = glows off */
+}
+
+[data-surface="console"] {
+  /* surfaces: slightly more neutral black, less red */
+  --bg:        #0A0807;
+  --text-hi:   #F0E6E1;
+  --text:      #DCCFC9;
+  --muted:     #9A857D;
+  --line:      rgba(255, 150, 120, 0.10);
+
+  /* brand: rust, a step calmer than the landing's */
+  --rust:      #E35A36;
+  --rust-2:    #D6553A;
+
+  /* heat = time left (fresh to cold) */
+  --heat-1:    #E3C56B;
+  --heat-2:    #D9914F;
+  --heat-3:    #C9603F;
+  --heat-4:    #93402E;
+  --stale:     #48413E;
+
+  /* who found it */
+  --rule:      #A197D8;
+  --ai:        #72BCD4;
+
+  /* system state */
+  --ok:        #62C492;
+  --fail:      #E4577F;
+
+  /* materials: thinner glass, denser panels */
+  --panel:        rgba(13, 10, 9, 0.86);
+  --glass-fill:   linear-gradient(140deg, rgba(255,150,120,.06), rgba(255,150,120,.015) 60%), rgba(20,14,12,.55);
+  --glass-border: rgba(255, 170, 140, 0.13);
+  --glass-hi:     inset 0 1px 0 rgba(255, 225, 205, 0.06);
+  --glass-blur:   blur(16px) saturate(115%);
+
+  /* numbers: plain mono instead of a dot-matrix face */
+  --font-num:  "IBM Plex Mono", ui-monospace, monospace;
+
+  /* tighter corners read as machined, not bubbly (hierarchy kept: glass > panel > row) */
+  --r-glass: 14px;  --r-panel: 10px;  --r-row: 6px;  --r-btn: 6px;
+
+  --glow: 0;
+}
