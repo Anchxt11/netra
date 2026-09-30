@@ -1,93 +1,53 @@
-// Step 2 (DETECT): the view has dived into "YOUR NETWORK". An isometric wireframe of the four
-// hosts on a grid, data streaming in. One stream turns bright yellow (fresh data), a bracket locks
-// onto it, then a rule tag (violet) and an AI tag (cyan) confirm what each engine saw.
-// Every reveal is driven by scroll, through `t` (0 = start of step 2's transition, 1 = step 2 settled).
+// Step 2 (DETECT): "YOUR NETWORK" up close. Four servers, traffic streaming in; one stream turns
+// yellow (fresh, suspicious data), a bracket locks on, then the rule and the AI engine say what
+// they saw, each in a few plain words. Every reveal is driven by scroll through `t`
+// (0 = step 1, 1 = step 2 settled). The globe's pixels assemble this drawing first (see Globe).
 import { motion, useTransform, type MotionValue } from "motion/react";
 import { SourceTag } from "../components/SourceTag";
+import { EVENT_AT, FLOOR, HOT, HOSTS, STREAMS, blockCorners, iso, pathPoints, type Host, type Path, type Pt } from "./networkGeometry";
 import styles from "./NetworkIso.module.css";
 
-const CX = 380;
-const CY = 400;
-const U = 44; // one grid unit
-const COS30 = Math.cos(Math.PI / 6);
-
-/** Grid (i, j, height) to screen. */
-const iso = (i: number, j: number, z = 0) => ({ x: CX + (i - j) * U * COS30, y: CY + (i + j) * U * 0.5 - z });
-const pts = (list: { x: number; y: number }[]) => list.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
-
-interface Host {
-  name: string;
-  i: number;
-  j: number;
-  h: number; // block height in px
-}
-
-const HOSTS: Host[] = [
-  { name: "web-02", i: -2, j: -2, h: 46 },
-  { name: "web-01", i: -2, j: 2, h: 46 },
-  { name: "db-01", i: 2, j: -2, h: 64 },
-  { name: "auth-01", i: 2, j: 2, h: 56 },
-];
-
-const HALF = 0.7; // block half-width in grid units
+const pts = (list: Pt[]) => list.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+const toPts = (path: Path) => pts(pathPoints(path));
+const pct = (v: number) => `${(v / 760) * 100}%`;
 
 function Block({ host }: { host: Host }) {
-  const { i, j, h } = host;
-  const a = iso(i - HALF, j - HALF);
-  const b = iso(i + HALF, j - HALF);
-  const c = iso(i + HALF, j + HALF);
-  const d = iso(i - HALF, j + HALF);
-  const up = (p: { x: number; y: number }) => ({ x: p.x, y: p.y - h });
-  const label = up(a);
+  const { b, c, d, A, B, C, D } = blockCorners(host);
   return (
     <g>
-      <polygon points={pts([d, c, up(c), up(d)])} className={styles.faceLeft} />
-      <polygon points={pts([c, b, up(b), up(c)])} className={styles.faceRight} />
-      <polygon points={pts([up(a), up(b), up(c), up(d)])} className={styles.faceTop} />
-      <text x={label.x} y={label.y - 12} className={styles.hostLabel}>
-        {host.name}
-      </text>
+      <polygon points={pts([d, c, C, D])} className={styles.faceLeft} />
+      <polygon points={pts([c, b, B, C])} className={styles.faceRight} />
+      <polygon points={pts([A, B, C, D])} className={styles.faceTop} />
     </g>
   );
 }
 
-// Streams arrive along the grid lines, from beyond the floor's edge into a host.
-const STREAMS: { id: string; path: [number, number][] }[] = [
-  { id: "s-web01", path: [[-6.5, 2], [-2.7, 2]] },
-  { id: "s-web02", path: [[-2, -6.5], [-2, -2.7]] },
-  { id: "s-db01", path: [[6.5, -2], [2.7, -2]] },
-  { id: "s-side", path: [[-1, 6.5], [-1, 2], [1.3, 2]] },
-];
-// The stream that turns yellow: into auth-01 from the front edge.
-const HOT: [number, number][] = [[2, 6.8], [2, 2.7]];
-const EVENT_AT = iso(2, 4.9); // where the bracket locks on
-
-const toPts = (path: [number, number][]) => pts(path.map(([i, j]) => iso(i, j)));
-
-const FLOOR = Array.from({ length: 9 }, (_, k) => k - 4);
+function HostLabel({ host }: { host: Host }) {
+  const { A } = blockCorners(host);
+  return (
+    <div className={styles.hostLabel} style={{ left: pct(A.x), top: pct(A.y - 44) }}>
+      <span className={styles.hostName}>{host.name}</span>
+      <span className={styles.hostRole}>{host.role}</span>
+    </div>
+  );
+}
 
 interface Props {
   t: MotionValue<number>;
-  /** Reduced motion: fades only, no scaling. */
-  still?: boolean;
 }
 
-export function NetworkIso({ t, still }: Props) {
-  const opacity = useTransform(t, [0.4, 0.62], [0, 1]);
-  const scale = useTransform(t, [0.4, 0.7], still ? [1, 1] : [0.86, 1]);
-  const hot = useTransform(t, [0.55, 0.68], [0, 1]);
-  const bracketOpacity = useTransform(t, [0.66, 0.76], [0, 1]);
-  const bracketScale = useTransform(t, [0.66, 0.78], still ? [1, 1] : [1.8, 1]);
-  const ruleTag = useTransform(t, [0.74, 0.82], [0, 1]);
-  const aiTag = useTransform(t, [0.84, 0.92], [0, 1]);
-
-  const left = (x: number) => `${(x / 760) * 100}%`;
-  const top = (y: number) => `${(y / 760) * 100}%`;
+export function NetworkIso({ t }: Props) {
+  const drawing = useTransform(t, [0.48, 0.6], [0, 1]);
+  const labels = useTransform(t, [0.56, 0.64], [0, 1]);
+  const hot = useTransform(t, [0.6, 0.68], [0, 1]);
+  const bracketOpacity = useTransform(t, [0.66, 0.74], [0, 1]);
+  const ruleTag = useTransform(t, [0.72, 0.8], [0, 1]);
+  const aiTag = useTransform(t, [0.8, 0.88], [0, 1]);
+  const streamStart = iso(-2, -6.5);
 
   return (
-    <motion.div className={styles.network} style={{ opacity, scale }} aria-hidden="true">
-      <svg viewBox="0 0 760 760" className={styles.svg}>
-        {/* floor grid */}
+    <div className={styles.network} aria-hidden="true">
+      <motion.svg viewBox="0 0 760 760" className={styles.svg} style={{ opacity: drawing }}>
         <g className={styles.floor}>
           {FLOOR.map((k) => (
             <g key={k}>
@@ -97,7 +57,7 @@ export function NetworkIso({ t, still }: Props) {
           ))}
         </g>
 
-        {/* incoming streams: dashes march toward the hosts */}
+        {/* incoming streams: dashes march toward the servers */}
         {STREAMS.map((s) => (
           <polyline key={s.id} points={toPts(s.path)} className={styles.stream} />
         ))}
@@ -108,7 +68,7 @@ export function NetworkIso({ t, still }: Props) {
           <Block key={h.name} host={h} />
         ))}
 
-        {/* the event on the hot stream, and the bracket that locks onto it */}
+        {/* the suspicious event, and the bracket that locks onto it */}
         <motion.g style={{ opacity: hot }}>
           <rect x={EVENT_AT.x - 7} y={EVENT_AT.y - 7} width="14" height="14" className={styles.eventGlow} />
           <rect x={EVENT_AT.x - 3} y={EVENT_AT.y - 3} width="6" height="6" className={styles.event} />
@@ -119,19 +79,43 @@ export function NetworkIso({ t, still }: Props) {
           width="32"
           height="32"
           className={styles.bracket}
-          style={{ opacity: bracketOpacity, scale: bracketScale }}
+          style={{ opacity: bracketOpacity }}
         />
-      </svg>
+      </motion.svg>
 
-      {/* what each engine saw */}
-      <div className={styles.tags} style={{ left: left(EVENT_AT.x + 26), top: top(EVENT_AT.y - 16) }}>
-        <motion.div style={{ opacity: ruleTag }}>
+      {/* plain-language labels */}
+      <motion.div className={styles.labels} style={{ opacity: labels }}>
+        {HOSTS.map((h) => (
+          <HostLabel key={h.name} host={h} />
+        ))}
+        <p className={styles.note} style={{ left: pct(streamStart.x + 12), top: pct(streamStart.y - 18) }}>
+          Normal traffic streaming in
+        </p>
+      </motion.div>
+
+      <motion.p
+        className={`${styles.note} ${styles.hotNote}`}
+        style={{ opacity: hot, right: pct(760 - EVENT_AT.x + 26), top: pct(EVENT_AT.y - 20) }}
+      >
+        <span>
+          34 accounts tried
+          <br />
+          from one address
+        </span>
+        <i aria-hidden="true" />
+      </motion.p>
+
+      {/* what each engine saw, in a few words */}
+      <div className={styles.tags} style={{ left: pct(EVENT_AT.x + 28), top: pct(EVENT_AT.y - 22) }}>
+        <motion.div className={styles.tagRow} style={{ opacity: ruleTag }}>
           <SourceTag source="rule" label="RULE CS-1" className={styles.tag} />
+          <span>Matches a known attack</span>
         </motion.div>
-        <motion.div style={{ opacity: aiTag }}>
+        <motion.div className={styles.tagRow} style={{ opacity: aiTag }}>
           <SourceTag source="ai" label="AI ENGINE 0.81" className={styles.tag} />
+          <span>Unusual for this login page</span>
         </motion.div>
       </div>
-    </motion.div>
+    </div>
   );
 }

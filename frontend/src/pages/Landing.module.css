@@ -32,14 +32,72 @@
   pointer-events: none;
 }
 
-/* copy: sits above the stage, so the diving globe passes behind it */
+/* copy: step 1's hero, and (from step 2) the step card in the same place */
 .copy {
   position: relative;
   z-index: 1;
-  align-self: center;
+  align-self: stretch;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   max-width: 540px;
+}
+
+.stepCardWrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  margin-top: -110px;
+}
+
+.stepCard {
+  padding: 22px 24px;
+  max-width: 440px;
+  border-radius: 18px;
+}
+
+.stepTitle {
+  margin: 8px 0 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 30px;
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+  color: var(--text-hi);
+}
+
+.stepText {
+  margin-top: 12px;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+/* how to read the drawing: three swatches, a few words each */
+.key {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 16px 0 0;
+  padding: 14px 0 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+  font-size: 13.5px;
+  color: var(--text);
+}
+
+.key li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.key i {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex: none;
 }
 
 .hero {

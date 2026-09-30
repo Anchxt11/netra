@@ -1,34 +1,57 @@
 // Landing (/): a scroll story. The stage stays pinned while scrolling moves through the steps.
-// Minimal by design: NETRA, one line, one button, one caption per step. Spec: docs/PAGES.md section 4.
+// Minimal by design: NETRA, one line, one button; then, per step, a title, one sentence and a
+// tiny colour key. Spec: docs/PAGES.md section 4.
 import { useRef, useState } from "react";
-import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform } from "motion/react";
+import {
+  AnimatePresence,
+  motion,
+  useMotionValueEvent,
+  useReducedMotion,
+  useScroll,
+  useSpring,
+  useTransform,
+} from "motion/react";
 import { Link } from "react-router-dom";
 import { GlassCard } from "../components/GlassCard";
 import { StepRail } from "../landing/StepRail";
 import { StepStage } from "../landing/StepStage";
-import { STEPS, pad2 } from "../landing/steps";
+import { STEPS, pad2, type KeySwatch } from "../landing/steps";
 import styles from "./Landing.module.css";
 
 // Steps built so far. The scroll only reaches these, so the story never shows an empty step.
 const BUILT_STEPS = 2;
+// Scroll distance per step, in viewport heights: enough room for each step to settle.
+const PER_STEP_VH = 120;
+
+const SWATCH: Record<KeySwatch, string> = {
+  heat: "var(--heat-1)",
+  rule: "var(--rule)",
+  ai: "var(--ai)",
+  rust: "var(--rust)",
+  ok: "var(--ok)",
+};
 
 // Default export so the router can lazy-load it (the globe libraries stay out of the dashboard).
 export default function Landing() {
   const scrollRef = useRef<HTMLElement>(null);
   const still = useReducedMotion() ?? false;
   const { scrollYProgress } = useScroll({ target: scrollRef, offset: ["start start", "end end"] });
-  // t runs 0 (step 1) to BUILT_STEPS - 1 (last built step); fractions are the transitions between.
-  const t = useTransform(scrollYProgress, [0, 1], [0, BUILT_STEPS - 1]);
+  // A spring between the wheel and the story: each notch glides instead of jumping.
+  const smooth = useSpring(scrollYProgress, { stiffness: 70, damping: 20, mass: 0.6, restDelta: 0.0001 });
+  // t runs 0 (step 1) to BUILT_STEPS - 1 (last built step); fractions are the moves between steps.
+  const t = useTransform(still ? scrollYProgress : smooth, [0, 1], [0, BUILT_STEPS - 1]);
   const [current, setCurrent] = useState(0);
   useMotionValueEvent(t, "change", (v) => setCurrent(Math.min(BUILT_STEPS - 1, Math.round(v))));
 
-  // Step 1's hero (NETRA, the line, the button) gives way as the dive begins.
-  const heroOpacity = useTransform(t, [0, 0.22], [1, 0]);
-  const heroY = useTransform(t, [0, 0.22], still ? [0, 0] : [0, -24]);
-  const step = STEPS[current];
+  // Step 1's hero gives way as the globe starts to break apart; the step card takes its place.
+  const heroOpacity = useTransform(t, [0.02, 0.2], [1, 0]);
+  const heroY = useTransform(t, [0.02, 0.2], still ? [0, 0] : [0, -20]);
+  const cardOpacity = useTransform(t, [0.3, 0.46], [0, 1]);
+  const cardY = useTransform(t, [0.3, 0.46], still ? [0, 0] : [16, 0]);
+  const cardStep = STEPS[Math.max(1, current)];
 
   return (
-    <section ref={scrollRef} className={styles.scroller} style={{ height: `${BUILT_STEPS * 100}vh` }}>
+    <section ref={scrollRef} className={styles.scroller} style={{ height: `calc(100vh + ${(BUILT_STEPS - 1) * PER_STEP_VH}vh)` }}>
       <div className={styles.landing}>
         <div className={styles.copy}>
           <motion.div
@@ -45,25 +68,41 @@ export default function Landing() {
             <Link to="/live" className={styles.cta} tabIndex={current === 0 ? 0 : -1}>
               OPEN LIVE DASHBOARD
             </Link>
+            <GlassCard className={styles.caption}>
+              <span className={styles.captionLabel}>STEP 01, {STEPS[0].label}</span>
+              <p>{STEPS[0].caption}</p>
+            </GlassCard>
           </motion.div>
 
-          <GlassCard className={styles.caption}>
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={step.n}
-                initial={{ opacity: 0, y: still ? 0 : 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                aria-live="polite"
-              >
-                <span className={styles.captionLabel}>
-                  STEP {pad2(step.n)}, {step.label}
-                </span>
-                <p>{step.caption}</p>
-              </motion.div>
-            </AnimatePresence>
-          </GlassCard>
+          {/* Steps 2 to 5: what this step shows, in one sentence, and how to read the drawing. */}
+          <motion.div className={styles.stepCardWrap} style={{ opacity: cardOpacity, y: cardY }} aria-hidden={current === 0}>
+            <GlassCard className={styles.stepCard}>
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={cardStep.n}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  aria-live="polite"
+                >
+                  <span className={styles.captionLabel}>STEP {pad2(cardStep.n)}</span>
+                  <h2 className={styles.stepTitle}>{cardStep.label}</h2>
+                  <p className={styles.stepText}>{cardStep.caption}</p>
+                  {cardStep.key && (
+                    <ul className={styles.key}>
+                      {cardStep.key.map((k) => (
+                        <li key={k.text}>
+                          <i style={{ background: SWATCH[k.swatch] }} aria-hidden="true" />
+                          {k.text}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </GlassCard>
+          </motion.div>
         </div>
 
         <div className={styles.stageWrap}>
