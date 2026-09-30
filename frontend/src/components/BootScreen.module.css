@@ -1,0 +1,126 @@
+.boot {
+  position: fixed;
+  inset: 0;
+  z-index: 800;
+  display: grid;
+  place-items: center;
+  background: rgba(10, 8, 7, 0.94);
+  cursor: pointer;
+  transition: opacity 200ms ease;
+}
+
+.leaving {
+  opacity: 0;
+}
+
+.motto {
+  position: absolute;
+  top: 28px;
+  left: 32px;
+  font-family: var(--font-data);
+  font-size: 12px;
+  line-height: 1.7;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.centre {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  width: min(420px, 90vw);
+}
+
+.mark {
+  display: block;
+  height: 64px;
+  aspect-ratio: 499 / 271;
+  background: var(--text-hi);
+  -webkit-mask: url("/brand/netra-mark.png") center / contain no-repeat;
+  mask: url("/brand/netra-mark.png") center / contain no-repeat;
+}
+
+.tagline {
+  font-family: var(--font-data);
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  color: var(--muted);
+}
+
+.lines {
+  width: 100%;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-data);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--text);
+}
+
+.lines li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 3px 0;
+  opacity: 0;
+  animation: lineIn 160ms ease-out forwards;
+}
+
+@keyframes lineIn {
+  to {
+    opacity: 1;
+  }
+}
+
+.leader {
+  flex: 1;
+  border-bottom: 1px dotted rgba(255, 255, 255, 0.18);
+  transform: translateY(-3px);
+}
+
+.ok { color: var(--ok); }
+.muted { color: var(--muted); }
+.fail { color: var(--fail); }
+
+.bar {
+  display: flex;
+  gap: 3px;
+  width: 100%;
+}
+
+.bar i {
+  flex: 1;
+  height: 8px;
+  border-radius: 1px;
+  background: var(--unlit);
+  animation: segOn 1ms linear forwards;
+}
+
+@keyframes segOn {
+  to {
+    background: var(--rust);
+  }
+}
+
+.skip {
+  position: absolute;
+  right: 32px;
+  bottom: 28px;
+  height: 28px;
+  padding: 0 14px;
+  border-radius: var(--r-btn);
+  border: 1px solid rgba(255, 150, 120, 0.35);
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-data);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+}
+
+.skip:hover {
+  color: var(--text-hi);
+  border-color: rgba(255, 150, 120, 0.6);
+}

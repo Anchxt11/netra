@@ -7,6 +7,10 @@ import { rankIncidents } from "../lib/rank";
 
 const MAX_EXPIRED = 50;
 const MAX_BENIGN = 20;
+const EPS_HISTORY = 30;
+
+/** Exactly one thing is selected: an incident, or a judged-normal item. */
+export type Selection = { kind: "incident" | "benign"; id: string } | null;
 
 interface NetraState {
   /** True on mock data: shows the SIMULATED FEED chip. The only place the source leaks into the UI. */
@@ -20,8 +24,10 @@ interface NetraState {
   expired: Incident[]; // newest first
   benign: BenignAnomaly[]; // newest first
   health: PipelineHealth | null;
-  selectedId: string | null;
-  select: (id: string | null) => void;
+  /** Events per second, last 30 health messages: drives the live trace in the top bar. */
+  epsHistory: number[];
+  selection: Selection;
+  select: (selection: Selection) => void;
   decide: (decision: Decision) => void;
 }
 
@@ -36,8 +42,9 @@ export const useNetra = create<NetraState>()((set) => ({
   expired: [],
   benign: [],
   health: null,
-  selectedId: null,
-  select: (id) => set({ selectedId: id }),
+  epsHistory: [],
+  selection: null,
+  select: (selection) => set({ selection }),
   decide: (decision) => source?.sendDecision(decision),
 }));
 
@@ -63,7 +70,10 @@ function apply(msg: ServerMessage) {
       }));
       break;
     case "health":
-      useNetra.setState({ health: msg.payload });
+      useNetra.setState((s) => ({
+        health: msg.payload,
+        epsHistory: [...s.epsHistory, msg.payload.feed === "live" ? msg.payload.eventsPerSec : 0].slice(-EPS_HISTORY),
+      }));
       break;
   }
 }

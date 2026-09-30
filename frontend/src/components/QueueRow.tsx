@@ -26,7 +26,7 @@ export function QueueRow({ score, name, detectedBy, mitreId, remaining, timeLeft
   const cls = [styles.row, selected && styles.selected, dimmed && !selected && styles.dimmed].filter(Boolean).join(" ");
 
   return (
-    <button type="button" className={cls} aria-pressed={selected} onClick={onSelect}>
+    <button type="button" className={cls} aria-pressed={selected} onClick={onSelect} data-row>
       <NumText value={score} size="m" className={styles.score} />
       <span className={styles.nameCol}>
         <span className={styles.name}>{name}</span>

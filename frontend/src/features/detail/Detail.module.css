@@ -1,0 +1,90 @@
+.focus,
+.judged {
+  padding: 18px 22px;
+  min-height: 0;
+}
+
+.focus {
+  height: 100%;
+}
+
+.judged {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-self: start;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.opened {
+  font-family: var(--font-data);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.name {
+  margin-top: 10px;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 21px;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text-hi);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.judged .name {
+  margin-top: 0;
+}
+
+.sentence {
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+.checks {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+}
+
+.checks li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pass {
+  color: var(--ok);
+  flex: none;
+}
+
+.nopass {
+  color: var(--muted);
+  flex: none;
+}
+
+.closing,
+.note {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.note {
+  margin-top: 8px;
+}

@@ -1,0 +1,115 @@
+.status,
+.chips {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.chips {
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.chipLink {
+  border-radius: var(--r-chip);
+}
+
+.chipLink:hover > span {
+  filter: brightness(1.2);
+}
+
+/* live trace */
+.feed {
+  --c: var(--ok);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-data);
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--c);
+  white-space: nowrap;
+}
+
+.feed svg {
+  display: block;
+  overflow: visible;
+}
+
+.trace {
+  fill: none;
+  stroke: var(--c);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+.base {
+  stroke: color-mix(in srgb, var(--c) 25%, transparent);
+  stroke-width: 1;
+}
+
+.failing {
+  --c: var(--fail);
+  animation: failPulse 1s ease-in-out infinite;
+}
+
+@keyframes failPulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.clock {
+  color: var(--text-hi);
+}
+
+/* freshness */
+.fresh {
+  --c: var(--ok);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.label {
+  font-family: var(--font-data);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.segs {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.segs i {
+  width: 5px;
+  height: 14px;
+  border-radius: 1px;
+  background: var(--unlit);
+}
+
+.segs i.lit {
+  background: var(--c);
+}
+
+.value {
+  font-family: var(--font-data);
+  font-size: 12px;
+  color: var(--text);
+}
+
+.failing .value {
+  color: var(--fail);
+}
+
+/* On narrower screens the word FRESHNESS goes; the gauge and value stay. */
+@media (max-width: 1360px) {
+  .freshLabel {
+    display: none;
+  }
+}

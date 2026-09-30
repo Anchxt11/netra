@@ -1,6 +1,5 @@
-import { Link, NavLink } from "react-router-dom";
-import { Chip } from "../../components/Chip";
-import { useNetra } from "../../store/useNetra";
+import { Link, NavLink, useLocation } from "react-router-dom";
+import { OsdChips, OsdStatus } from "./Osd";
 import styles from "./TopBar.module.css";
 
 const NAV = [
@@ -10,11 +9,12 @@ const NAV = [
 ];
 
 export function TopBar() {
-  const simulated = useNetra((s) => s.simulated);
+  // The landing page stays minimal: no status readouts there.
+  const landing = useLocation().pathname === "/";
 
   return (
     <header className={styles.row}>
-      <div className={styles.side} />
+      <div className={styles.side}>{!landing && <OsdStatus />}</div>
 
       {/* The glass bar only wraps the logo and the three links. */}
       <div className={styles.bar}>
@@ -38,14 +38,7 @@ export function TopBar() {
         </nav>
       </div>
 
-      {/* Status strip: the live indicator, clock and freshness join this later. */}
-      <div className={`${styles.side} ${styles.status}`}>
-        {simulated && (
-          <Chip tone="muted" dashed>
-            SIMULATED FEED
-          </Chip>
-        )}
-      </div>
+      <div className={styles.side}>{!landing && <OsdChips />}</div>
     </header>
   );
 }

@@ -6,6 +6,12 @@ export function formatCountdown(ms: number): string {
   return `${pad(Math.floor(total / 60))}:${pad(total % 60)}`;
 }
 
+/** Wall-clock "14:12" in the viewer's local time. */
+export function formatHM(t: string | number | Date): string {
+  const d = new Date(t);
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 /** Wall-clock "14:37:12" in the viewer's local time. */
 export function formatClock(t: string | number | Date): string {
   const d = new Date(t);

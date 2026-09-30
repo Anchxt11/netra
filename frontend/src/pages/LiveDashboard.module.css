@@ -1,0 +1,54 @@
+/*
+  1440x900: 356 | 722 | 310, no page scroll. Below 1440 wide the centre shrinks;
+  below 900 tall the page scrolls vertically (never sideways).
+  90px = top padding 12 + top bar 52 + gap 12 + bottom padding 14.
+*/
+.dash {
+  display: grid;
+  grid-template-columns: 356px minmax(0, 1fr) 310px;
+  gap: var(--gap);
+  height: calc(100vh - 90px);
+  min-height: 806px;
+}
+
+.left,
+.centre,
+.centreSingle,
+.right {
+  min-height: 0;
+  min-width: 0;
+}
+
+.centre {
+  display: grid;
+  grid-template-rows: 212px 262px minmax(0, 1fr);
+  gap: var(--gap);
+}
+
+.centreSingle {
+  display: flex;
+  flex-direction: column;
+}
+
+.middle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 258px;
+  gap: var(--gap);
+  min-height: 0;
+}
+
+.right {
+  display: grid;
+  grid-template-rows: 344px 204px minmax(0, 1fr);
+  gap: var(--gap);
+}
+
+.upcoming {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.upcomingNote {
+  font-size: 12.5px;
+  color: var(--muted);
+}
