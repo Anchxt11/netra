@@ -31,53 +31,6 @@
   margin-bottom: 0;
 }
 
-/* "RANKED BY RISK ?" */
-.helpWrap {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.help {
-  display: inline-grid;
-  place-items: center;
-  width: 16px;
-  height: 16px;
-  padding: 0;
-  border-radius: 50%;
-  border: 1px solid var(--line);
-  background: transparent;
-  color: var(--muted);
-  font-family: var(--font-data);
-  font-size: 10px;
-  cursor: pointer;
-}
-
-.help:hover,
-.help[aria-expanded="true"] {
-  color: var(--text-hi);
-  border-color: var(--muted);
-}
-
-.helpPop {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  z-index: 5;
-  width: 240px;
-  padding: 10px 12px;
-  border-radius: var(--r-btn);
-  background: var(--bg);
-  border: 1px solid var(--glass-border);
-  font-family: var(--font-ui);
-  font-size: 13px;
-  line-height: 1.4;
-  letter-spacing: 0;
-  text-transform: none;
-  color: var(--text);
-}
-
 /* pinned groups */
 .pinned {
   display: flex;

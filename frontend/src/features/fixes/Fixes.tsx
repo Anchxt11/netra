@@ -60,7 +60,6 @@ export function Fixes({ incident }: { incident: Incident }) {
     <section className={styles.fixes} aria-label="Recommended fixes" data-tour="fixes">
       <header className={styles.head}>
         <BoxTitle>RECOMMENDED FIXES</BoxTitle>
-        <span className={styles.meta}>FROM A FIXED LIST OF 14, NOTHING RUNS WITHOUT APPROVAL</span>
       </header>
 
       {!crieReady || fixes.length === 0 ? (

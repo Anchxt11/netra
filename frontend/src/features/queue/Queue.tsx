@@ -15,31 +15,6 @@ const LAYOUT = { layout: { duration: 0.22, ease: "easeOut" as const } };
 const FLASH_ON = "rgba(227, 90, 54, 0.28)";
 const FLASH_OFF = "rgba(227, 90, 54, 0)";
 
-function RiskHelp() {
-  const [open, setOpen] = useState(false);
-  return (
-    <span className={styles.helpWrap}>
-      RANKED BY RISK
-      <button
-        type="button"
-        className={styles.help}
-        aria-expanded={open}
-        aria-controls="risk-help"
-        aria-label="How risk is ranked"
-        onClick={() => setOpen((v) => !v)}
-        onKeyDown={(e) => e.key === "Escape" && setOpen(false)}
-        onBlur={() => setOpen(false)}
-      >
-        ?
-      </button>
-      {open && (
-        <span id="risk-help" role="note" className={styles.helpPop}>
-          Risk is how bad, times how sure, times how soon. Incidents move up as their time runs out.
-        </span>
-      )}
-    </span>
-  );
-}
 
 export function Queue() {
   const ranked = useRankedIncidents();
@@ -134,7 +109,7 @@ export function Queue() {
   });
 
   return (
-    <Panel title="Needs attention" meta={<RiskHelp />} corners={["tl", "br"]} className={styles.panel} tourId="queue">
+    <Panel title="Needs attention" corners={["tl", "br"]} className={styles.panel} tourId="queue">
       <div className={styles.list} onKeyDown={onKeyDown}>
         <AnimatePresence initial={false} mode="popLayout">
           {items}

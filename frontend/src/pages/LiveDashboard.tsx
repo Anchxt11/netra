@@ -75,7 +75,7 @@ export function LiveDashboard({ embedded = false }: { embedded?: boolean }) {
                 <Waiting title="How it escalated" />
                 <Waiting title="Who is involved" />
               </div>
-              <Waiting title="Recommended fixes" meta="FROM A FIXED LIST OF 14, NOTHING RUNS WITHOUT APPROVAL" />
+              <Waiting title="Recommended fixes" />
             </>
           )}
         </div>

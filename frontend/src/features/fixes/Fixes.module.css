@@ -16,17 +16,6 @@
   border-bottom: 1px solid var(--line);
 }
 
-.head .meta {
-  margin-left: auto;
-}
-
-.meta {
-  font-family: var(--font-data);
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  color: var(--muted);
-}
-
 .cards {
   flex: 1;
   min-height: 0;
