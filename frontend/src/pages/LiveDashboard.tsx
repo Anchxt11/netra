@@ -11,6 +11,7 @@ import { Fixes } from "../features/fixes/Fixes";
 import { Toast } from "../components/Toast";
 import { RightColumn } from "../features/health/RightColumn";
 import { DemoDock } from "../features/demo/DemoDock";
+import { Tour } from "../features/tour/Tour";
 import { useNetra, useRankedIncidents } from "../store/useNetra";
 import styles from "./LiveDashboard.module.css";
 
@@ -23,7 +24,8 @@ function Waiting({ title, meta }: { title: string; meta?: string }) {
   );
 }
 
-export function LiveDashboard() {
+/** `embedded`: shown at the end of the home page's story (the tour then only plays on request). */
+export function LiveDashboard({ embedded = false }: { embedded?: boolean }) {
   const ranked = useRankedIncidents();
   const incidents = useNetra((s) => s.incidents);
   const benign = useNetra((s) => s.benign);
@@ -80,6 +82,7 @@ export function LiveDashboard() {
       )}
       <Toast />
       <DemoDock />
+      <Tour autoStart={!embedded} />
 
       <div className={styles.right}>
         <RightColumn />

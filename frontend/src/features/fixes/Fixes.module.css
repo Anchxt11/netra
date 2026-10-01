@@ -6,12 +6,18 @@
   min-width: 0;
 }
 
+/* Same header bar as the panels: title, context, a divider under both. */
 .head {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 6px 12px;
-  padding-left: 4px;
+  padding: 0 4px 9px;
+  border-bottom: 1px solid var(--line);
+}
+
+.head .meta {
+  margin-left: auto;
 }
 
 .meta {

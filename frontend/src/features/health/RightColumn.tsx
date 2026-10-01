@@ -27,11 +27,11 @@ export function RightColumn() {
 
   return (
     <>
-      <Panel title="Threat scope" meta={`${ranked.length} OPEN`} corners={["tr", "bl"]} className={styles.panel}>
+      <Panel title="Threat scope" meta={`${ranked.length} OPEN`} corners={["tr", "bl"]} className={styles.panel} tourId="scope">
         <ThreatScope incidents={ranked} selectedId={selectedId} onSelect={(id) => select({ kind: "incident", id })} />
       </Panel>
 
-      <Panel title="Detections / min" meta="LAST 30 MIN" className={styles.panel}>
+      <Panel title="Detections / min" meta="LAST 30 MIN" className={styles.panel} tourId="detections">
         {health && (
           <div className={styles.chips}>
             <Chip tone="rule" dot>
@@ -47,7 +47,7 @@ export function RightColumn() {
         </Suspense>
       </Panel>
 
-      <Panel title="System" meta="CAN YOU TRUST THIS?" className={styles.panel}>
+      <Panel title="System" meta="CAN YOU TRUST THIS?" className={styles.panel} tourId="system">
         {health ? <SystemList health={health} now={now} /> : <p className={styles.pending}>PENDING</p>}
       </Panel>
     </>

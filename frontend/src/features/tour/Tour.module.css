@@ -1,0 +1,95 @@
+.tour {
+  position: fixed;
+  inset: 0;
+  z-index: 750;
+}
+
+/* The spotlight: a clear window over the box, everything else dimmed. */
+.spot {
+  position: fixed;
+  border-radius: 12px;
+  border: 1.5px solid var(--rust);
+  box-shadow: 0 0 0 9999px rgba(6, 6, 5, 0.74);
+  transition: top 250ms ease, left 250ms ease, width 250ms ease, height 250ms ease;
+  pointer-events: none;
+}
+
+.card {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px 20px 16px;
+  border-radius: var(--r-glass);
+  background: rgba(16, 15, 14, 0.94);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-hi);
+  transition: top 250ms ease, left 250ms ease;
+}
+
+.count {
+  font-family: var(--font-data);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-hi);
+}
+
+.text {
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.skip,
+.back,
+.next {
+  height: 32px;
+  padding: 0 14px;
+  border-radius: var(--r-btn);
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.07em;
+  cursor: pointer;
+}
+
+.skip {
+  margin-right: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+}
+
+.skip:hover {
+  color: var(--text-hi);
+}
+
+.back {
+  border: 1px solid var(--edge);
+  background: transparent;
+  color: var(--text);
+}
+
+.next {
+  border: 1px solid var(--rust);
+  background: var(--rust);
+  color: var(--on-rust);
+}

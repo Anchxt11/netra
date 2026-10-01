@@ -13,10 +13,17 @@ export { echarts };
 /** Colours by role, read from the element's CSS tokens. */
 export const chartColors = themeColors;
 
+/** "#C9C3BE" + 0.3 -> "rgba(201, 195, 190, 0.3)" (charts draw on canvas, so no CSS colour-mix). */
+function withAlpha(hex: string, alpha: number): string {
+  const h = hex.replace("#", "");
+  const n = parseInt(h.length === 3 ? h.replace(/./g, (x) => x + x) : h, 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+}
+
 export function chartTheme(el?: Element) {
   const c = chartColors(el);
-  const axisLine = "rgba(255, 120, 90, 0.3)";
-  const grid = "rgba(255, 120, 90, 0.08)";
+  const axisLine = withAlpha(c.scope, 0.3);
+  const grid = withAlpha(c.scope, 0.08);
   const mono = '"IBM Plex Mono", ui-monospace, monospace';
   const axis = {
     axisLine: { show: true, lineStyle: { color: axisLine } },
@@ -35,7 +42,7 @@ export function chartTheme(el?: Element) {
     valueAxis: { ...axis, axisLine: { show: false }, splitLine: { show: true, lineStyle: { color: grid } } },
     tooltip: {
       backgroundColor: "rgba(20, 14, 12, 0.88)",
-      borderColor: "rgba(255, 170, 140, 0.18)",
+      borderColor: withAlpha(c.scope, 0.2),
       borderWidth: 1,
       padding: [6, 10],
       textStyle: { color: c.text, fontFamily: mono, fontSize: 11 },

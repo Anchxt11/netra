@@ -134,7 +134,7 @@ export function Queue() {
   });
 
   return (
-    <Panel title="Needs attention" meta={<RiskHelp />} corners={["tl", "br"]} className={styles.panel}>
+    <Panel title="Needs attention" meta={<RiskHelp />} corners={["tl", "br"]} className={styles.panel} tourId="queue">
       <div className={styles.list} onKeyDown={onKeyDown}>
         <AnimatePresence initial={false} mode="popLayout">
           {items}

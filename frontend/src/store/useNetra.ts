@@ -56,6 +56,17 @@ interface NetraState {
   /** Approve or reject a fix. Updates the screen at once, then the source confirms. */
   decide: (decision: Decision) => void;
   dismissToast: () => void;
+
+  // Screen state, not data.
+  /** The boot screen is showing: the tour waits for it. */
+  booting: boolean;
+  /** The first-visit tour is open. */
+  tourOpen: boolean;
+  /** The dashboard section on the home page is on screen: the header shows its status readouts. */
+  dashboardInView: boolean;
+  setBooting: (booting: boolean) => void;
+  setTourOpen: (open: boolean) => void;
+  setDashboardInView: (inView: boolean) => void;
 }
 
 let source: DataSource | null = null;
@@ -100,6 +111,13 @@ export const useNetra = create<NetraState>()((set) => ({
     source?.sendDecision(d);
   },
   dismissToast: () => set({ toast: null }),
+
+  booting: false,
+  tourOpen: false,
+  dashboardInView: false,
+  setBooting: (booting) => set({ booting }),
+  setTourOpen: (tourOpen) => set({ tourOpen }),
+  setDashboardInView: (dashboardInView) => set({ dashboardInView }),
 
   demoAvailable: false,
   demo: { running: null, focusId: null },

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
+import { useNetra } from "../../store/useNetra";
 import { OsdChips, OsdStatus, SimulatedChip } from "./Osd";
 import styles from "./TopBar.module.css";
 
@@ -10,8 +11,11 @@ const NAV = [
 ];
 
 export function TopBar() {
-  // The landing page stays minimal: no status readouts there.
+  // The landing page stays minimal, until you scroll down to its dashboard: then the header
+  // becomes the dashboard's header, with its status readouts and the quiet theme.
   const landing = useLocation().pathname === "/";
+  const dashboardInView = useNetra((s) => s.dashboardInView);
+  const readouts = !landing || dashboardInView;
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -22,8 +26,11 @@ export function TopBar() {
   }, []);
 
   return (
-    <header className={`${styles.row} ${scrolled ? styles.scrolled : ""}`}>
-      <div className={styles.side}>{!landing && <OsdStatus />}</div>
+    <header
+      className={`${styles.row} ${scrolled ? styles.scrolled : ""}`}
+      data-surface={landing && dashboardInView ? "console" : undefined}
+    >
+      <div className={styles.side}>{readouts && <OsdStatus />}</div>
 
       {/* The glass bar only wraps the logo and the three links. */}
       <div className={styles.bar}>
@@ -47,7 +54,7 @@ export function TopBar() {
         </nav>
       </div>
 
-      <div className={styles.side}>{landing ? <SimulatedChip /> : <OsdChips />}</div>
+      <div className={styles.side}>{readouts ? <OsdChips /> : <SimulatedChip />}</div>
     </header>
   );
 }

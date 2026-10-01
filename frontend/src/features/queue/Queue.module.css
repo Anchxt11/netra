@@ -15,7 +15,7 @@
   margin: 0 -4px;
   padding: 0 4px;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 150, 120, 0.2) transparent;
+  scrollbar-color: var(--edge-soft) transparent;
 }
 
 .list > div:first-child h3 {

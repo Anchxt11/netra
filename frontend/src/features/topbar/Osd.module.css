@@ -15,6 +15,25 @@
   border-radius: var(--r-chip);
 }
 
+/* Replays the first-visit tour. */
+.tourButton {
+  height: 22px;
+  padding: 0 10px;
+  border-radius: var(--r-chip);
+  border: 1px solid var(--edge);
+  background: transparent;
+  font-family: var(--font-data);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.tourButton:hover {
+  border-color: var(--edge-hover);
+  color: var(--text-hi);
+}
+
 .chipLink:hover > span {
   filter: brightness(1.2);
 }

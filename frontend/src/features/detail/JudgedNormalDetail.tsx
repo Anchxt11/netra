@@ -1,7 +1,7 @@
 import { Check } from "@phosphor-icons/react";
 import type { BenignAnomaly } from "../../data/types";
 import { GlassCard } from "../../components/GlassCard";
-import { BracketLabel } from "../../components/Panel";
+import { BoxTitle } from "../../components/Panel";
 import { formatClock } from "../../lib/time";
 import styles from "./Detail.module.css";
 
@@ -10,7 +10,7 @@ export function JudgedNormalDetail({ anomaly }: { anomaly: BenignAnomaly }) {
   return (
     <GlassCard className={styles.judged}>
       <div className={styles.head}>
-        <BracketLabel>JUDGED NORMAL</BracketLabel>
+        <BoxTitle>JUDGED NORMAL</BoxTitle>
         <span className={styles.opened}>{formatClock(anomaly.ts)}</span>
       </div>
       <h2 className={styles.name}>{anomaly.name}</h2>

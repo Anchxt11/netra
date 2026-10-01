@@ -15,6 +15,7 @@ import { Link } from "react-router-dom";
 import { GlassCard } from "../components/GlassCard";
 import { StepRail } from "../landing/StepRail";
 import { StepStage } from "../landing/StepStage";
+import { DASHBOARD_ANCHOR, DashboardSection } from "../landing/DashboardSection";
 import { STEPS, pad2, type KeySwatch } from "../landing/steps";
 import styles from "./Landing.module.css";
 
@@ -108,9 +109,18 @@ export default function Landing() {
                   )}
                   {cardStep.n === STEPS.length && (
                     <motion.div style={{ opacity: finalCta, pointerEvents: ctaLive ? "auto" : "none" }}>
-                      <Link to="/live" className={`${styles.cta} ${styles.finalCta}`} tabIndex={ctaLive ? 0 : -1}>
-                        OPEN LIVE DASHBOARD
-                      </Link>
+                      {/* The live dashboard is right below the story: this glides down to it. */}
+                      <a
+                        href={`#${DASHBOARD_ANCHOR}`}
+                        className={`${styles.cta} ${styles.finalCta}`}
+                        tabIndex={ctaLive ? 0 : -1}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          document.getElementById(DASHBOARD_ANCHOR)?.scrollIntoView({ behavior: still ? "auto" : "smooth" });
+                        }}
+                      >
+                        SEE IT LIVE
+                      </a>
                     </motion.div>
                   )}
                 </motion.div>
@@ -139,7 +149,10 @@ export default function Landing() {
       </div>
     </section>
 
-    {/* Closing band, after the story. */}
+    {/* After the story: the real thing. */}
+    <DashboardSection />
+
+    {/* Closing band, at the very end. */}
     <footer className={styles.band}>Built on Microsoft Azure, ONNX Runtime and LightGBM from Microsoft Research.</footer>
     </>
   );

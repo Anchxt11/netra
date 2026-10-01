@@ -8,8 +8,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 31px;
-  border-bottom: 1px dashed rgba(255, 120, 90, 0.12);
+  min-height: 29px;
+  border-bottom: 1px dashed color-mix(in srgb, var(--scope) calc(0.12 * 100%), transparent);
   font-size: 12.5px;
   color: var(--text);
 }

@@ -1,4 +1,5 @@
-import { useCallback, useState } from "react";
+import { useCallback, useLayoutEffect, useState } from "react";
+import { useNetra } from "../store/useNetra";
 import { MotionConfig } from "motion/react";
 import { Outlet, useLocation, useSearchParams } from "react-router-dom";
 import { TopBar } from "../features/topbar/TopBar";
@@ -36,6 +37,9 @@ export function AppShell() {
     }
     setBooting(false);
   }, []);
+  // Let the tour know when the boot screen is in the way.
+  const publishBooting = useNetra((s) => s.setBooting);
+  useLayoutEffect(() => publishBooting(booting), [booting, publishBooting]);
 
   return (
     // reducedMotion="user": motion animations switch off when the OS asks for reduced motion.

@@ -1,0 +1,11 @@
+/* Sits right under the pinned header when scrolled to (68px = header top 12 + 44 + gap 12). */
+.section {
+  scroll-margin-top: 68px;
+  margin-top: 40px;
+}
+
+/* Holds the dashboard's height before it loads, so the page does not jump. */
+.space {
+  height: calc(100vh - 82px);
+  min-height: 806px;
+}

@@ -38,11 +38,11 @@
 
 .reject {
   background: transparent;
-  border-color: rgba(255, 150, 120, 0.35);
+  border-color: var(--edge);
   color: var(--text);
 }
 
 .reject:hover:not(:disabled) {
-  border-color: rgba(255, 150, 120, 0.6);
+  border-color: var(--edge-hover);
   color: var(--text-hi);
 }

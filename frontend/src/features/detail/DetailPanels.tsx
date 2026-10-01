@@ -14,7 +14,7 @@ export function EscalationPanel({ incident }: { incident: Incident }) {
   const meta = `${n} ${n === 1 ? "SIGNAL" : "SIGNALS"}, ${engines} ${engines === 1 ? "ENGINE" : "ENGINES"}`;
 
   return (
-    <Panel title="How it escalated" meta={meta} corners={["tl"]} className={styles.panel}>
+    <Panel title="How it escalated" meta={meta} corners={["tl"]} className={styles.panel} tourId="escalation">
       <div className={styles.escalation}>
         <EscalationList key={incident.id} signals={incident.signals} />
         <EvidenceBar signals={incident.signals} attention={incident.attentionScore} />
@@ -26,7 +26,7 @@ export function EscalationPanel({ incident }: { incident: Incident }) {
 /** WHO IS INVOLVED: the entity graph. */
 export function InvolvedPanel({ incident }: { incident: Incident }) {
   return (
-    <Panel title="Who is involved" corners={["tr"]} className={styles.panel}>
+    <Panel title="Who is involved" corners={["tr"]} className={styles.panel} tourId="involved">
       <div className={styles.body}>
         <EntityGraph incident={incident} />
       </div>

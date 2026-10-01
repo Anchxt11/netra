@@ -80,7 +80,7 @@
   list-style: none;
   border-radius: var(--r-chip);
   background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 150, 120, 0.12);
+  border: 1px solid var(--edge-soft);
 }
 
 .link {

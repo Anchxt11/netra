@@ -6,7 +6,7 @@
   list-style: none;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 150, 120, 0.2) transparent;
+  scrollbar-color: var(--edge-soft) transparent;
 }
 
 .row {
@@ -15,7 +15,7 @@
   align-items: center;
   gap: 8px;
   padding: 4px 0;
-  border-bottom: 1px dashed rgba(255, 120, 90, 0.13);
+  border-bottom: 1px dashed color-mix(in srgb, var(--scope) calc(0.13 * 100%), transparent);
   font-size: 12.5px;
   line-height: 1.25;
   color: var(--text);

@@ -17,6 +17,7 @@ export function themeColors(el: Element = document.documentElement) {
     textHi: read(s, "--text-hi"),
     muted: read(s, "--muted"),
     onRust: read(s, "--on-rust"),
+    scope: read(s, "--scope") || "#FF785A",
     heat: [read(s, "--heat-1"), read(s, "--heat-2"), read(s, "--heat-3"), read(s, "--heat-4")],
   };
 }

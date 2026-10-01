@@ -70,7 +70,7 @@ function Freshness() {
 export function OsdStatus() {
   const now = useNetra((s) => s.now);
   return (
-    <div className={styles.status}>
+    <div className={styles.status} data-tour="status">
       <FeedTrace />
       <NumText value={formatClock(now)} size="m" className={styles.clock} />
       <Freshness />
@@ -96,8 +96,12 @@ export function OsdChips() {
   const expired = useNetra((s) => s.health?.expiredToday ?? s.expired.length);
   const judgedNormal = useNetra((s) => s.health?.judgedNormalToday ?? s.benign.length);
   const simulated = useNetra((s) => s.simulated);
+  const openTour = useNetra((s) => s.setTourOpen);
   return (
     <div className={styles.chips}>
+      <button type="button" className={styles.tourButton} onClick={() => openTour(true)} aria-label="Start the guided tour of the dashboard">
+        TOUR
+      </button>
       <Link to="/live#expired" className={styles.chipLink}>
         <Chip>EXPIRED {expired}</Chip>
       </Link>

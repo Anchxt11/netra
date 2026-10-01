@@ -3,7 +3,7 @@
 // missing values show PENDING. Spec: docs/PAGES.md sections 2 and 3, docs/DATA_CONTRACT.md "Fixtures".
 import { Chip } from "../../components/Chip";
 import { GlassCard } from "../../components/GlassCard";
-import { BracketLabel, Panel } from "../../components/Panel";
+import { BoxTitle, Panel } from "../../components/Panel";
 import styles from "./EngineStandby.module.css";
 
 interface Model {
@@ -47,7 +47,7 @@ export function EngineStandby({ title, subtitle, source, model, metrics, stages,
       <div className={styles.grid}>
         <GlassCard className={styles.walkthrough}>
           <div className={styles.cardHead}>
-            <BracketLabel>WALKTHROUGH</BracketLabel>
+            <BoxTitle>WALKTHROUGH</BoxTitle>
             <Chip tone="muted" dashed>
               WAITING FOR MODEL EXPORT
             </Chip>

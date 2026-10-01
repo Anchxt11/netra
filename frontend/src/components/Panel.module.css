@@ -1,5 +1,5 @@
 .panel {
-  --corner-color: rgba(255, 120, 90, 0.45);
+  --corner-color: color-mix(in srgb, var(--scope) calc(0.45 * 100%), transparent);
   position: relative;
   padding: 14px 16px;
   background: var(--panel);
@@ -7,32 +7,28 @@
   border-radius: var(--r-panel);
 }
 
+/* A proper header bar: the box's title, its context on the right, a divider under both. */
 .head {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-bottom: 10px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--line);
 }
 
-.bracket {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+/* Box titles, everywhere: clear and readable first, decorative never. */
+.title {
   flex: none;
-  white-space: nowrap;
   margin: 0;
-  font-family: var(--font-data);
-  font-weight: 500;
-  font-size: 12px;
-  line-height: 1;
-  letter-spacing: 0.08em;
+  white-space: nowrap;
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--text);
-}
-
-.bracket b {
-  font-weight: 500;
-  color: var(--rust);
+  color: var(--text-hi);
 }
 
 .meta {

@@ -4,7 +4,7 @@ import { AttentionGauge } from "../../components/AttentionGauge";
 import { Chip, SplitChip } from "../../components/Chip";
 import { CountdownRing } from "../../components/CountdownRing";
 import { GlassCard } from "../../components/GlassCard";
-import { BracketLabel } from "../../components/Panel";
+import { BoxTitle } from "../../components/Panel";
 import { RiskReadout } from "../../components/RiskReadout";
 import { SevBars } from "../../components/SevBars";
 import { remainingShare } from "../../lib/heat";
@@ -30,10 +30,10 @@ export function IncidentFocus({ incident }: { incident: Incident }) {
   const { users, ips } = incident.entities;
 
   return (
-    <GlassCard className={styles.card}>
+    <GlassCard className={styles.card} data-tour="focus">
       <div className={styles.main}>
         <div className={styles.head}>
-          <BracketLabel>INCIDENT {incident.id}</BracketLabel>
+          <BoxTitle>INCIDENT {incident.id}</BoxTitle>
           <span className={styles.opened}>OPENED {formatClock(incident.createdAt)}</span>
           {incident.status === "approved" && (
             <Chip tone="ok" className={styles.approved}>

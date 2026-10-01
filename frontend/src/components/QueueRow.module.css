@@ -18,7 +18,7 @@
 
 .row:hover {
   background: rgba(255, 255, 255, 0.045);
-  border-color: rgba(255, 150, 120, 0.12);
+  border-color: var(--edge-soft);
 }
 
 .score {

@@ -5,7 +5,7 @@ import type { Incident, ModelStatus } from "../../data/types";
 import { Chip } from "../../components/Chip";
 import { FixCard } from "../../components/FixCard";
 import { GlassCard } from "../../components/GlassCard";
-import { BracketLabel } from "../../components/Panel";
+import { BoxTitle } from "../../components/Panel";
 import { useNetra } from "../../store/useNetra";
 import styles from "./Fixes.module.css";
 
@@ -57,9 +57,9 @@ export function Fixes({ incident }: { incident: Incident }) {
   const settled = approvedId !== undefined || incident.status !== "open";
 
   return (
-    <section className={styles.fixes} aria-label="Recommended fixes">
+    <section className={styles.fixes} aria-label="Recommended fixes" data-tour="fixes">
       <header className={styles.head}>
-        <BracketLabel>RECOMMENDED FIXES</BracketLabel>
+        <BoxTitle>RECOMMENDED FIXES</BoxTitle>
         <span className={styles.meta}>FROM A FIXED LIST OF 14, NOTHING RUNS WITHOUT APPROVAL</span>
       </header>
 

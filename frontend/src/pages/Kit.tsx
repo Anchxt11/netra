@@ -17,7 +17,7 @@ import { CountdownRing } from "../components/CountdownRing";
 import { GlassCard } from "../components/GlassCard";
 import { HeatSegments } from "../components/HeatSegments";
 import { NumText } from "../components/NumText";
-import { BracketLabel, Panel } from "../components/Panel";
+import { BoxTitle, Panel } from "../components/Panel";
 import { QueueRow } from "../components/QueueRow";
 import { RiskReadout } from "../components/RiskReadout";
 import { ScanlineOverlay } from "../components/ScanlineOverlay";
@@ -125,7 +125,7 @@ function Section({ title, note, wide, children }: { title: string; note?: string
   return (
     <section className={`${styles.section} ${wide ? styles.wide : ""}`}>
       <div className={styles.sectionHead}>
-        <BracketLabel>{title}</BracketLabel>
+        <BoxTitle>{title}</BoxTitle>
         {note && <p className={styles.note}>{note}</p>}
       </div>
       {children}
@@ -228,7 +228,7 @@ export default function Kit() {
           <Section title="Incident focus" note="Glass card composed from the kit, following the selected row.">
             <GlassCard className={styles.focus}>
               <div className={styles.focusMain}>
-                <BracketLabel>INCIDENT {focus.id}</BracketLabel>
+                <BoxTitle>INCIDENT {focus.id}</BoxTitle>
                 <p className={styles.incidentName}>{focus.name}</p>
                 <div className={styles.row}>
                   {focus.detectedBy === "both" ? (
