@@ -1,17 +1,16 @@
-# Netra stack - Person A. Start with:  docker compose up -d
-# Later additions (ClickHouse, processor, Postgres, API) get added as new services below.
+# Netra — Near Real-Time SOC Dashboard
+# Full stack: Redpanda, Generator, Processor, Console
 name: netra
 
 services:
+
+  # ─── Redpanda (Kafka-compatible broker) ──────────────────────────────────────
   redpanda:
     image: docker.redpanda.com/redpandadata/redpanda:v24.3.1
     container_name: redpanda
     command:
       - redpanda
       - start
-      # two doors into the same broker:
-      #   9092  = for other containers (host name "redpanda")
-      #   19092 = for your laptop (host name "localhost")
       - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
       - --advertise-kafka-addr internal://redpanda:9092,external://localhost:19092
       - --mode dev-container
@@ -22,8 +21,8 @@ services:
       - --node-id 0
       - --check=false
     ports:
-      - "19092:19092"   # Kafka API for the host (simulator's default --bootstrap)
-      - "19644:9644"    # admin API
+      - "19092:19092"   # Kafka API (host access)
+      - "19644:9644"    # Admin API
     healthcheck:
       test: ["CMD-SHELL", "rpk cluster health | grep -E 'Healthy:.+true' || exit 1"]
       interval: 5s
@@ -32,7 +31,7 @@ services:
     volumes:
       - redpanda-data:/var/lib/redpanda/data
 
-  # One-shot job: creates the 3 topics, then exits. Safe to re-run.
+  # ─── Topic initialisation (one-shot, safe to re-run) ─────────────────────────
   topic-init:
     image: docker.redpanda.com/redpandadata/redpanda:v24.3.1
     depends_on:
@@ -47,7 +46,7 @@ services:
         done
         rpk topic list -X brokers=redpanda:9092
 
-  # Optional web UI to look at topics/messages: http://localhost:8080
+  # ─── Redpanda Console (web UI) ── http://localhost:8080 ──────────────────────
   console:
     image: docker.redpanda.com/redpandadata/console:v2.8.0
     depends_on:
@@ -58,17 +57,48 @@ services:
     ports:
       - "8080:8080"
 
-  # The simulator as a container (started only with:  docker compose --profile sim up -d)
+  # ─── Team A: Traffic generator (requires --profile sim) ──────────────────────
   generator:
     profiles: ["sim"]
     build: ./simulator
     depends_on:
       topic-init:
         condition: service_completed_successfully
-    command: ["python", "web_traffic_sim.py", "--bootstrap", "redpanda:9092",
-              "--rate", "10", "--labels", "/data/labels.jsonl"]
+    command:
+      - python
+      - web_traffic_sim.py
+      - --bootstrap
+      - redpanda:9092
+      - --rate
+      - "${GENERATOR_RATE:-10}"
+      - --labels
+      - /data/labels.jsonl
     volumes:
       - ./data:/data
+
+  # ─── Team B: Event processor + YAML rule engine ─────────────────────────────
+  processor:
+    build:
+      context: .
+      dockerfile: processor/Dockerfile
+    depends_on:
+      topic-init:
+        condition: service_completed_successfully
+    environment:
+      KAFKA_BOOTSTRAP: redpanda:9092
+      RAW_TOPIC: events.raw
+      ENRICHED_TOPIC: events.enriched
+      ALERT_TOPIC: alerts
+      PROCESSOR_GROUP_ID: netra-processor
+      RULES_DIR: /app/rules/sigma
+      SCORER: ${SCORER:-dummy}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    restart: unless-stopped
+
+  # ─── Team C: TODO — ClickHouse, Postgres, FastAPI ────────────────────────────
+  # clickhouse:
+  # postgres:
+  # api:
 
 volumes:
   redpanda-data:
