@@ -44,48 +44,57 @@ make down
 
 After starting, open:
 - **Redpanda Console** — [http://localhost:8080](http://localhost:8080) — inspect topics and messages live
-- **Topics**: `events.raw`, `events.enriched`, `alerts`
+- **FastAPI Backend** — runs on `http://localhost:8000`. Test via `curl http://localhost:8000/health`.
+
+Check pipeline health and data flow:
+```bash
+# View Kafka consumer lag (should be 0)
+make lag
+
+# View event ingestion counts in ClickHouse
+make clickhouse-counts
+```
+
+### API Smoke Test
+To test the API manually via terminal:
+```bash
+# Login and get token
+TOKEN=$(curl -s http://localhost:8000/auth/login -H 'content-type: application/json' -d '{"username":"analyst","password":"analyst12345"}' | python3 -c 'import sys,json;print(json.load(sys.stdin)["access_token"])')
+
+# Fetch recent incidents
+curl -s http://localhost:8000/incidents -H "authorization: Bearer $TOKEN"
+```
 
 ## Project Structure
 
-```
+```text
 netra/
+├── api/                       # Team C — FastAPI backend & WebSocket
+│   ├── app/                   # FastAPI routes, models, and consumers
+│   ├── db/                    # Postgres migrations and init
+│   ├── tools/                 # Mock publish and ClickHouse seeding tools
+│   └── Dockerfile
 ├── contracts/                 # Frozen schemas (JSON Schema, YAML)
 │   ├── raw_event.schema.json  # 16-field raw event schema
 │   ├── enriched_event.json    # Raw + features, risk_score, rule_hits, processed_ts
 │   ├── alert.json             # Alert schema for the alerts topic
 │   ├── rule_schema.yaml       # Sigma-style rule specification
+│   ├── API_SPEC.md            # Backend REST & WS API specification
 │   ├── scorer.md              # Scorer interface contract
 │   └── sample_raw_events.jsonl
+├── infrastructure/            # Infrastructure config & scripts
+│   └── clickhouse/init/       # ClickHouse MergeTree & MV definitions
 ├── simulator/                 # Team A — event generator
 │   ├── web_traffic_sim.py     # Discrete event simulator with 7 attack scenarios
 │   └── Dockerfile
 ├── processor/                 # Team B — stream processor + rule engine
 │   ├── main.py                # Entry point
-│   ├── consumer.py            # Kafka consumer/producer loop
 │   ├── processor.py           # Enrichment orchestrator
-│   ├── features.py            # 23-feature extractor
-│   ├── rule_engine.py         # Sigma-style YAML rule engine with sliding windows
-│   ├── scorer.py              # Scorer ABC + DummyScorer
-│   ├── alerts.py              # Alert emitter to Kafka
-│   ├── config.py              # Environment-based config
-│   ├── Dockerfile
-│   └── requirements.txt
-├── rules/sigma/               # Detection rules (YAML)
-│   ├── brute_force.yaml       # 5 failed logins / 60s per IP
-│   ├── credential_stuffing.yaml # 20 failed logins / 30s per IP
-│   ├── excessive_requests.yaml  # 100 HTTP requests / 60s per IP
-│   ├── http_flood.yaml        # 200 HTTP requests / 30s per IP
-│   ├── web_scan.yaml          # 10 probe-path hits / 60s per IP
-│   ├── data_exfiltration.yaml # data_transfer > 50 MB
-│   ├── privilege_escalation.yaml # sudo command detected
-│   ├── malicious_process.yaml # Reverse shell, shadow read, curl|sh
-│   ├── suspicious_ip.yaml    # Known IoC IP list
-│   └── suspicious_login.yaml # Failed admin login
-├── tests/                     # Unit tests
-│   ├── test_processor.py      # Enrichment contract tests
-│   └── test_rules.py         # All rules, modifiers, conditions (31 tests)
-├── docker-compose.yaml        # Full stack definition
+│   ├── rule_engine.py         # Sigma-style YAML rule engine
+│   └── Dockerfile
+├── rules/sigma/               # 10 Detection rules (YAML)
+├── tests/                     # Unit tests (31 tests)
+├── docker-compose.yaml        # Full stack definition (Redpanda, API, Processor, ClickHouse)
 ├── Makefile                   # Developer commands
 └── pyproject.toml
 ```
@@ -133,12 +142,22 @@ When rules trigger, alerts are published to the `alerts` topic:
 | `suspicious_ip`        | high     | Instant  | Known IoC IP addresses                 |
 | `suspicious_login`     | medium   | Instant  | Failed login with admin username       |
 
-### Rule Engine Features
+### Rule Engine & Processing Logic
 
-- **Field modifiers**: `equals`, `contains`, `startswith`, `endswith`, `gt`, `gte`, `lt`, `lte`, `in`, `regex`
-- **Conditions**: `all` (AND) and `any` (OR)
-- **Sliding windows**: Time-based counting keyed by `(rule_id, client_ip)`
-- **Dot-notation field access** for nested keys
+The Python processor continuously reads raw web traffic from `events.raw` and extracts 23 specific security features (e.g., `ua_is_scanner`, `bytes_out`). It then evaluates these features against a custom **YAML Rule Engine** inspired by Sigma.
+
+#### How the Rule Engine Works
+- **Dot-Notation**: Rules can target nested JSON keys in the enriched event, such as `features.process_has_shadow: true`.
+- **Modifiers (`|` syntax)**: By default, the engine checks for exact matches. Modifiers alter this logic:
+  - **Strings**: `|contains`, `|startswith`, `|endswith`, `|regex` (e.g., `process|regex: "(nc -e|curl.*\\|.*sh)"`).
+  - **Numbers**: `|gt` (>), `|gte` (>=), `|lt` (<), `|lte` (<=) (e.g., `bytes_out|gt: 50000000`).
+  - **Lists**: `|in` checks if a value exists within a provided list.
+- **Conditions**: 
+  - `condition: all` evaluates as **AND** (every criteria must match).
+  - `condition: any` evaluates as **OR** (if at least one criteria matches, the rule triggers).
+- **Sliding Windows**: Rate-based attacks (like DDoS or brute force) use in-memory state tracking to count events per IP address over a defined timeframe (e.g., 20 requests in 30 seconds).
+
+If any rules trigger, the processor computes a risk score, emits an alert payload to the `alerts` Kafka topic, and forwards the fully enriched event (with features and rule hits) to the `events.enriched` topic for ClickHouse ingestion.
 
 ## Scorer Interface
 
@@ -208,9 +227,9 @@ make test
 
 | Person | Owns                        | Status  |
 |--------|-----------------------------|---------|
-| A      | Generator, Redpanda, Docker Compose, ClickHouse DDL, Load Test | ✅ Generator done |
+| A      | Generator, Redpanda, Docker Compose, ClickHouse DDL, Load Test | ✅ Generator & ClickHouse done |
 | B      | Processor, YAML rules, Scorer interface, Alert emitter | ✅ Done (10 rules, 31 tests) |
-| C      | PostgreSQL, FastAPI, WebSocket, Auth | Pending |
+| C      | PostgreSQL, FastAPI, WebSocket, Auth | ✅ Done (REST + WS endpoints active) |
 | Frontend | React dashboard            | Pending |
 | ML     | IsolationForest / XGBoost model | Pending |
 

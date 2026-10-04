@@ -48,6 +48,19 @@ topics: ## List Kafka topics
 lag: ## Show processor consumer lag
 	docker exec redpanda rpk group describe netra-processor
 
+clickhouse-counts: ## Show event counts in ClickHouse
+	docker exec clickhouse clickhouse-client -u netra --password netra -q "SELECT 'events_raw', count() FROM netra.events_raw UNION ALL SELECT 'events', count() FROM netra.events UNION ALL SELECT 'events_errors', count() FROM netra.events_errors;"
+
+api-health: ## Check the FastAPI backend health
+	curl -s http://localhost:8000/health
+
+smoke-test: ## Run API smoke test to verify endpoints
+	@echo "Testing login..."
+	@TOKEN=$$(curl -s http://localhost:8000/auth/login -H 'content-type: application/json' -d '{"username":"analyst","password":"analyst12345"}' | python3 -c 'import sys,json;print(json.load(sys.stdin)["access_token"])'); \
+	echo "Token received."; \
+	echo "Fetching incidents..."; \
+	curl -s http://localhost:8000/incidents -H "authorization: Bearer $$TOKEN"
+
 consume-raw: ## Consume live events from events.raw (Ctrl+C to stop)
 	docker exec redpanda rpk topic consume events.raw --offset end -f json
 
