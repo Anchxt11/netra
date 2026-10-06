@@ -50,7 +50,8 @@ export function AppShell() {
         <main className={styles.page}>
           <Outlet />
         </main>
-        {booting && <BootScreen onDone={bootDone} />}
+        {/* Signing in comes first; the boot sequence then plays on the page you land on. */}
+        {booting && pathname !== "/login" && <BootScreen onDone={bootDone} />}
       </div>
     </MotionConfig>
   );

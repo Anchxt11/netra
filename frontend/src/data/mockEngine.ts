@@ -554,8 +554,8 @@ class MockEngine {
     } else {
       h.eventsPerSec = 0; // nothing is arriving
     }
-    h.eventsToday += h.eventsPerSec;
-    const p95 = Math.max(900, Math.min(2400, h.freshnessMs.p95 + r.int(-120, 120)));
+    h.eventsToday = (h.eventsToday ?? 0) + h.eventsPerSec;
+    const p95 = Math.max(900, Math.min(2400, (h.freshnessMs?.p95 ?? 1700) + r.int(-120, 120)));
     h.freshnessMs = { p50: Math.round(p95 * 0.45), p95 };
     h.freshnessHistory = [...h.freshnessHistory.slice(-59), { t: iso(now), p95 }];
 

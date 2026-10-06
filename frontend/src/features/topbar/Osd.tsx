@@ -4,6 +4,7 @@ import { Chip } from "../../components/Chip";
 import { NumText } from "../../components/NumText";
 import { formatClock } from "../../lib/time";
 import { useNetra } from "../../store/useNetra";
+import { useSession } from "../../store/useSession";
 import styles from "./Osd.module.css";
 
 const TRACE_W = 46;
@@ -16,7 +17,10 @@ const TRACE_H = 16;
 function FeedTrace() {
   const history = useNetra((s) => s.epsHistory);
   const feed = useNetra((s) => s.health?.feed ?? "live");
-  const failing = feed !== "live";
+  const connection = useNetra((s) => s.connection);
+  const lost = connection === "closed";
+  const failing = lost || feed !== "live";
+  const waiting = connection === "connecting" && !failing;
 
   const max = Math.max(1, ...history);
   const min = Math.min(...history, max);
@@ -25,13 +29,26 @@ function FeedTrace() {
   const points = history
     .map((v, i) => `${(i * step).toFixed(1)},${(TRACE_H - 2 - ((v - min) / span) * (TRACE_H - 4)).toFixed(1)}`)
     .join(" ");
-  const label = feed === "live" ? "LIVE" : feed === "stalled" ? "FEED STALLED" : "FEED DOWN";
+  // The connection comes first: a feed can only be live over a working connection.
+  const label = lost
+    ? "RECONNECTING"
+    : waiting
+      ? "CONNECTING"
+      : feed === "live"
+        ? "LIVE"
+        : feed === "stalled"
+          ? "FEED STALLED"
+          : "FEED DOWN";
 
   return (
-    <span className={`${styles.feed} ${failing ? styles.failing : ""}`} role="status" aria-label={`Live feed status: ${label}`}>
+    <span
+      className={`${styles.feed} ${failing ? styles.failing : ""} ${waiting ? styles.waiting : ""}`}
+      role="status"
+      aria-label={`Live feed status: ${label}`}
+    >
       <svg width={TRACE_W} height={TRACE_H} aria-hidden="true">
         <line x1="0" y1={TRACE_H - 0.5} x2={TRACE_W} y2={TRACE_H - 0.5} className={styles.base} />
-        {failing ? (
+        {failing || waiting ? (
           <line x1="0" y1={TRACE_H / 2} x2={TRACE_W} y2={TRACE_H / 2} className={styles.trace} />
         ) : (
           history.length > 1 && <polyline points={points} className={styles.trace} />
@@ -45,7 +62,7 @@ function FeedTrace() {
 /** Freshness SLA: time from an event arriving to a ranked alert on screen. p95 against a 5 s target. */
 function Freshness() {
   const health = useNetra((s) => s.health);
-  if (!health) return <span className={styles.label}>FRESHNESS PENDING</span>;
+  if (!health?.freshnessMs) return <span className={styles.label}>FRESHNESS PENDING</span>;
   const p95 = health.freshnessMs.p95;
   const over = p95 > health.slaMs;
   const lit = Math.max(1, Math.min(10, Math.round((p95 / health.slaMs) * 10)));
@@ -113,6 +130,26 @@ export function OsdChips() {
           SIMULATED FEED
         </Chip>
       )}
+      <SignedIn />
     </div>
+  );
+}
+
+/** On the real backend: who is signed in, and the way out. */
+function SignedIn() {
+  const session = useSession((s) => s.session);
+  const signOut = useSession((s) => s.signOut);
+  if (!session) return null;
+  const { username, role } = session.user;
+  return (
+    <>
+      <Chip tone="muted">
+        <span className="visually-hidden">Signed in as </span>
+        {username.toLowerCase() === role ? role.toUpperCase() : `${role.toUpperCase()} ${username.toUpperCase()}`}
+      </Chip>
+      <button type="button" className={styles.tourButton} onClick={() => signOut()}>
+        SIGN OUT
+      </button>
+    </>
   );
 }

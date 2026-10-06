@@ -42,8 +42,8 @@ interface Draft {
 
 export interface CorrelatorOutput {
   upsert(incident: Incident): void;
-  /** Merged into another incident: gone without expiring. */
-  remove(id: string): void;
+  /** Merged into incident `into`: gone without expiring. */
+  remove(id: string, into: string): void;
   expire(id: string): void;
 }
 
@@ -92,12 +92,13 @@ export class Correlator {
     }
   }
 
-  /** One alert (one row of the backend's incidents table). Repeats of an alert_id are ignored. */
-  addAlert(row: AlertRow, now: number) {
-    if (!row?.alert_id || this.seen.has(row.alert_id)) return;
+  /** One alert (one row of the backend's incidents table). Returns false for an alert_id already seen. */
+  addAlert(row: AlertRow, now: number): boolean {
+    if (!row?.alert_id || this.seen.has(row.alert_id)) return false;
     this.seen.add(row.alert_id);
     if (this.eventOf(row) || !row.event_ids?.length) this.process(row, now);
     else this.pending.push({ row, since: now });
+    return true;
   }
 
   /** Once a second: alerts that waited long enough, and incidents whose window ran out. */
@@ -265,7 +266,7 @@ export class Correlator {
     into.createdAt = Math.min(into.createdAt, from.createdAt);
     this.open.delete(from.key);
     this.byId.delete(from.id);
-    this.out.remove(from.id);
+    this.out.remove(from.id, into.id);
   }
 
   /** A password-guessing incident that turns out to be stuffing becomes the campaign (same number). */

@@ -2,9 +2,10 @@
 import { useMemo } from "react";
 import { create } from "zustand";
 import type { BenignAnomaly, Incident, PipelineHealth } from "../data/types";
-import { createDataSource, type ConnectionStatus, type DataSource, type Decision, type ServerMessage } from "../data/source";
+import { createDataSource, loginRequired, type ConnectionStatus, type DataSource, type Decision, type ServerMessage } from "../data/source";
 import { rankIncidents } from "../lib/rank";
 import { SCENARIO_LENGTH_MS, type ScenarioName } from "../data/scenarios/demo";
+import { SESSION_ENDED, useSession } from "./useSession";
 
 const MAX_EXPIRED = 50;
 const MAX_BENIGN = 20;
@@ -131,20 +132,22 @@ export const useNetra = create<NetraState>()((set) => ({
   resetDemo: () => {
     if (!source?.demo) return;
     window.clearTimeout(demoTimer);
-    set({
-      incidents: {},
-      expired: [],
-      benign: [],
-      health: null,
-      epsHistory: [],
-      selection: null,
-      decisions: {},
-      toast: null,
-      demo: { running: null, focusId: null },
-    });
+    set({ ...EMPTY, demo: { running: null, focusId: null } });
     source.demo.reset(); // replays the same seeded start
   },
 }));
+
+/** Everything that came from the source: cleared on a demo reset and on signing out. */
+const EMPTY = {
+  incidents: {},
+  expired: [],
+  benign: [],
+  health: null,
+  epsHistory: [],
+  selection: null,
+  decisions: {},
+  toast: null,
+} satisfies Partial<NetraState>;
 
 let demoTimer = 0;
 
@@ -164,6 +167,14 @@ function apply(msg: ServerMessage) {
         return { incidents: rest, expired: [{ ...inc, status: "expired" as const }, ...s.expired].slice(0, MAX_EXPIRED) };
       });
       break;
+    case "incident.remove":
+      useNetra.setState((s) => {
+        const { [msg.payload.id]: _gone, ...rest } = s.incidents;
+        // Looking at an incident that just merged into another: follow it there.
+        const follow = s.selection?.kind === "incident" && s.selection.id === msg.payload.id && msg.payload.into;
+        return { incidents: rest, selection: follow ? { kind: "incident", id: msg.payload.into as string } : s.selection };
+      });
+      break;
     case "benign.upsert":
       useNetra.setState((s) => ({
         benign: [msg.payload, ...s.benign.filter((b) => b.id !== msg.payload.id)].slice(0, MAX_BENIGN),
@@ -178,13 +189,37 @@ function apply(msg: ServerMessage) {
   }
 }
 
+function onStatus(connection: ConnectionStatus) {
+  useNetra.setState({ connection });
+  if (connection === "unauthorized") useSession.getState().signOut(SESSION_ENDED);
+}
+
 /** Connect the data source once, and start the one-second clock. Safe to call twice. */
 export function startNetra() {
   if (source) return;
-  source = createDataSource();
-  useNetra.setState({ simulated: source.kind === "mock", demoAvailable: Boolean(source.demo) });
-  source.connect(apply, (connection) => useNetra.setState({ connection }));
-  window.setInterval(() => useNetra.setState((s) => ({ now: Date.now() + s.clockOffsetMs })), 1000);
+  const s = createDataSource();
+  source = s;
+  useNetra.setState({ simulated: s.kind === "mock", demoAvailable: Boolean(s.demo) });
+  window.setInterval(() => useNetra.setState((st) => ({ now: Date.now() + st.clockOffsetMs })), 1000);
+
+  if (!loginRequired) {
+    s.connect(apply, onStatus);
+    return;
+  }
+  // The real backend: connected while someone is signed in. Signing out clears the screen.
+  let disconnect: (() => void) | null = null;
+  const sync = (signedIn: boolean) => {
+    if (signedIn && !disconnect) {
+      useNetra.setState({ connection: "connecting" });
+      disconnect = s.connect(apply, onStatus);
+    } else if (!signedIn && disconnect) {
+      disconnect();
+      disconnect = null;
+      useNetra.setState({ ...EMPTY, connection: "connecting", clockOffsetMs: 0 });
+    }
+  };
+  sync(Boolean(useSession.getState().session));
+  useSession.subscribe((st) => sync(Boolean(st.session)));
 }
 
 /** Open incidents in queue order. The only ranking in the app: src/lib/rank.ts. */

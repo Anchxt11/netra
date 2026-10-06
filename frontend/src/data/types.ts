@@ -98,8 +98,8 @@ export interface PipelineHealth {
   feed: "live" | "stalled" | "down";
   lastEventAt: string;
   eventsPerSec: number;
-  eventsToday: number;
-  freshnessMs: { p50: number; p95: number };
+  eventsToday: number | null; // null when the source does not count a day's events
+  freshnessMs: { p50: number; p95: number } | null; // null until the backend has measured it
   slaMs: 5000;
   freshnessHistory: { t: string; p95: number }[];
   detections: { rule: number; ai: number };

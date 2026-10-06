@@ -38,8 +38,8 @@ function Sparkline({ values, max }: { values: number[]; max: number }) {
 }
 
 export function SystemList({ health, now }: { health: PipelineHealth; now: number }) {
-  const p95 = health.freshnessMs.p95;
-  const over = p95 > health.slaMs;
+  const p95 = health.freshnessMs?.p95;
+  const over = p95 !== undefined && p95 > health.slaMs;
   const stoppedFor = Math.max(0, Math.round((now - Date.parse(health.lastEventAt)) / 1000));
 
   // Any pipeline problem replaces the first row with a pink status and a plain sentence.
@@ -53,17 +53,21 @@ export function SystemList({ health, now }: { health: PipelineHealth; now: numbe
   const retrain: Row =
     health.retraining.status === "failed"
       ? { key: "retrain", label: "Next retraining", value: "LAST RUN FAILED", tone: "fail" }
-      : { key: "retrain", label: "Next retraining", value: health.retraining.nextRun ? formatHM(health.retraining.nextRun) : "PENDING", tone: "ok" };
+      : health.retraining.nextRun
+        ? { key: "retrain", label: "Next retraining", value: formatHM(health.retraining.nextRun), tone: "ok" }
+        : { key: "retrain", label: "Next retraining", value: "PENDING", tone: "muted" };
 
   const rows: Row[] = [
     first,
-    {
-      key: "fresh",
-      label: "Freshness p95",
-      value: `${(p95 / 1000).toFixed(1)}S/${health.slaMs / 1000}S${over ? " OVER" : ""}`,
-      tone: over ? "fail" : "ok",
-      spark: health.freshnessHistory.map((f) => f.p95),
-    },
+    p95 === undefined
+      ? { key: "fresh", label: "Freshness p95", value: "PENDING", tone: "muted" }
+      : {
+          key: "fresh",
+          label: "Freshness p95",
+          value: `${(p95 / 1000).toFixed(1)}S/${health.slaMs / 1000}S${over ? " OVER" : ""}`,
+          tone: over ? "fail" : "ok",
+          spark: health.freshnessHistory.map((f) => f.p95),
+        },
     modelRow(health.models.find((m) => m.name === "ATDE"), "ATDE detection model"),
     modelRow(health.models.find((m) => m.name === "CRIE"), "CRIE remediation model"),
     retrain,

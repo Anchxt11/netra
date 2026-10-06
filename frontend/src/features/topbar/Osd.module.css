@@ -26,6 +26,7 @@
   font-size: 11px;
   letter-spacing: 0.06em;
   color: var(--text);
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -72,6 +73,11 @@
 .failing {
   --c: var(--fail);
   animation: failPulse 1s ease-in-out infinite;
+}
+
+/* Connecting for the first time: nothing has failed, nothing is live yet. */
+.waiting {
+  --c: var(--muted);
 }
 
 @keyframes failPulse {

@@ -1,0 +1,96 @@
+.page {
+  min-height: calc(100vh - 82px);
+  display: grid;
+  place-items: center;
+  padding: 24px 16px 72px;
+}
+
+.card {
+  width: min(420px, 100%);
+  padding: 30px 30px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 24px;
+  letter-spacing: 0.04em;
+  color: var(--text-hi);
+}
+
+.lead {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+/* Why you are here again (session ended). */
+.notice {
+  margin: 0;
+  padding: 9px 12px;
+  border: 1px solid var(--edge);
+  border-radius: var(--r-row);
+  font-size: 14px;
+  color: var(--text-hi);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 6px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-family: var(--font-data);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.input {
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--edge);
+  border-radius: var(--r-btn);
+  background: rgba(0, 0, 0, 0.28);
+  font-family: var(--font-data);
+  font-size: 14px;
+  color: var(--text-hi);
+}
+
+.input:hover {
+  border-color: var(--edge-hover);
+}
+
+.error {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--text-hi);
+}
+
+.submit {
+  width: 100%;
+  height: 40px;
+  margin-top: 4px;
+}
+
+.server {
+  margin: 4px 0 0;
+  font-family: var(--font-data);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}

@@ -13,9 +13,11 @@ const NAV = [
 export function TopBar() {
   // The landing page stays minimal, until you scroll down to its dashboard: then the header
   // becomes the dashboard's header, with its status readouts and the quiet theme.
-  const landing = useLocation().pathname === "/";
+  const { pathname } = useLocation();
+  const landing = pathname === "/";
   const dashboardInView = useNetra((s) => s.dashboardInView);
-  const readouts = !landing || dashboardInView;
+  // The sign-in page has no data to show yet.
+  const readouts = pathname !== "/login" && (!landing || dashboardInView);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {

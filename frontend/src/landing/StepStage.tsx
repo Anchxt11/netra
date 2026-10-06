@@ -81,7 +81,7 @@ export function StepStage({ t, still }: Props) {
       <RecommendLayer t={t} still={still} />
 
       <Readout label="EVENTS / S" value={eps !== undefined ? String(eps) : "PENDING"} pos="tl" />
-      <Readout label="EVENTS TODAY" value={today !== undefined ? today.toLocaleString("en-GB") : "PENDING"} pos="tr" />
+      <Readout label="EVENTS TODAY" value={today != null ? today.toLocaleString("en-GB") : "PENDING"} pos="tr" />
       <Readout label="DETECTION RULES" value={String(RULE_COUNT)} pos="bl" />
       <Readout label="ATDE MODEL" value={atdeText} pos="br" tone={atdeText === "READY" ? "ok" : "muted"} />
     </div>

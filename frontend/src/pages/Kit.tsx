@@ -442,7 +442,7 @@ function EngineDebug() {
   return (
     <p className={styles.debug}>
       ENGINE: {ranked.length} OPEN ({tiers}) · {expired} EXPIRED · {judgedNormal} JUDGED NORMAL ·{" "}
-      {health ? `${health.eventsPerSec} EVENTS/S · P95 ${(health.freshnessMs.p95 / 1000).toFixed(1)}S` : "NO HEALTH YET"}
+      {health ? `${health.eventsPerSec} EVENTS/S · P95 ${health.freshnessMs ? `${(health.freshnessMs.p95 / 1000).toFixed(1)}S` : "PENDING"}` : "NO HEALTH YET"}
     </p>
   );
 }

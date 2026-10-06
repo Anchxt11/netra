@@ -53,8 +53,9 @@ export function PixelField({ intensity = 1 }: Props) {
     let last = 0;
 
     const setup = () => {
-      cols = Math.ceil(window.innerWidth / CELL);
-      rows = Math.ceil(window.innerHeight / CELL);
+      // At least 1: a window can briefly measure 0 wide (a hidden or resizing tab), and an empty canvas throws.
+      cols = Math.max(1, Math.ceil(window.innerWidth / CELL));
+      rows = Math.max(1, Math.ceil(window.innerHeight / CELL));
       canvas.width = cols;
       canvas.height = rows;
       canvas.style.width = `${cols * CELL}px`;
