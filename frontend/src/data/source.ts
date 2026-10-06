@@ -1,6 +1,6 @@
 // The ONE interface the frontend talks to. Two implementations: the mock engine
 // (default) and the real backend. Swapping them needs no UI changes.
-import type { BenignAnomaly, Incident, PipelineHealth } from "./types";
+import type { BenignAnomaly, FeedEvent, Incident, PipelineHealth, TrafficSecond } from "./types";
 import type { ScenarioName } from "./scenarios/demo";
 import { createMockSource } from "./mockEngine";
 import { createBackendSource } from "./backend/backendSource";
@@ -14,6 +14,8 @@ export type ServerMessage =
   | { type: "incident.remove"; payload: { id: string; into?: string } }
   | { type: "benign.upsert"; payload: BenignAnomaly }
   | { type: "health"; payload: PipelineHealth }
+  /** Once a second: counts for all traffic, and a sample of the events behind them. */
+  | { type: "traffic"; payload: { second: TrafficSecond; events: FeedEvent[] } }
   | { type: "hello"; payload: { serverTime: string } };
 
 /** Frontend to backend: an analyst approved or rejected a recommended fix. */

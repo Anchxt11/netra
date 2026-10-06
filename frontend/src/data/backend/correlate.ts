@@ -130,6 +130,11 @@ export class Correlator {
     }
   }
 
+  /** A cached enriched event (for the live feed). */
+  event(id: string | undefined): EnrichedEvent | undefined {
+    return id ? this.events.get(id) : undefined;
+  }
+
   /** The backend rows behind one of our incidents (to record decisions against). */
   rowsOf(incidentId: string): number[] {
     return this.byId.get(incidentId)?.rows ?? [];

@@ -87,6 +87,23 @@ export interface BenignAnomaly {
   checks: { label: string; passed: boolean }[];
 }
 
+/** One event in the live feed. Normal traffic too: the feed shows everything, flagged or not. */
+export interface FeedEvent {
+  id: string;
+  ts: string;
+  ip: string;
+  what: string; // "GET /products/41 · 200", "login failed for maria.silva"
+  flag?: { by: "rule" | "ai"; label: string }; // label: the rule's code, or "AI 0.81"
+}
+
+/** All traffic in one second. Every event counts here, flagged or not. */
+export interface TrafficSecond {
+  t: string;
+  normal: number;
+  rule: number; // flagged by a rule
+  ai: number; // flagged by the AI engine
+}
+
 export interface ModelStatus {
   name: "ATDE" | "CRIE";
   version: string;

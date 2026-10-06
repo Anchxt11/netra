@@ -1,9 +1,10 @@
 // The simulated backend. Emits the same envelope messages as the real WebSocket, on timers,
 // from a fixed seed. Background behaviour only; the scripted demo scenarios come later.
 // Spec: docs/DATA_CONTRACT.md, "Mock engine".
-import type { AttackType, BenignAnomaly, BenignKind, Incident, PipelineHealth, Signal, SignalLevel } from "./types";
+import type { AttackType, BenignAnomaly, BenignKind, FeedEvent, Incident, PipelineHealth, Signal, SignalLevel } from "./types";
 import type { ConnectionStatus, DataSource, Decision, ServerMessage } from "./source";
 import { createRng } from "./rng";
+import { attackEvent, normalEvent } from "./traffic";
 import {
   ADMIN_COMMANDS,
   AI_POINTS,
@@ -46,6 +47,9 @@ const minuteStart = (t: number) => Math.floor(t / 60_000) * 60_000;
 
 class MockEngine {
   private r = createRng(SEED);
+  // The live feed has its own generator, so the incidents and demo scenarios play out exactly as before.
+  private tr = createRng(SEED + 7);
+  private pendingFeed: FeedEvent[] = [];
   private live = new Map<string, Live>();
   private nextNumber = 131;
   private nextBenign = 1;
@@ -101,6 +105,8 @@ class MockEngine {
   reset() {
     this.stop();
     this.r = createRng(SEED);
+    this.tr = createRng(SEED + 7);
+    this.pendingFeed = [];
     this.live.clear();
     this.nextNumber = 131;
     this.nextBenign = 1;
@@ -241,6 +247,7 @@ class MockEngine {
     if (this.health.feed !== "live") {
       this.updateHealth(now);
       this.emit({ type: "health", payload: structuredClone(this.health) });
+      this.emitTraffic(now, false);
       return;
     }
 
@@ -272,6 +279,35 @@ class MockEngine {
 
     this.updateHealth(now);
     this.emit({ type: "health", payload: structuredClone(this.health) });
+    this.emitTraffic(now, true);
+  }
+
+  /** The live monitor: this second's counts (all traffic) and a sample of the events behind them. */
+  private emitTraffic(now: number, flowing: boolean) {
+    const tr = this.tr;
+    const events: FeedEvent[] = [];
+    let rule = 0;
+    let ai = 0;
+    if (flowing) {
+      // Now and then a flagged event from an open incident, so the feed and the queue tell one story.
+      const open = [...this.live.values()];
+      if (open.length > 0 && tr.chance(0.45)) {
+        const l = tr.pick(open);
+        const last = l.incident.signals[l.incident.signals.length - 1];
+        if (last) this.pendingFeed.push(attackEvent(l.incident.attackType, l.ctx, last.ruleId, now));
+      }
+      for (const f of this.pendingFeed) {
+        if (f.flag?.by === "ai") ai += tr.int(1, 2);
+        else rule += tr.int(3, 9);
+      }
+      events.push(...this.pendingFeed);
+      const n = tr.int(3, 6);
+      for (let i = 0; i < n; i++) events.push(normalEvent(tr, now - tr.int(0, 900)));
+    }
+    this.pendingFeed = [];
+    const total = flowing ? this.health.eventsPerSec : 0;
+    events.sort((a, b) => Date.parse(b.ts) - Date.parse(a.ts));
+    this.emit({ type: "traffic", payload: { second: { t: iso(now), normal: Math.max(0, total - rule - ai), rule, ai }, events } });
   }
 
   // ---------------------------------------------------------------- incidents
@@ -373,6 +409,7 @@ class MockEngine {
       points = RULES[ruleId].points ?? 20;
     }
     this.addSignal(inc, ruleId.startsWith("ATDE") ? "ATDE" : ruleId, sentence, points, ts);
+    this.pendingFeed.push(attackEvent(inc.attackType, live.ctx, ruleId, ts));
 
     // Escalations the rules document calls out.
     if (ruleId === "BF-4") inc.severity = 5;

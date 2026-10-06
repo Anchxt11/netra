@@ -1,7 +1,7 @@
 // The app's shared state. Fed only by the DataSource (mock or WebSocket); pages read from here.
 import { useMemo } from "react";
 import { create } from "zustand";
-import type { BenignAnomaly, Incident, PipelineHealth } from "../data/types";
+import type { BenignAnomaly, FeedEvent, Incident, PipelineHealth, TrafficSecond } from "../data/types";
 import { createDataSource, loginRequired, type ConnectionStatus, type DataSource, type Decision, type ServerMessage } from "../data/source";
 import { rankIncidents } from "../lib/rank";
 import { SCENARIO_LENGTH_MS, type ScenarioName } from "../data/scenarios/demo";
@@ -10,6 +10,8 @@ import { SESSION_ENDED, useSession } from "./useSession";
 const MAX_EXPIRED = 50;
 const MAX_BENIGN = 20;
 const EPS_HISTORY = 30;
+const TRAFFIC_SECONDS = 60;
+const FEED_LENGTH = 40;
 
 /** Exactly one thing is selected: an incident, or a judged-normal item. */
 export type Selection = { kind: "incident" | "benign"; id: string } | null;
@@ -45,6 +47,10 @@ interface NetraState {
   health: PipelineHealth | null;
   /** Events per second, last 30 health messages: drives the live trace in the top bar. */
   epsHistory: number[];
+  /** All traffic, one entry per second, last 60 seconds: the live feed's chart. */
+  traffic: TrafficSecond[];
+  /** Recent events, newest first: the live feed's list. */
+  feed: FeedEvent[];
   selection: Selection;
   decisions: Record<string, DecisionRecord>; // by incident id
   toast: Toast | null;
@@ -82,6 +88,8 @@ export const useNetra = create<NetraState>()((set) => ({
   benign: [],
   health: null,
   epsHistory: [],
+  traffic: [],
+  feed: [],
   selection: null,
   decisions: {},
   toast: null,
@@ -144,6 +152,8 @@ const EMPTY = {
   benign: [],
   health: null,
   epsHistory: [],
+  traffic: [],
+  feed: [],
   selection: null,
   decisions: {},
   toast: null,
@@ -178,6 +188,12 @@ function apply(msg: ServerMessage) {
     case "benign.upsert":
       useNetra.setState((s) => ({
         benign: [msg.payload, ...s.benign.filter((b) => b.id !== msg.payload.id)].slice(0, MAX_BENIGN),
+      }));
+      break;
+    case "traffic":
+      useNetra.setState((s) => ({
+        traffic: [...s.traffic, msg.payload.second].slice(-TRAFFIC_SECONDS),
+        feed: msg.payload.events.length ? [...msg.payload.events, ...s.feed].slice(0, FEED_LENGTH) : s.feed,
       }));
       break;
     case "health":

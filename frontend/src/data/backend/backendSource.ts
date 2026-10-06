@@ -6,6 +6,7 @@ import { ApiError, createApi } from "./api";
 import { Correlator } from "./correlate";
 import { HealthTracker } from "./health";
 import { isRealModel } from "./rules";
+import { TrafficMeter } from "./traffic";
 import type { AlertRow, BackendMessage, EnrichedEvent } from "./types";
 
 const FRESHNESS_EVERY_MS = 5_000;
@@ -53,6 +54,7 @@ export function createBackendSource({ apiUrl, wsUrl, getToken }: Options): DataS
       const now = () => Date.now() + offset;
 
       const health = new HealthTracker();
+      const meter = new TrafficMeter();
       const corr = new Correlator({
         upsert: (incident) => onMessage({ type: "incident.upsert", payload: incident }),
         remove: (id, into) => onMessage({ type: "incident.remove", payload: { id, into } }),
@@ -70,10 +72,14 @@ export function createBackendSource({ apiUrl, wsUrl, getToken }: Options): DataS
         onStatus("unauthorized");
       };
 
-      const alert = (row: AlertRow) => {
+      const alert = (row: AlertRow, live = true) => {
         if (corr.addAlert(row, now())) {
           const model = !row.rule_id && isRealModel(row.model) ? row.model : null;
           health.detection(model, Date.parse(row.created_ts) || now());
+          if (model && live) {
+            const ev = corr.event(row.event_ids?.[0]);
+            meter.addAi(ev, ev?.risk_score);
+          }
         }
       };
 
@@ -83,7 +89,7 @@ export function createBackendSource({ apiUrl, wsUrl, getToken }: Options): DataS
           const [events, alerts] = await Promise.all([api.recentEvents(token), api.recentAlerts(token)]);
           if (stopped) return;
           corr.addEvents(events.map(normalise).reverse(), now()); // the API returns newest first
-          for (const row of [...alerts].reverse()) alert(row);
+          for (const row of [...alerts].reverse()) alert(row, false);
         } catch (e) {
           if (e instanceof ApiError && e.status === 401) unauthorized();
           // Otherwise carry on live: history is a nice-to-have.
@@ -101,6 +107,7 @@ export function createBackendSource({ apiUrl, wsUrl, getToken }: Options): DataS
             const batch = (msg.data ?? []).map(normalise);
             corr.addEvents(batch, now());
             health.events(batch.length + (msg.dropped ?? 0), now());
+            meter.addEvents(batch, msg.dropped ?? 0);
             break;
           }
           case "alert":
@@ -150,6 +157,7 @@ export function createBackendSource({ apiUrl, wsUrl, getToken }: Options): DataS
         window.setInterval(() => {
           corr.tick(now());
           onMessage({ type: "health", payload: health.snapshot(now()) });
+          onMessage({ type: "traffic", payload: meter.flush(now()) });
         }, 1000),
         window.setInterval(pollFreshness, FRESHNESS_EVERY_MS),
         window.setInterval(pollServer, SERVER_HEALTH_EVERY_MS),
