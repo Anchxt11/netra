@@ -1,0 +1,77 @@
+// What the backend actually sends: api/app on the backend branch (routes, ws.py, consumers.py).
+// Where these disagree with docs/DATA_CONTRACT.md, these win (CLAUDE.md: the backend files win).
+
+/** One event after the processor: the raw event plus its features, score and rule hits. */
+export interface EnrichedEvent {
+  event_id: string;
+  event_ts: string;
+  source?: string;
+  user?: string;
+  ip?: string;
+  event_type?: string;
+  status?: string;
+  host?: string;
+  bytes_out?: number;
+  process?: string;
+  method?: string;
+  path?: string;
+  http_status?: number;
+  user_agent?: string;
+  response_ms?: number;
+  risk_score?: number;
+  rule_hits?: string[];
+  processed_ts?: string;
+}
+
+/** A row of the backend's `incidents` table. The backend stores ONE row per alert (one rule, one event). */
+export interface AlertRow {
+  id: number;
+  alert_id: string;
+  rule_id: string | null; // null when a model raised it
+  model: string | null; // null when a rule raised it
+  title?: string | null;
+  severity: string; // low | medium | high | critical
+  event_ids: string[];
+  status: "open" | "acknowledged" | "resolved";
+  notes?: string | null;
+  created_ts: string;
+}
+
+/** WebSocket envelope from the backend: { type, data, server_ts }. */
+export type BackendMessage =
+  | { type: "hello"; data: { username: string; role: string }; server_ts: string }
+  | { type: "events"; data: EnrichedEvent[]; server_ts: string; dropped?: number }
+  | { type: "alert"; data: AlertRow; server_ts: string }
+  | { type: "incident_update"; data: AlertRow; server_ts: string }
+  | { type: "pong"; server_ts: string };
+
+/** GET /freshness: p50 and p95 of (stored_ts - event_ts) over a sliding window. */
+export interface FreshnessReport {
+  events: number;
+  avg_events_per_sec: number;
+  p50_seconds: number | null;
+  p95_seconds: number | null;
+  sla_p95_seconds: number;
+  seconds_since_last_event: number | null;
+  status: "ok" | "breach" | "stalled" | "no_data";
+}
+
+/** GET /health: is the server's own pipeline running? */
+export interface ServerHealth {
+  status: "ok" | "degraded";
+  postgres: boolean;
+  consumers: Record<string, boolean>;
+}
+
+export interface SessionUser {
+  id: number;
+  username: string;
+  role: "analyst" | "admin";
+}
+
+/** POST /auth/login */
+export interface LoginResponse {
+  access_token: string;
+  expires_in: number; // seconds
+  user: SessionUser;
+}
