@@ -27,25 +27,62 @@ Generator ─► Redpanda [events.raw] ─► Processor ─► Redpanda [events.
 
 We provide two separate ways to generate activity: the **Live Lab** (real HTTP requests via Juice Shop) or the **Synthetic Generator** (purely mathematical traffic generation).
 
-To run the full end-to-end pipeline with the **Live Lab** (recommended):
+### 1. Starting the Environment
 
+To run the full end-to-end pipeline with the **Live Lab** (recommended):
 ```bash
-# Start the core infrastructure (Redpanda, processor, DB, API, UI)
+# 1. Start the core infrastructure (Redpanda, DB, Processor, API, Console)
 make up
 
-# Start the Live Lab (Juice Shop, nginx, Vector, and the auto-attack orchestrator)
+# 2. Start the Live Lab (Juice Shop, Nginx, Vector, and the auto-attack bots)
 make lab
-
-# View the real-time logs of the lab components
-make lab-logs
 ```
 
-If you prefer to run the mathematical **Synthetic Generator** instead:
+*(Optional)* If you prefer to run the mathematical **Synthetic Generator** instead of the Live Lab:
 ```bash
 make sim
 ```
+*Note: Do not run `make sim` and `make lab` at the same time, as they simulate overlapping scenarios using different techniques.*
 
-*Note: You generally should not run `make sim` and `make lab` at the same time, as they simulate overlapping scenarios using different techniques.*
+### 2. Managing the Environment
+
+```bash
+# View real-time logs of the Live Lab components
+make lab-logs
+
+# View logs of the core infrastructure (Processor, API, etc.)
+make logs
+
+# Run the unit test suite
+make test
+
+# Stop all running containers gracefully (preserves data)
+make down
+
+# Stop everything and WIPE all data volumes (resets Kafka, DB, ClickHouse to zero)
+make clean
+```
+
+### 3. Triggering Manual Attacks (Live Lab)
+
+While the `make lab` command automatically runs a background orchestrator that fires cyberattacks at random intervals, you can also force specific attacks to happen immediately on-demand.
+
+```bash
+# Trigger a specific attack scenario instantly
+make attack SCENARIO=brute_force
+
+# Available scenarios to pass to SCENARIO=:
+#   web_scan              (Path and param fuzzing)
+#   brute_force           (Password guessing)
+#   credential_stuffing   (Distributed login spray)
+#   http_flood            (L7 DDoS)
+#   sqli                  (SQL injection)
+#   data_exfiltration     (Huge file downloads)
+#   account_takeover      (Successful login from high-risk IP)
+
+# Trigger ALL attack scenarios sequentially
+make attack-full
+```
 
 After starting the stack, open:
 - **Redpanda Console** — [http://localhost:8080](http://localhost:8080) — inspect topics and messages live
