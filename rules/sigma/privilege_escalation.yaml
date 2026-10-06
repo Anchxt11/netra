@@ -1,0 +1,7 @@
+id: privilege_escalation
+title: Privilege escalation command observed
+severity: high
+detection:
+  event_type: process_start
+  process|contains: sudo
+condition: all

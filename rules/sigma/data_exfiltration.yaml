@@ -1,0 +1,7 @@
+id: data_exfiltration
+title: Large data transfer detected
+severity: critical
+detection:
+  event_type: data_transfer
+  bytes_out|gt: 50000000
+condition: all

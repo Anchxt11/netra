@@ -1,0 +1,9 @@
+id: brute_force
+title: Repeated failed logins from one IP
+severity: high
+detection:
+  event_type: login
+  status: failure
+condition: all
+timeframe: 60
+count: 5

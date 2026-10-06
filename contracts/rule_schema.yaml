@@ -1,0 +1,12 @@
+schema: netra-sigma-style-v1
+rule:
+  required: [id, title, severity, detection, condition]
+  optional: [timeframe, count]
+severity: {allowed: [low, medium, high, critical]}
+condition: {allowed: [all, any]}
+field_modifiers: [contains, startswith, endswith, gt, gte, lt, lte, in, regex]
+window:
+  timeframe: seconds
+  count: integer
+  key: ip
+examples: [rules/sigma/brute_force.yaml, rules/sigma/excessive_requests.yaml]

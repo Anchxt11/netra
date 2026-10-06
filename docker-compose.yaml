@@ -1,2 +1,164 @@
+# Netra — Near Real-Time SOC Dashboard
+# Full stack: Redpanda, Generator, Processor, Console
+name: netra
+
 services:
-  
+
+  # ─── Redpanda (Kafka-compatible broker) ──────────────────────────────────────
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:v24.3.1
+    container_name: redpanda
+    command:
+      - redpanda
+      - start
+      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr internal://redpanda:9092,external://localhost:19092
+      - --mode dev-container
+      - --smp 1
+      - --memory 1G
+      - --reserve-memory 0M
+      - --overprovisioned
+      - --node-id 0
+      - --check=false
+    ports:
+      - "19092:19092"   # Kafka API (host access)
+      - "19644:9644"    # Admin API
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health | grep -E 'Healthy:.+true' || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - redpanda-data:/var/lib/redpanda/data
+
+  # ─── Topic initialisation (one-shot, safe to re-run) ─────────────────────────
+  topic-init:
+    image: docker.redpanda.com/redpandadata/redpanda:v24.3.1
+    depends_on:
+      redpanda:
+        condition: service_healthy
+    restart: "no"
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        for t in events.raw events.enriched alerts; do
+          rpk topic create $$t -p 3 -r 1 -c retention.ms=3600000 -X brokers=redpanda:9092 || true
+        done
+        rpk topic list -X brokers=redpanda:9092
+
+  # ─── Redpanda Console (web UI) ── http://localhost:8080 ──────────────────────
+  console:
+    image: docker.redpanda.com/redpandadata/console:v2.8.0
+    depends_on:
+      redpanda:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKERS: redpanda:9092
+    ports:
+      - "8080:8080"
+
+  # ─── Team A: Traffic generator (requires --profile sim) ──────────────────────
+  generator:
+    profiles: ["sim"]
+    build: ./simulator
+    depends_on:
+      topic-init:
+        condition: service_completed_successfully
+    command:
+      - python
+      - web_traffic_sim.py
+      - --bootstrap
+      - redpanda:9092
+      - --rate
+      - "${GENERATOR_RATE:-10}"
+      - --labels
+      - /data/labels.jsonl
+    volumes:
+      - ./data:/data
+
+  # ─── Team B: Event processor + YAML rule engine ─────────────────────────────
+  processor:
+    build:
+      context: .
+      dockerfile: processor/Dockerfile
+    depends_on:
+      topic-init:
+        condition: service_completed_successfully
+    environment:
+      KAFKA_BOOTSTRAP: redpanda:9092
+      RAW_TOPIC: events.raw
+      ENRICHED_TOPIC: events.enriched
+      ALERT_TOPIC: alerts
+      PROCESSOR_GROUP_ID: netra-processor
+      RULES_DIR: /app/rules/sigma
+      SCORER: ${SCORER:-dummy}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    restart: unless-stopped
+
+  # ─── Team C: ClickHouse, Postgres, FastAPI ──────────────────────────────────
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.8
+    container_name: clickhouse
+    depends_on:
+      redpanda:
+        condition: service_healthy
+      topic-init:
+        condition: service_completed_successfully
+    environment:
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-netra}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-netra}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+    ports:
+      - "127.0.0.1:8123:8123"
+      - "127.0.0.1:9000:9000"
+    ulimits:
+      nofile: { soft: 262144, hard: 262144 }
+    volumes:
+      - ./infrastructure/clickhouse/init:/docker-entrypoint-initdb.d:ro
+      - clickhouse-data:/var/lib/clickhouse
+    healthcheck:
+      test: ["CMD-SHELL", "clickhouse-client -u $$CLICKHOUSE_USER --password $$CLICKHOUSE_PASSWORD -q 'EXISTS TABLE netra.events_errors_mv' | grep -q 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: soc
+      POSTGRES_PASSWORD: soc
+      POSTGRES_DB: soc
+    volumes:
+      - ./api/db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U soc -d soc"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build: ./api
+    depends_on:
+      postgres: { condition: service_healthy }
+      topic-init: { condition: service_completed_successfully }
+    environment:
+      DATABASE_URL: postgresql://soc:soc@postgres:5432/soc
+      KAFKA_BOOTSTRAP: redpanda:9092
+      CLICKHOUSE_HOST: clickhouse
+      CLICKHOUSE_PORT: "8123"
+      CLICKHOUSE_USER: netra
+      CLICKHOUSE_PASSWORD: netra
+      CLICKHOUSE_DB: netra
+      CLICKHOUSE_TABLE: events
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me-please-0123456789}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin12345}
+      ANALYST_PASSWORD: ${ANALYST_PASSWORD:-analyst12345}
+    ports: ["8000:8000"]
+    restart: unless-stopped
+
+volumes:
+  redpanda-data:
+  clickhouse-data:
+  pgdata:
