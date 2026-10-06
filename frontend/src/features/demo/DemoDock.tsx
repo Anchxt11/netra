@@ -8,10 +8,10 @@ import { useNetra, useRankedIncidents } from "../../store/useNetra";
 import styles from "./DemoDock.module.css";
 
 const ACTIONS: { key: string; code: string; label: string; scenario?: ScenarioName }[] = [
-  { key: "Shift+A", code: "KeyA", label: "RUN CREDENTIAL STUFFING", scenario: "credential_stuffing" },
-  { key: "Shift+B", code: "KeyB", label: "RUN FLASH CROWD", scenario: "flash_crowd" },
-  { key: "Shift+F", code: "KeyF", label: "STALL FEED", scenario: "feed_failure" },
-  { key: "Shift+R", code: "KeyR", label: "RESET" },
+  { key: "Shift+A", code: "KeyA", label: "Run credential stuffing", scenario: "credential_stuffing" },
+  { key: "Shift+B", code: "KeyB", label: "Run flash crowd", scenario: "flash_crowd" },
+  { key: "Shift+F", code: "KeyF", label: "Stall the feed", scenario: "feed_failure" },
+  { key: "Shift+R", code: "KeyR", label: "Reset" },
 ];
 
 export function DemoDock() {

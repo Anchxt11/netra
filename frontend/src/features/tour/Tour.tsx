@@ -1,6 +1,6 @@
 // The first-visit tour: a spotlight walks through the dashboard, one box at a time, saying in
 // plain words what each one is for. Plays once (remembered in this browser), never in demo mode,
-// and can be replayed from the TOUR button in the header. Esc skips, arrow keys move.
+// and can be replayed from the Tour button in the header. Esc skips, arrow keys move.
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useNetra } from "../../store/useNetra";
@@ -16,42 +16,47 @@ const STEPS: TourStep[] = [
   {
     target: "queue",
     title: "Needs attention",
-    text: "Every open incident, ranked by risk: how bad, how sure and how soon. Start at the top.",
+    text: "Every open incident, ranked by risk: how bad, how sure and how soon. The dot cools from ember to ash as time runs out.",
   },
   {
     target: "focus",
     title: "The incident you picked",
-    text: "What it is, how bad it would be, how strong the evidence is, and the countdown before its data goes stale.",
+    text: "What it is, who is involved, and the countdown before its evidence goes cold.",
   },
   {
     target: "escalation",
     title: "How it escalated",
-    text: "Each warning sign in order. The tag says who raised it: a rule ID, or ATDE for the AI engine. Together they add up to the attention score.",
-  },
-  {
-    target: "involved",
-    title: "Who is involved",
-    text: "The addresses, accounts and servers in this attack, and how they connect. The solid one is the target.",
+    text: "Attention climbs one step per warning sign. Hover a step for the full sentence; lilac steps came from the AI engine.",
   },
   {
     target: "fixes",
-    title: "Recommended fixes",
-    text: "The top 3 fixes from a fixed list, with the reasons behind each. Nothing runs until you approve it.",
+    title: "Fix",
+    text: "Hover to see the top 3 fixes, click to open them with their reasons. Nothing runs until you approve.",
+  },
+  {
+    target: "feed",
+    title: "Live feed",
+    text: "All traffic, normal included, second by second. Rust and lilac are what the rules and the AI flagged.",
   },
   {
     target: "scope",
     title: "Threat scope",
-    text: "All open incidents at a glance. The closer a dot is to the centre, the less time is left. Click a dot to open it.",
+    text: "All open incidents at a glance. Hover any tile to open it; the closer a dot is to the centre, the less time is left.",
+  },
+  {
+    target: "involved",
+    title: "Who is involved",
+    text: "The addresses, accounts and servers in this attack, and how they connect.",
   },
   {
     target: "detections",
     title: "Detections per minute",
-    text: "How many warning signs the rules and the AI engine raised, minute by minute, and when this attack started.",
+    text: "How many warning signs the rules and the AI engine raised, minute by minute.",
   },
   {
     target: "system",
     title: "System",
-    text: "Whether NETRA itself is healthy. If the feed or a model fails, it shows here in pink.",
+    text: "Whether NETRA itself is healthy. If the feed or a model fails, it shows here in red.",
   },
   {
     target: "status",
@@ -167,7 +172,7 @@ export function Tour({ autoStart }: { autoStart: boolean }) {
       <div className={styles.spot} style={spot} aria-hidden="true" />
       <div className={styles.card} style={{ left, top, width: CARD_W }}>
         <span className={styles.count}>
-          STEP {index + 1} OF {STEPS.length}
+          Step {index + 1} of {STEPS.length}
         </span>
         <h2 id="tour-title" className={styles.title}>
           {step.title}
@@ -177,15 +182,15 @@ export function Tour({ autoStart }: { autoStart: boolean }) {
         </p>
         <div className={styles.actions}>
           <button type="button" className={styles.skip} onClick={close}>
-            SKIP TOUR
+            Skip tour
           </button>
           {index > 0 && (
             <button type="button" className={styles.back} onClick={back}>
-              BACK
+              Back
             </button>
           )}
           <button ref={nextRef} type="button" className={styles.next} onClick={next}>
-            {index === STEPS.length - 1 ? "FINISH" : "NEXT"}
+            {index === STEPS.length - 1 ? "Finish" : "Next"}
           </button>
         </div>
       </div>

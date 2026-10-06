@@ -1,0 +1,162 @@
+.hero {
+  position: relative;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 24px 28px 20px;
+  border-radius: var(--r-glass);
+  border: 1px solid var(--line);
+  box-shadow: var(--glass-hi);
+  background:
+    radial-gradient(700px 380px at 88% -12%, rgba(228, 87, 46, 0.16), transparent 65%),
+    var(--panel);
+}
+
+/* The v1 pixel field, reduced to a whisper: ember dots fading from the top-right corner. */
+.dots {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(255, 138, 92, 0.55) 1px, transparent 1.4px);
+  background-size: 9px 9px;
+  -webkit-mask-image: radial-gradient(520px 300px at 90% 6%, #000 0%, transparent 75%);
+  mask-image: radial-gradient(520px 300px at 90% 6%, #000 0%, transparent 75%);
+  opacity: 0.45;
+}
+
+.head,
+.body,
+.facts {
+  position: relative;
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.titleCol {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.ai {
+  color: var(--ai);
+}
+
+.name {
+  font-size: 40px;
+  font-weight: 300;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  color: var(--text-hi);
+}
+
+.who {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.mono {
+  font-family: var(--font-data);
+  font-size: 13px;
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) 22px;
+  gap: 24px;
+  align-items: center;
+}
+
+.evidence {
+  align-self: stretch;
+  display: flex;
+  padding: 26px 0 30px;
+}
+
+.evidence > * {
+  flex: 1;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 0.8fr) minmax(0, 1.6fr);
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+.fact {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.fact + .fact {
+  border-left: 1px solid var(--line);
+  padding-left: 20px;
+}
+
+.factLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.factValue {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 30px;
+  font-weight: 200;
+  letter-spacing: -0.02em;
+  color: var(--text-hi);
+  line-height: 1.1;
+  min-width: 0;
+}
+
+.faint {
+  color: var(--faint);
+}
+
+.rust {
+  color: var(--rust);
+}
+
+.formula {
+  font-family: var(--font-data);
+  font-size: 11.5px;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 1400px) {
+  .name {
+    font-size: 32px;
+  }
+  .body {
+    gap: 18px;
+  }
+}

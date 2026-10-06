@@ -3,15 +3,15 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 22px;
-  padding: 0 9px;
+  height: 24px;
+  padding: 0 10px;
   border-radius: var(--r-chip);
-  border: 1px solid color-mix(in srgb, var(--c) 32%, transparent);
+  border: 1px solid color-mix(in srgb, var(--c) 28%, transparent);
   background: color-mix(in srgb, var(--c) 4%, transparent);
   color: var(--c);
-  font-family: var(--font-data);
-  font-size: 11px;
-  letter-spacing: 0.04em;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
   white-space: nowrap; /* no forced uppercase: chips also carry data like usernames */
 }
 
@@ -29,7 +29,9 @@
   background: var(--c);
   border-color: var(--c);
   color: var(--on-rust);
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.04em;
 }
 
 .dashed {
@@ -45,12 +47,12 @@
 
 .split {
   display: inline-flex;
-  height: 22px;
+  height: 24px;
   border-radius: var(--r-chip);
   overflow: hidden;
-  font-family: var(--font-data);
-  font-size: 11px;
-  letter-spacing: 0.04em;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
   white-space: nowrap;
 }
 

@@ -10,7 +10,7 @@ export function JudgedNormalDetail({ anomaly }: { anomaly: BenignAnomaly }) {
   return (
     <GlassCard className={styles.judged}>
       <div className={styles.head}>
-        <BoxTitle>JUDGED NORMAL</BoxTitle>
+        <BoxTitle>Judged normal</BoxTitle>
         <span className={styles.opened}>{formatClock(anomaly.ts)}</span>
       </div>
       <h2 className={styles.name}>{anomaly.name}</h2>

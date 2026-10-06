@@ -62,14 +62,14 @@ function FeedTrace() {
 /** Freshness SLA: time from an event arriving to a ranked alert on screen. p95 against a 5 s target. */
 function Freshness() {
   const health = useNetra((s) => s.health);
-  if (!health?.freshnessMs) return <span className={styles.label}>FRESHNESS PENDING</span>;
+  if (!health?.freshnessMs) return <span className={styles.label}>Freshness pending</span>;
   const p95 = health.freshnessMs.p95;
   const over = p95 > health.slaMs;
   const lit = Math.max(1, Math.min(10, Math.round((p95 / health.slaMs) * 10)));
-  const value = `${(p95 / 1000).toFixed(1)}S/${health.slaMs / 1000}S`;
+  const value = `${(p95 / 1000).toFixed(1)} s / ${health.slaMs / 1000} s`;
   return (
     <span className={`${styles.fresh} ${over ? styles.failing : ""}`} aria-label={`Freshness p95 ${value}${over ? ", over target" : ""}`}>
-      <span className={`${styles.label} ${styles.freshLabel}`}>FRESHNESS</span>
+      <span className={`${styles.label} ${styles.freshLabel}`}>Freshness</span>
       <span className={styles.segs} aria-hidden="true">
         {Array.from({ length: 10 }, (_, i) => (
           <i key={i} className={i < lit ? styles.lit : undefined} />
@@ -77,7 +77,7 @@ function Freshness() {
       </span>
       <span className={styles.value} aria-hidden="true">
         {value}
-        {over && " OVER TARGET"}
+        {over && " over target"}
       </span>
     </span>
   );
@@ -102,7 +102,7 @@ export function SimulatedChip() {
   return (
     <div className={styles.chips}>
       <Chip tone="muted" dashed>
-        SIMULATED FEED
+        Simulated feed
       </Chip>
     </div>
   );
@@ -117,17 +117,17 @@ export function OsdChips() {
   return (
     <div className={styles.chips}>
       <button type="button" className={styles.tourButton} onClick={() => openTour(true)} aria-label="Start the guided tour of the dashboard">
-        TOUR
+        Tour
       </button>
       <Link to="/live#expired" className={styles.chipLink}>
-        <Chip>EXPIRED {expired}</Chip>
+        <Chip>Expired {expired}</Chip>
       </Link>
       <Link to="/live#judged-normal" className={styles.chipLink}>
-        <Chip tone="ok">JUDGED NORMAL {judgedNormal}</Chip>
+        <Chip tone="ok">Judged normal {judgedNormal}</Chip>
       </Link>
       {simulated && (
         <Chip tone="muted" dashed>
-          SIMULATED FEED
+          Simulated feed
         </Chip>
       )}
       <SignedIn />

@@ -1,7 +1,8 @@
 .focus,
 .judged {
-  padding: 18px 22px;
+  padding: 24px 28px;
   min-height: 0;
+  border-radius: var(--r-glass);
 }
 
 .focus {
@@ -23,19 +24,17 @@
 
 .opened {
   font-family: var(--font-data);
-  font-size: 11px;
-  letter-spacing: 0.06em;
+  font-size: 12px;
   color: var(--muted);
 }
 
 .name {
   margin-top: 10px;
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: 21px;
-  line-height: 1.25;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+  font-family: var(--font-ui);
+  font-weight: 300;
+  font-size: 40px;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
   color: var(--text-hi);
   display: -webkit-box;
   -webkit-line-clamp: 2;

@@ -1,0 +1,77 @@
+.tiles {
+  --tile-h: 118px;
+  --tile-open-h: 360px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--gap);
+}
+
+.line {
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: var(--text);
+}
+
+.rust {
+  color: var(--rust);
+}
+
+.ai {
+  color: var(--ai);
+}
+
+.big {
+  font-size: 30px;
+  font-weight: 200;
+  letter-spacing: -0.02em;
+  color: var(--text-hi);
+}
+
+.small {
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--muted);
+}
+
+.scopeMini {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mini {
+  width: 76px;
+  height: 64px;
+  flex: none;
+  margin: -6px 0 -8px -6px;
+}
+
+.scopeOpen {
+  height: 100%;
+}
+
+.chartOpen {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chartOpen > :last-child {
+  flex: 1;
+  min-height: 0;
+}
+
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 8px;
+  background: var(--ok);
+}
+
+.bad {
+  background: var(--fail);
+}

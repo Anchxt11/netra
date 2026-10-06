@@ -7,8 +7,7 @@ import { PixelField } from "../components/PixelField";
 import { BootScreen } from "../components/BootScreen";
 import styles from "./AppShell.module.css";
 
-// Brightness of the pixel-dot background (0 to 1): dashboard pages, and the landing page.
-const FIELD_INTENSITY = 0.55;
+// Brightness of the landing page's pixel-dot background (0 to 1).
 const LANDING_FIELD_INTENSITY = 0.6;
 const BOOT_KEY = "netra.booted";
 
@@ -45,7 +44,8 @@ export function AppShell() {
     // reducedMotion="user": motion animations switch off when the OS asks for reduced motion.
     <MotionConfig reducedMotion="user">
       <div className={styles.shell} data-surface={surface}>
-        <PixelField intensity={surface === "console" ? FIELD_INTENSITY : landing ? LANDING_FIELD_INTENSITY : 1} />
+        {/* v2: the pixel field lives on the landing page only; the dashboard stays quiet. */}
+        {landing && <PixelField intensity={LANDING_FIELD_INTENSITY} />}
         <TopBar />
         <main className={styles.page}>
           <Outlet />

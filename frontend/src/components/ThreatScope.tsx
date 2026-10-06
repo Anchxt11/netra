@@ -57,9 +57,11 @@ interface Props {
   incidents: Ranked<Incident>[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  /** Small, inside a closed tile: no labels or legend, and the blips are not separate focus stops. */
+  compact?: boolean;
 }
 
-export function ThreatScope({ incidents, selectedId, onSelect }: Props) {
+export function ThreatScope({ incidents, selectedId, onSelect, compact = false }: Props) {
   const blips = incidents.map((i) => {
     const angle = blipAngle(i.id, i.attackType);
     const minutesLeft = i.rank.timeLeftMs / 60_000;
@@ -107,9 +109,11 @@ export function ThreatScope({ incidents, selectedId, onSelect }: Props) {
           {RINGS.map((ring) => (
             <g key={ring.min}>
               <circle cx={CX} cy={CY} r={ring.r} className={ring.solid ? styles.ring : styles.ringDashed} />
-              <text x={CX + 4} y={CY - ring.r + 11} className={styles.ringLabel}>
-                {ring.min}M
-              </text>
+              {!compact && (
+                <text x={CX + 4} y={CY - ring.r + 11} className={styles.ringLabel}>
+                  {ring.min}M
+                </text>
+              )}
             </g>
           ))}
           {TICKS.map((t, i) => (
@@ -120,7 +124,7 @@ export function ThreatScope({ incidents, selectedId, onSelect }: Props) {
           ))}
           <line x1={CX - 6} y1={CY} x2={CX + 6} y2={CY} className={styles.cross} />
           <line x1={CX} y1={CY - 6} x2={CX} y2={CY + 6} className={styles.cross} />
-          {FAMILIES.map((f) => {
+          {!compact && FAMILIES.map((f) => {
             const p = polar(R + 19, FAMILY_CENTRE[f]);
             return (
               <text key={f} x={p.x} y={p.y + 3} className={styles.family}>
@@ -148,12 +152,12 @@ export function ThreatScope({ incidents, selectedId, onSelect }: Props) {
             <g
               key={b.inc.id}
               className={styles.blip}
-              role="button"
-              tabIndex={0}
-              aria-pressed={isSel}
-              aria-label={`${b.inc.name}, ${formatCountdown(b.inc.rank.timeLeftMs)} left, attention ${b.inc.attentionScore}`}
-              onClick={() => onSelect(b.inc.id)}
-              onKeyDown={(e) => onKey(e, b.inc.id)}
+              role={compact ? undefined : "button"}
+              tabIndex={compact ? undefined : 0}
+              aria-pressed={compact ? undefined : isSel}
+              aria-label={compact ? undefined : `${b.inc.name}, ${formatCountdown(b.inc.rank.timeLeftMs)} left, attention ${b.inc.attentionScore}`}
+              onClick={compact ? undefined : () => onSelect(b.inc.id)}
+              onKeyDown={compact ? undefined : (e) => onKey(e, b.inc.id)}
             >
               <circle cx={b.pos.x} cy={b.pos.y} r={b.size + 7} className={styles.hit} />
               <circle cx={b.pos.x} cy={b.pos.y} r={b.size + 4} fill={b.color} opacity={0.18} />
@@ -163,20 +167,22 @@ export function ThreatScope({ incidents, selectedId, onSelect }: Props) {
           );
         })}
 
-        {selected && <SelectedMark x={selected.pos.x} y={selected.pos.y} text={`${SHORT[selected.inc.attackType]} ${formatCountdown(selected.inc.rank.timeLeftMs)}`} />}
+        {selected && !compact && <SelectedMark x={selected.pos.x} y={selected.pos.y} text={`${SHORT[selected.inc.attackType]} ${formatCountdown(selected.inc.rank.timeLeftMs)}`} />}
       </svg>
 
+      {!compact && (
       <div className={styles.legend} aria-hidden="true">
-        <span>CENTRE = NO TIME LEFT</span>
+        <span>Centre = no time left</span>
         <span className={styles.heatKey}>
-          FRESH
+          warm
           <i style={{ background: "var(--heat-1)" }} />
           <i style={{ background: "var(--heat-2)" }} />
           <i style={{ background: "var(--heat-3)" }} />
           <i style={{ background: "var(--heat-4)" }} />
-          COLD
+          cold
         </span>
       </div>
+      )}
     </div>
   );
 }

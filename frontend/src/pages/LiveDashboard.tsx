@@ -1,28 +1,17 @@
-// /live: left = what needs action, centre = how much time and why, right = the big picture and trust.
-// Layout: docs/DESIGN.md "Live dashboard layout" and docs/reference/dashboard.png.
+// /live: left = what needs action, centre = the incident (how long, how it escalated, how bad) with
+// the details a hover away, right = the traffic itself. Layout: docs/PAGES.md, design board "Dashboard B".
 import { useEffect } from "react";
-import { Panel } from "../components/Panel";
 import { Queue } from "../features/queue/Queue";
 import { IncidentFocusEmpty } from "../features/detail/IncidentFocusEmpty";
-import { IncidentFocus } from "../features/detail/IncidentFocus";
-import { EscalationPanel, InvolvedPanel } from "../features/detail/DetailPanels";
+import { IncidentHero } from "../features/detail/IncidentHero";
 import { JudgedNormalDetail } from "../features/detail/JudgedNormalDetail";
-import { Fixes } from "../features/fixes/Fixes";
+import { DashboardTiles } from "../features/health/DashboardTiles";
+import { LiveFeed } from "../features/traffic/LiveFeed";
 import { Toast } from "../components/Toast";
-import { RightColumn } from "../features/health/RightColumn";
 import { DemoDock } from "../features/demo/DemoDock";
 import { Tour } from "../features/tour/Tour";
 import { useNetra, useRankedIncidents } from "../store/useNetra";
 import styles from "./LiveDashboard.module.css";
-
-/** Before the first incident arrives (for example, a real feed that has just connected). */
-function Waiting({ title, meta }: { title: string; meta?: string }) {
-  return (
-    <Panel title={title} meta={meta} className={styles.waiting}>
-      <p className={styles.waitingNote}>Waiting for the first incident.</p>
-    </Panel>
-  );
-}
 
 /** `embedded`: shown at the end of the home page's story (the tour then only plays on request). */
 export function LiveDashboard({ embedded = false }: { embedded?: boolean }) {
@@ -53,40 +42,24 @@ export function LiveDashboard({ embedded = false }: { embedded?: boolean }) {
         <Queue />
       </div>
 
-      {selectedBenign ? (
-        <div className={styles.centreSingle}>
+      <div className={styles.centre}>
+        {selectedBenign ? (
           <JudgedNormalDetail anomaly={selectedBenign} />
-        </div>
-      ) : (
-        <div className={styles.centre}>
-          {selectedIncident ? (
-            <>
-              <IncidentFocus incident={selectedIncident} />
-              <div className={styles.middle}>
-                <EscalationPanel incident={selectedIncident} />
-                <InvolvedPanel incident={selectedIncident} />
-              </div>
-              <Fixes incident={selectedIncident} />
-            </>
-          ) : (
-            <>
-              <IncidentFocusEmpty />
-              <div className={styles.middle}>
-                <Waiting title="How it escalated" />
-                <Waiting title="Who is involved" />
-              </div>
-              <Waiting title="Recommended fixes" />
-            </>
-          )}
-        </div>
-      )}
+        ) : selectedIncident ? (
+          <IncidentHero incident={selectedIncident} />
+        ) : (
+          <IncidentFocusEmpty />
+        )}
+        <DashboardTiles incident={selectedIncident} />
+      </div>
+
+      <div className={styles.right}>
+        <LiveFeed />
+      </div>
+
       <Toast />
       <DemoDock />
       <Tour autoStart={!embedded} />
-
-      <div className={styles.right}>
-        <RightColumn />
-      </div>
     </div>
   );
 }

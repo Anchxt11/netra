@@ -1,67 +1,36 @@
 /*
-  1440x900: 356 | 722 | 310, no page scroll. Narrower screens: slimmer side columns and the
-  centre shrinks; below 900 tall the page scrolls vertically (never sideways).
-  82px = header top padding 12 + header 44 + gap 12 + bottom padding 14.
+  1440x900: 268 | incident | 384. Narrower screens: slimmer side columns, the centre shrinks;
+  below about 860 tall the page scrolls vertically (never sideways).
+  82px = header top padding + header + gap + bottom padding (AppShell).
 */
 .dash {
-  --col-left: 356px;
-  --col-right: 310px;
-  --col-involved: 258px;
+  --col-left: 268px;
+  --col-right: 384px;
+  /* the fixes overlay covers the centre column */
+  --fix-inset: 82px calc(var(--col-right) + var(--page-pad) + var(--gap)) 20px calc(var(--col-left) + var(--page-pad) + var(--gap));
   display: grid;
   grid-template-columns: var(--col-left) minmax(0, 1fr) var(--col-right);
   gap: var(--gap);
   height: calc(100vh - 82px);
-  min-height: 806px;
+  min-height: 620px;
 }
 
 @media (max-width: 1400px) {
   .dash {
-    --col-left: 330px;
-    --col-right: 280px;
-    --col-involved: 220px;
-    min-height: 900px; /* the taller focus card needs room above the fix cards */
+    --col-left: 240px;
+    --col-right: 330px;
   }
 }
 
 .left,
 .centre,
-.centreSingle,
 .right {
   min-height: 0;
   min-width: 0;
 }
 
-/* The focus card may grow on narrow screens; the fixes row takes what is left. */
 .centre {
   display: grid;
-  grid-template-rows: minmax(212px, auto) 262px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
   gap: var(--gap);
-}
-
-.centreSingle {
-  display: flex;
-  flex-direction: column;
-}
-
-.middle {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--col-involved);
-  gap: var(--gap);
-  min-height: 0;
-}
-
-.right {
-  display: grid;
-  grid-template-rows: 344px 204px minmax(0, 1fr);
-  gap: var(--gap);
-}
-
-.waiting {
-  min-height: 0;
-  overflow: hidden;
-}
-
-.waitingNote {
-  font-size: 12.5px;
-  color: var(--muted);
 }

@@ -46,7 +46,8 @@ export function MitigationsCard({ incident, crie }: { incident: Incident; crie?:
   );
 }
 
-export function Fixes({ incident }: { incident: Incident }) {
+/** `bare`: no header of its own (inside the fixes overlay, which has one). */
+export function Fixes({ incident, bare = false }: { incident: Incident; bare?: boolean }) {
   const crie = useNetra((s) => s.health?.models.find((m) => m.name === "CRIE"));
   const record = useNetra((s) => s.decisions[incident.id]);
   const decide = useNetra((s) => s.decide);
@@ -57,10 +58,12 @@ export function Fixes({ incident }: { incident: Incident }) {
   const settled = approvedId !== undefined || incident.status !== "open";
 
   return (
-    <section className={styles.fixes} aria-label="Recommended fixes" data-tour="fixes">
-      <header className={styles.head}>
-        <BoxTitle>RECOMMENDED FIXES</BoxTitle>
-      </header>
+    <section className={styles.fixes} aria-label="Recommended fixes">
+      {!bare && (
+        <header className={styles.head}>
+          <BoxTitle>Recommended fixes</BoxTitle>
+        </header>
+      )}
 
       {!crieReady || fixes.length === 0 ? (
         <MitigationsCard incident={incident} crie={crie} />

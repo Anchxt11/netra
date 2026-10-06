@@ -7,7 +7,7 @@ interface Props {
   title: string;
   /** Muted text on the right of the title, e.g. "7 OPEN". */
   meta?: ReactNode;
-  /** L-shaped ticks for key panels, usually two opposite corners. */
+  /** v1 corner ticks: accepted for compatibility, no longer drawn (DESIGN.md v2). */
   corners?: Corner[];
   className?: string;
   children?: ReactNode;
@@ -16,12 +16,9 @@ interface Props {
 }
 
 /** Opaque module for reading data, with a clear header bar: the title, its context, a divider. */
-export function Panel({ title, meta, corners = [], className, children, tourId }: Props) {
+export function Panel({ title, meta, className, children, tourId }: Props) {
   return (
     <section className={className ? `${styles.panel} ${className}` : styles.panel} data-tour={tourId}>
-      {corners.map((c) => (
-        <i key={c} className={`${styles.corner} ${styles[c]}`} aria-hidden="true" />
-      ))}
       <header className={styles.head}>
         <BoxTitle>{title}</BoxTitle>
         {meta && <span className={styles.meta}>{meta}</span>}

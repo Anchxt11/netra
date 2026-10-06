@@ -28,19 +28,16 @@
 }
 
 .count {
-  font-family: var(--font-data);
-  font-size: 10.5px;
-  letter-spacing: 0.1em;
+  font-size: 12px;
+  font-weight: 500;
   color: var(--muted);
 }
 
 .title {
   margin: 0;
   font-family: var(--font-ui);
-  font-weight: 700;
-  font-size: 16px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-weight: 500;
+  font-size: 18px;
   color: var(--text-hi);
 }
 
@@ -64,9 +61,8 @@
   padding: 0 14px;
   border-radius: var(--r-btn);
   font-family: var(--font-ui);
-  font-weight: 700;
-  font-size: 12px;
-  letter-spacing: 0.07em;
+  font-weight: 600;
+  font-size: 13px;
   cursor: pointer;
 }
 

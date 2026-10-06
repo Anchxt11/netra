@@ -137,7 +137,7 @@ export function Queue() {
               aria-hidden="true"
             />
           )}
-          <span className={styles.groupName}>JUDGED NORMAL {judgedCount}</span>
+          <span className={styles.groupName}>Judged normal · {judgedCount}</span>
           {latestBenign && (
             <span className={styles.latest}>
               {latestBenign.name}, {formatHM(latestBenign.ts)}
@@ -155,8 +155,8 @@ export function Queue() {
           onClick={() => setShowExpired((v) => !v)}
         >
           <i className={styles.staleMark} aria-hidden="true" />
-          <span className={styles.groupName}>EXPIRED {expiredCount}</span>
-          <span className={styles.toggle}>{showExpired ? "HIDE" : "SHOW"}</span>
+          <span className={styles.groupName}>Expired · {expiredCount}</span>
+          <span className={styles.toggle}>{showExpired ? "Hide" : "Show"}</span>
         </button>
         {showExpired && (
           <ul id="expired-list" className={styles.expiredList}>

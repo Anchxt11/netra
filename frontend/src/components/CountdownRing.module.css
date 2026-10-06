@@ -21,15 +21,20 @@
   gap: 6px;
 }
 
-/* The number scales with the ring: 40px at 184px. */
+/* The number scales with the ring: about 52px at 232px. */
 .centre .time {
-  font-size: calc(var(--ring-size, 184px) * 0.217);
+  font-size: calc(var(--ring-size, 184px) * 0.235);
+  font-weight: 200;
 }
 
-.label,
+.label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
 .stale {
   font-family: var(--font-data);
-  font-size: 10px;
-  letter-spacing: 0.08em;
+  font-size: 11px;
   color: var(--muted);
 }

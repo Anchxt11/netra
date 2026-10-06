@@ -39,7 +39,7 @@ export function CountdownRing({ remaining, timeLeftMs, staleBy, size }: Props) {
       className={styles.ring}
       style={size ? ({ "--ring-size": `${size}px` } as CSSProperties) : undefined}
       role="img"
-      aria-label={`Time left ${time}, data goes stale at ${staleAt}`}
+      aria-label={`Time left ${time}, the evidence goes cold at ${staleAt}`}
     >
       <svg viewBox={`0 0 ${BOX} ${BOX}`} aria-hidden="true">
         {PATHS.map((d, i) => (
@@ -47,9 +47,9 @@ export function CountdownRing({ remaining, timeLeftMs, staleBy, size }: Props) {
         ))}
       </svg>
       <div className={styles.centre} aria-hidden="true">
-        <span className={styles.label}>TIME LEFT</span>
+        <span className={styles.label}>Time left</span>
         <NumText value={time} size="xl" color="var(--text-hi)" className={styles.time} />
-        <span className={styles.stale}>STALE AT {staleAt}</span>
+        <span className={styles.stale}>cold at {staleAt}</span>
       </div>
     </div>
   );

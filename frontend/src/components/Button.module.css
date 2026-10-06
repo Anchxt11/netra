@@ -1,15 +1,13 @@
 .btn {
   display: inline-grid;
   place-items: center;
-  height: 34px;
-  padding: 0 16px;
+  height: 38px;
+  padding: 0 18px;
   border-radius: var(--r-btn);
   border: 1px solid transparent;
   font-family: var(--font-ui);
-  font-weight: 700;
-  font-size: 12px;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 13.5px;
   white-space: nowrap;
   cursor: pointer;
   transition: filter 120ms ease, background-color 120ms ease, border-color 120ms ease;

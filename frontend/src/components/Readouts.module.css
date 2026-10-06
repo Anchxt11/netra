@@ -1,11 +1,9 @@
 /* Shared by SevBars, AttentionGauge and RiskReadout. */
 
 .label {
-  font-family: var(--font-data);
-  font-size: 10.5px;
+  font-size: 12px;
+  font-weight: 500;
   line-height: 1.2;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: var(--muted);
 }
 
@@ -24,8 +22,8 @@
 }
 
 .bars i {
-  width: 6px;
-  border-radius: 1px;
+  width: 5px;
+  border-radius: 2px;
   background: var(--unlit);
 }
 
@@ -35,10 +33,11 @@
 
 .sevText {
   white-space: nowrap;
-  font-family: var(--font-data);
-  font-size: 12px;
+  font-size: 30px;
+  font-weight: 200;
+  letter-spacing: -0.02em;
   line-height: 1;
-  color: var(--text);
+  color: var(--text-hi);
 }
 
 /* attention */

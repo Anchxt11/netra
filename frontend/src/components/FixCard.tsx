@@ -10,7 +10,7 @@ const R = 15;
 const CIRC = 2 * Math.PI * R;
 const BAR_FULL = 0.32; // a contribution this large fills the reason bar
 
-/** CRIE's confidence in this fix: a cyan ring, because an ML model produced it. */
+/** CRIE's confidence in this fix: a lilac ring, because an ML model produced it. */
 function ConfidenceRing({ value }: { value: number }) {
   return (
     <span className={styles.ring} role="img" aria-label={`Confidence ${value.toFixed(2)}`}>
@@ -46,7 +46,7 @@ interface Props {
 }
 
 export function FixCard({ fix, approvedAt, locked, onApprove, onReject }: Props) {
-  const d3fend = fix.d3fend.name || "PENDING";
+  const d3fend = fix.d3fend.name || "pending";
   const cls = [styles.card, approvedAt !== undefined && styles.approved, locked && styles.locked].filter(Boolean).join(" ");
 
   return (
@@ -65,9 +65,9 @@ export function FixCard({ fix, approvedAt, locked, onApprove, onReject }: Props)
           <ConfidenceRing value={fix.confidence} />
         </header>
 
-        <p className={styles.why}>WHY THE AI PICKED IT</p>
+        <p className={styles.why}>Why the AI picked it</p>
         <ul className={styles.reasons}>
-          {fix.reasons.slice(0, 2).map((r) => {
+          {fix.reasons.slice(0, 3).map((r) => {
             const width = Math.max(0.06, Math.min(1, Math.abs(r.contribution) / BAR_FULL)) * 100;
             const sign = r.contribution >= 0 ? "+" : "−";
             return (
@@ -88,15 +88,15 @@ export function FixCard({ fix, approvedAt, locked, onApprove, onReject }: Props)
         <footer className={styles.actions}>
           {approvedAt !== undefined ? (
             <p className={styles.approvedAt} role="status">
-              APPROVED {formatClock(approvedAt)}
+              Approved at {formatClock(approvedAt)}
             </p>
           ) : (
             <>
               <Button variant="approve" className={styles.approve} onClick={onApprove} disabled={locked}>
-                APPROVE FIX
+                Approve fix
               </Button>
               <Button variant="reject" className={styles.reject} onClick={onReject} disabled={locked}>
-                REJECT
+                Reject
               </Button>
             </>
           )}

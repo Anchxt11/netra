@@ -1,0 +1,150 @@
+.wrap {
+  position: relative;
+  flex: none;
+}
+
+.fix {
+  height: 44px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: var(--r-chip);
+  background: var(--rust);
+  color: var(--on-rust);
+  font-size: 15px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+
+.fix:hover {
+  filter: brightness(1.08);
+}
+
+.approved {
+  background: var(--ok);
+  color: var(--on-ok);
+}
+
+.sub {
+  font-weight: 400;
+  opacity: 0.72;
+}
+
+/* The fan: the top three fixes slide out under the button on hover or focus. */
+.fan {
+  position: absolute;
+  right: 0;
+  top: 52px;
+  width: 240px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;
+  z-index: 30;
+}
+
+.card {
+  position: absolute;
+  right: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--glass-fill);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transform: translateY(-6px);
+  transition:
+    transform 0.42s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.25s;
+  transition-delay: calc(var(--i) * 40ms);
+}
+
+.wrap:hover .card,
+.fix:focus-visible ~ .fan .card {
+  opacity: 1;
+  transform: translateY(calc(var(--i) * 62px));
+}
+
+.cardMeta {
+  font-size: 11.5px;
+  color: var(--ai);
+}
+
+.cardName {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-hi);
+}
+
+/* The fixes overlay covers the incident card it belongs to. */
+.overlay {
+  position: fixed;
+  inset: var(--fix-inset, 96px 24px 24px);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px 26px;
+  border-radius: var(--r-glass);
+  background: rgba(14, 14, 16, 0.9);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 40px 120px rgba(0, 0, 0, 0.7);
+  animation: open 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes open {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.99);
+  }
+}
+
+.overlayHead {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+}
+
+.overlayTitle {
+  white-space: nowrap;
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--text-hi);
+  letter-spacing: -0.01em;
+}
+
+.overlayTitle::first-letter {
+  text-transform: uppercase;
+}
+
+.overlayNote {
+  font-size: 13px;
+  color: var(--muted);
+  margin-right: auto;
+}
+
+.close {
+  height: 36px;
+  padding: 0 16px;
+  border-radius: var(--r-btn);
+  border: 1px solid var(--edge);
+  background: transparent;
+  color: var(--text-hi);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.close:hover {
+  border-color: var(--edge-hover);
+}

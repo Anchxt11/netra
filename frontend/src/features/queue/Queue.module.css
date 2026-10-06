@@ -3,7 +3,11 @@
   flex-direction: column;
   min-height: 0;
   height: 100%;
-  padding: 16px 12px 12px;
+  padding: 18px 8px 10px;
+}
+
+.panel > header {
+  padding: 0 10px;
 }
 
 /* The ranked rows scroll; the two groups below stay pinned. */
@@ -23,7 +27,7 @@
 }
 
 .rowWrap {
-  margin-bottom: 6px;
+  margin-bottom: 2px;
   border-radius: var(--r-row);
 }
 
@@ -47,19 +51,18 @@
   gap: 10px;
   width: 100%;
   height: 40px;
-  padding: 0 14px;
+  padding: 0 12px;
   border-radius: var(--r-row);
   border: 1px solid transparent;
-  background: rgba(255, 255, 255, 0.025);
-  font-family: var(--font-data);
-  font-size: 11.5px;
-  letter-spacing: 0.08em;
+  background: transparent;
+  font-size: 12.5px;
+  font-weight: 500;
   text-align: left;
   cursor: pointer;
 }
 
 .group:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.045);
+  background: var(--panel-2);
 }
 
 .group:disabled {

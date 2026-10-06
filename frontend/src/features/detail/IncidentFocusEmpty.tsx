@@ -7,7 +7,7 @@ import styles from "./Detail.module.css";
 export function IncidentFocusEmpty() {
   return (
     <GlassCard className={styles.focus}>
-      <BoxTitle>INCIDENT</BoxTitle>
+      <BoxTitle>Incident</BoxTitle>
       <p className={styles.note}>Waiting for the first incident. Nothing needs action yet.</p>
     </GlassCard>
   );
