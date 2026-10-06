@@ -191,6 +191,23 @@ services:
     networks:
       lab-net: { ipv4_address: 172.30.0.11 }  # second IP for distributed credential stuffing
 
+  # ─── Lab Profile: Benign User (Normal background activity) ───────────────────
+  benign-user:
+    image: curlimages/curl:latest
+    profiles: ["lab"]
+    depends_on: [nginx]
+    networks:
+      lab-net: { ipv4_address: 172.30.0.20 }  # Normal IP (normalizer treats as US)
+    command: >
+      /bin/sh -c '
+        while true; do
+          for path in "/" "/api/Products" "/rest/languages" "/assets/public/favicon.ico" "/api/Challenges"; do
+            curl -s -o /dev/null "http://nginx$$path"
+            sleep $$(( (RANDOM % 3) + 1 ))
+          done
+        done
+      '
+
   # ─── Lab Profile: Vector log shipper ─────────────────────────────────────────
   vector:
     image: timberio/vector:latest-alpine

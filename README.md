@@ -25,24 +25,29 @@ Generator ─► Redpanda [events.raw] ─► Processor ─► Redpanda [events.
 
 ## Quick Start
 
+We provide two separate ways to generate activity: the **Live Lab** (real HTTP requests via Juice Shop) or the **Synthetic Generator** (purely mathematical traffic generation).
+
+To run the full end-to-end pipeline with the **Live Lab** (recommended):
+
 ```bash
-# Start everything (Redpanda, processor, console)
+# Start the core infrastructure (Redpanda, processor, DB, API, UI)
 make up
 
-# Start with the traffic generator (includes simulated attacks)
-make sim
+# Start the Live Lab (Juice Shop, nginx, Vector, and the auto-attack orchestrator)
+make lab
 
-# View logs
-make logs
-
-# Run unit tests
-make test
-
-# Stop everything
-make down
+# View the real-time logs of the lab components
+make lab-logs
 ```
 
-After starting, open:
+If you prefer to run the mathematical **Synthetic Generator** instead:
+```bash
+make sim
+```
+
+*Note: You generally should not run `make sim` and `make lab` at the same time, as they simulate overlapping scenarios using different techniques.*
+
+After starting the stack, open:
 - **Redpanda Console** — [http://localhost:8080](http://localhost:8080) — inspect topics and messages live
 - **FastAPI Backend** — runs on `http://localhost:8000`. Test via `curl http://localhost:8000/health`.
 
@@ -170,9 +175,23 @@ class Scorer(ABC):
 
 Current implementation: `DummyScorer` (heuristic weights). Drop-in replacement with `IsolationForest`/`XGBoost` model by implementing the `Scorer` interface.
 
-## Generator Attack Scenarios
+## Attack Scenarios (Live Lab & Synthetic)
 
-The simulator generates realistic web/auth/endpoint telemetry and injects 7 attack types after a configurable warmup period:
+### Live Lab Scenarios (Orchestrated by `auto_attack.py`)
+These are launched via real HTTP requests (using `ffuf`, `ab`, `sqlmap`, etc.) from the attacker containers in the Lab Profile:
+
+| Scenario              | Tool Used  | Description                                        |
+|-----------------------|------------|----------------------------------------------------|
+| `web_scan`            | `ffuf`     | High-volume path and param fuzzing                 |
+| `brute_force`         | `ffuf`     | Password guessing against `/rest/user/login`       |
+| `credential_stuffing` | `ffuf`     | Distributed login spray across many accounts       |
+| `http_flood`          | `ab`       | L7 DDoS using 50 concurrent connections            |
+| `sqli`                | `sqlmap`   | Automated SQL injection against the product search |
+| `data_exfiltration`   | `curl`     | Rapid download of huge backup files from `/ftp`    |
+| `account_takeover`    | `curl`     | Successful login from a high-risk geo IP (RU/CN)   |
+
+### Synthetic Generator Scenarios
+The simulator (`make sim`) generates fake telemetry and injects these mathematical patterns without doing any real HTTP networking:
 
 | Scenario              | Description                                        |
 |-----------------------|----------------------------------------------------|

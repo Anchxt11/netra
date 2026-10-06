@@ -91,10 +91,23 @@ scenario_data_exfiltration() {
     green "[+] data_exfiltration complete"
 }
 
+scenario_account_takeover() {
+    blue "[*] Scenario: account_takeover — Successful login from high-risk IP"
+    # The normalizer maps the attacker IP (172.30.0.10) to "RU".
+    # A successful login from RU triggers the account_takeover Sigma rule.
+    curl -s -X POST -H "Content-Type: application/json" \
+        -d '{"email":"admin@juice-sh.op","password":"admin123"}' \
+        "${TARGET}/rest/user/login" > /dev/null
+    green "[+] account_takeover complete"
+}
+
 scenario_full() {
     blue "[*] Running ALL scenarios in sequence..."
     echo ""
     scenario_brute_force
+    echo ""
+    sleep 5
+    scenario_account_takeover
     echo ""
     sleep 5
     scenario_web_scan
@@ -120,6 +133,7 @@ usage() {
     echo "Scenarios:"
     echo "  brute_force          Hydra login brute force"
     echo "  credential_stuffing  Fast multi-user credential spray"
+    echo "  account_takeover     Successful login from high-risk geo IP"
     echo "  web_scan             ffuf path/param fuzzing"
     echo "  sqli                 sqlmap SQL injection"
     echo "  http_flood           hey HTTP flood"
@@ -135,6 +149,7 @@ fi
 case "$1" in
     brute_force)          scenario_brute_force ;;
     credential_stuffing)  scenario_credential_stuffing ;;
+    account_takeover)     scenario_account_takeover ;;
     web_scan)             scenario_web_scan ;;
     sqli)                 scenario_sqli ;;
     http_flood)           scenario_http_flood ;;

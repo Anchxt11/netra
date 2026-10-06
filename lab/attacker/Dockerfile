@@ -13,6 +13,7 @@ RUN apt-get update && \
         wget \
         dnsutils \
         procps \
+        python3 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install ffuf (Go binary)
@@ -26,11 +27,12 @@ RUN ARCH=$(dpkg --print-architecture) && \
 # Copy baked-in wordlists (the lab network has no internet)
 COPY wordlists/ /wordlists/
 
-# Copy attack runner script
+# Copy attack runner script and auto orchestrator
 COPY attack-runner.sh /usr/local/bin/attack-runner
-RUN chmod +x /usr/local/bin/attack-runner
+COPY auto_attack.py /usr/local/bin/auto_attack
+RUN chmod +x /usr/local/bin/attack-runner /usr/local/bin/auto_attack
 
 WORKDIR /work
 
-# Keep container alive so we can exec into it
-CMD ["sleep", "infinity"]
+# Automatically run the orchestrator instead of sleeping
+CMD ["/usr/local/bin/auto_attack"]
