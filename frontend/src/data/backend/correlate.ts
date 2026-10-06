@@ -135,6 +135,14 @@ export class Correlator {
     return this.byId.get(incidentId)?.rows ?? [];
   }
 
+  /** An analyst approved a fix: the incident is decided, like the mock's. If the attack goes on, a new one opens. */
+  close(incidentId: string) {
+    const d = this.byId.get(incidentId);
+    if (!d) return;
+    this.open.delete(d.key);
+    this.byId.delete(d.id);
+  }
+
   // ------------------------------------------------------------------ grouping
 
   private eventOf(row: AlertRow): EnrichedEvent | undefined {

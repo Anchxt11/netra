@@ -9,6 +9,7 @@
 //   POST /_dev/stall?seconds=20   stop delivering events, like a stuck pipeline
 //   POST /_dev/drop               drop every WebSocket, like a network blip
 //   POST /_dev/expire             end every session (the socket closes with 4401)
+//   POST /_dev/refuse-writes?seconds=30   decisions fail to save (503)
 import { spawn } from "node:child_process";
 import { createHash, createHmac } from "node:crypto";
 import { createServer } from "node:http";
@@ -38,6 +39,7 @@ const events = []; // newest last, with stored_ts
 const rows = []; // the incidents table: one row per alert
 let buffer = [];
 let stalledUntil = 0;
+let refuseWritesUntil = 0;
 const clients = new Set();
 
 const now = () => new Date().toISOString();
@@ -184,6 +186,7 @@ const server = createServer(async (req, res) => {
   }
   if (path.startsWith("/_dev/") && req.method === "POST") {
     if (path === "/_dev/stall") stalledUntil = Date.now() + Number(url.searchParams.get("seconds") ?? 20) * 1000;
+    if (path === "/_dev/refuse-writes") refuseWritesUntil = Date.now() + Number(url.searchParams.get("seconds") ?? 30) * 1000;
     if (path === "/_dev/drop") for (const c of clients) c.close(1012, "dropped for testing");
     if (path === "/_dev/expire") {
       for (const c of clients) revoked.add(c.claims.iat), c.close(4401, "invalid or expired token");
@@ -204,6 +207,7 @@ const server = createServer(async (req, res) => {
     return send(res, 200, rows.slice(-limit).reverse().map(({ payload: _p, ...r }) => r));
   }
   const m = path.match(/^\/incidents\/(\d+)$/);
+  if (m && req.method === "PATCH" && Date.now() < refuseWritesUntil) return send(res, 503, { detail: "Database unavailable" });
   if (m && req.method === "PATCH") {
     const row = rows[Number(m[1]) - 1];
     if (!row) return send(res, 404, { detail: "Incident not found" });

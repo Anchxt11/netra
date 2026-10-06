@@ -178,6 +178,7 @@ export function createBackendSource({ apiUrl, wsUrl, getToken }: Options): DataS
       const line = `${new Date().toISOString()} ${username || "analyst"} ${d.decision === "approve" ? "APPROVED" : "REJECTED"} ${d.actionId}`;
       const lines = [...(log.get(d.incidentId) ?? []), line];
       log.set(d.incidentId, lines);
+      if (d.decision === "approve") correlator?.close(d.incidentId);
       const health = tracker;
       void api
         .updateIncident(token, row, { notes: lines.join("\n"), ...(d.decision === "approve" ? { status: "acknowledged" as const } : {}) })
