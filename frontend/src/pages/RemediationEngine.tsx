@@ -13,8 +13,8 @@ export function RemediationEngine() {
       source={crie.source}
       model={crie.model}
       metrics={[
-        { label: "PRECISION@3", value: crie.metrics.precisionAt3, format: pctFmt },
-        { label: "ANALYST ACCEPTANCE", value: crie.metrics.acceptanceRate, format: pctFmt },
+        { label: "Precision@3", value: crie.metrics.precisionAt3, format: pctFmt },
+        { label: "Analyst acceptance", value: crie.metrics.acceptanceRate, format: pctFmt },
       ]}
       stages={[
         "An incident is confirmed",

@@ -13,9 +13,9 @@ export function DetectionEngine() {
       source={atde.source}
       model={atde.model}
       metrics={[
-        { label: "PRECISION (ATTACKS)", value: atde.metrics.precisionMalicious, format: pctFmt },
-        { label: "RECALL (ATTACKS)", value: atde.metrics.recallMalicious, format: pctFmt },
-        { label: "SCORING TIME P95", value: atde.metrics.scoringLatencyMsP95, format: (v) => `${v} MS` },
+        { label: "Precision (attacks)", value: atde.metrics.precisionMalicious, format: pctFmt },
+        { label: "Recall (attacks)", value: atde.metrics.recallMalicious, format: pctFmt },
+        { label: "Scoring time p95", value: atde.metrics.scoringLatencyMsP95, format: (v) => `${v} MS` },
       ]}
       stages={[
         "A live event arrives",

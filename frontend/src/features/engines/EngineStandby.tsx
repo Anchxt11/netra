@@ -30,10 +30,10 @@ const known = (text: string | null) => (text && !/^confirm/i.test(text) ? text :
 export function EngineStandby({ title, subtitle, source, model, metrics, stages, note }: Props) {
   const example = source !== "model-export";
   const rows: [string, string | null][] = [
-    ["MODEL", model.name],
-    ["VERSION", example ? null : `v${model.version}`],
-    ["TRAINED", example ? null : model.trainedAt],
-    ["TRAINING DATA", known(model.trainingData)],
+    ["Model", model.name],
+    ["Version", example ? null : `v${model.version}`],
+    ["Trained", example ? null : model.trainedAt],
+    ["Training data", known(model.trainingData)],
     ...metrics.map((m): [string, string | null] => [m.label, m.value === null ? null : (m.format ?? String)(m.value)]),
   ];
 
@@ -47,9 +47,9 @@ export function EngineStandby({ title, subtitle, source, model, metrics, stages,
       <div className={styles.grid}>
         <GlassCard className={styles.walkthrough}>
           <div className={styles.cardHead}>
-            <BoxTitle>WALKTHROUGH</BoxTitle>
+            <BoxTitle>Walkthrough</BoxTitle>
             <Chip tone="muted" dashed>
-              WAITING FOR MODEL EXPORT
+              Waiting for the model export
             </Chip>
           </div>
           <p className={styles.lead}>
@@ -66,7 +66,7 @@ export function EngineStandby({ title, subtitle, source, model, metrics, stages,
           </ol>
         </GlassCard>
 
-        <Panel title="Model card" meta={example ? <Chip tone="muted">EXAMPLE DATA</Chip> : undefined} corners={["tr", "bl"]} className={styles.card}>
+        <Panel title="Model card" meta={example ? <Chip tone="muted">Example data</Chip> : undefined} corners={["tr", "bl"]} className={styles.card}>
           <dl className={styles.facts}>
             {rows.map(([label, value]) => (
               <div key={label}>
