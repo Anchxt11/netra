@@ -1,72 +1,16 @@
 /*
-  CONSOLE THEME: the quiet, industrial look for the dashboard and engine pages.
-  The landing page keeps the vivid originals from tokens.css. This file only
-  re-tunes those tokens inside [data-surface="console"] (set by AppShell, and by
-  the dashboard section on the home page).
-
-  Colour on the dashboard is kept for urgency: rust (ACT NOW, the selected item,
-  going cold) and pink (our own pipeline failing). Everything else is a quiet,
-  near-neutral grey with only a hint of hue, so rule and AI stay distinguishable.
-
-  To tweak the dashboard's look, this is the first place to edit. Every
-  component derives its tints from these values.
+  Shared helpers every surface uses. Since v2 (2026-10-07) the landing page and
+  the dashboard share one palette (tokens.css), so the old [data-surface="console"]
+  overrides are gone; the attribute stays as a hook for small layout differences.
 */
-
-/* Shared helpers used by components on every surface (warm defaults for the landing page). */
 :root {
   --on-rust:    #1A0906;                    /* dark text on solid rust */
-  --on-ok:      #06140C;                    /* dark text on solid green */
+  --on-ok:      #04122B;                    /* dark text on solid blue */
   --unlit:      rgba(255, 255, 255, 0.07);  /* switched-off segments and ring tracks */
-  --glow:       1;                          /* 1 = glows on, 0 = glows off */
-  --edge:       rgba(255, 150, 120, 0.35);  /* outlines: reject button, rank badge */
-  --edge-hover: rgba(255, 150, 120, 0.6);
-  --edge-soft:  rgba(255, 150, 120, 0.12);  /* faint outlines and scrollbars */
-  --scope:      #FF785A;                    /* radar rings, ticks, dividers (used at low opacity) */
-}
-
-[data-surface="console"] {
-  /* surfaces: near-neutral black and greys */
-  --bg:        #0A0A09;
-  --text-hi:   #ECE8E4;
-  --text:      #D2CCC7;
-  --muted:     #958E89;
-  --line:      rgba(255, 255, 255, 0.08);
-  --edge:       rgba(255, 255, 255, 0.22);
-  --edge-hover: rgba(255, 255, 255, 0.42);
-  --edge-soft:  rgba(255, 255, 255, 0.09);
-  --scope:      #C9C3BE;
-
-  /* brand and urgency: rust stays the one strong colour */
-  --rust:      #E35A36;
-  --rust-2:    #D6553A;
-
-  /* heat = time left: calm while there is time, warming to rust as it runs out */
-  --heat-1:    #D8D0C6;
-  --heat-2:    #C2AA92;
-  --heat-3:    #D48659;
-  --heat-4:    #C9492D;
-  --stale:     #45423F;
-
-  /* who found it: two quiet greys, lilac for a rule, blue for the AI engine */
-  --rule:      #ADA6C2;
-  --ai:        #9DB8C1;
-
-  /* system state: a muted sage for healthy and approve; pink stays loud for failures */
-  --ok:        #9CC0A8;
-  --fail:      #E4577F;
-
-  /* materials: neutral glass, dense panels */
-  --panel:        rgba(12, 12, 11, 0.88);
-  --glass-fill:   linear-gradient(140deg, rgba(255,255,255,.05), rgba(255,255,255,.012) 60%), rgba(18,17,16,.6);
-  --glass-border: rgba(255, 255, 255, 0.11);
-  --glass-hi:     inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  --glass-blur:   blur(16px) saturate(110%);
-
-  /* numbers: plain mono instead of a dot-matrix face */
-  --font-num:  "IBM Plex Mono", ui-monospace, monospace;
-
-  /* tighter corners read as machined, not bubbly (hierarchy kept: glass > panel > row) */
-  --r-glass: 14px;  --r-panel: 10px;  --r-row: 6px;  --r-btn: 6px;
-
-  --glow: 0;
+  --glow:       0;                          /* glows are off; ember light comes from gradients instead */
+  --edge:       rgba(255, 255, 255, 0.14);  /* outlines: buttons, chips, rank badges */
+  --edge-hover: rgba(255, 255, 255, 0.32);
+  --edge-soft:  rgba(255, 255, 255, 0.06);  /* faint outlines and scrollbars */
+  --scope:      #BDB8B2;                    /* radar rings, ticks, dividers (used at low opacity) */
+  --ember-light: radial-gradient(320px 220px at 0% 0%, rgba(228, 87, 46, 0.16), transparent 70%);
 }

@@ -1,42 +1,55 @@
+/*
+  NETRA design tokens (v2, 2026-10-07). One dark theme for the whole site.
+  The idea: data is warm when it arrives and cools as it ages. Rust is the one
+  warm colour (act, select, brand); time left cools from ember to ash; everything
+  else is graphite and grey. Spec: docs/DESIGN.md.
+*/
 :root {
-  /* brand and surfaces */
-  --bg:        #0B0605;
-  --rust:      #FF4A26;   /* brand, selection, primary action, ACT NOW */
-  --rust-2:    #E63A1C;   /* end of the selected-row gradient */
-  --text-hi:   #FFF1EA;   /* headings, key numbers */
-  --text:      #F5E3DC;   /* body and data */
-  --muted:     #A8796C;   /* labels, secondary, "PENDING" */
-  --line:      rgba(255, 96, 64, 0.14);  /* panel borders, dividers */
+  /* surfaces */
+  --bg:        #0A0A0B;   /* ink: the page */
+  --panel:     #131315;   /* graphite: cards */
+  --panel-2:   #1B1B1E;   /* graphite 2: hover, raised, selected */
+  --line:      rgba(255, 255, 255, 0.07);  /* hairlines and dividers */
 
-  /* heat = time left to act (warm = fresh). Only on time elements. */
-  --heat-1:    #FFD95A;   /* more than 66% of the window left */
-  --heat-2:    #FF9A3C;   /* 33 to 66% */
-  --heat-3:    #F0502A;   /* 15 to 33% */
-  --heat-4:    #A3261A;   /* under 15%: going cold */
-  --stale:     #4A3F3C;   /* expired */
+  /* text */
+  --text-hi:   #F3F0EC;   /* bone: titles and big numbers */
+  --text:      #BDB8B2;   /* stone: sentences */
+  --muted:     #8B8680;   /* ash: labels, "PENDING" */
+  --faint:     #6E6A66;   /* trailing digits of big numbers */
 
-  /* who found it (cool = the machines) */
-  --rule:      #A98BFF;   /* detected by a rule */
-  --ai:        #52D8FF;   /* produced by an ML model (ATDE detections, CRIE confidence, SHAP) */
+  /* brand: rust means act. Selection, primary action, ACT NOW. */
+  --rust:      #E4572E;
+  --rust-2:    #9C3418;
+  --ember:     #FF8A5C;   /* the hot end of rust (gradients, fresh data) */
+
+  /* time left: ember (just arrived) cooling to ash (going cold). Only on time elements. */
+  --heat-1:    #FF8A5C;   /* more than 66% of the window left */
+  --heat-2:    #E4572E;   /* 33 to 66% */
+  --heat-3:    #A5513A;   /* 15 to 33% */
+  --heat-4:    #6E5A52;   /* under 15%: going cold */
+  --stale:     #4A4744;   /* expired */
+
+  /* who found it: rules are neutral, the AI engine is lilac */
+  --rule:      #CFC9C2;
+  --ai:        #B9A8FF;
 
   /* system state */
-  --ok:        #3CF29B;   /* healthy, live, judged normal, approve */
-  --fail:      #FF3D7F;   /* our own pipeline is failing. Nothing else is this colour. */
+  --ok:        #4C8DFF;   /* healthy, live, judged normal, approve */
+  --fail:      #F0454F;   /* our own pipeline is failing. Always with words. */
 
-  /* materials */
-  --panel:        rgba(12, 6, 5, 0.80);
-  --glass-fill:   linear-gradient(140deg, rgba(255,120,90,.11), rgba(255,120,90,.025) 60%), rgba(26,11,9,.46);
-  --glass-border: rgba(255, 150, 120, 0.20);
-  --glass-hi:     inset 0 1px 0 rgba(255, 210, 190, 0.10);
-  --glass-blur:   blur(18px) saturate(140%);
+  /* materials: glass only for open tiles, overlays and the nav */
+  --glass-fill:   rgba(27, 27, 30, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-hi:     inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --glass-blur:   blur(18px) saturate(120%);
 
   /* type */
-  --font-display: "Michroma", sans-serif;          /* incident names, headlines */
-  --font-ui:      "Chakra Petch", system-ui, sans-serif;
-  --font-data:    "IBM Plex Mono", ui-monospace, monospace;
-  --font-num:     "Doto", "IBM Plex Mono", monospace;  /* big numerals only */
+  --font-display: "Michroma", sans-serif;                          /* the NETRA wordmark only */
+  --font-ui:      "Geist Variable", system-ui, sans-serif;         /* everything you read */
+  --font-data:    "Geist Mono Variable", ui-monospace, monospace;  /* addresses, ids, times */
+  --font-num:     "Geist Variable", system-ui, sans-serif;         /* big numbers, weight 200 */
 
-  /* geometry: radius encodes the material */
-  --r-glass: 22px;  --r-panel: 18px;  --r-row: 12px;  --r-btn: 10px;  --r-chip: 999px;
-  --gap: 12px;  --page-pad: 14px;
+  /* geometry: big soft cards, rounder rows, round pills */
+  --r-glass: 28px;  --r-panel: 24px;  --r-row: 14px;  --r-btn: 12px;  --r-chip: 999px;
+  --gap: 16px;  --page-pad: 24px;
 }
