@@ -43,3 +43,6 @@ INSERT INTO config (key, value) VALUES
     ('freshness_window_minutes',  '5'),
     ('rules_enabled',             '{}')      -- {"rule_id": false} disables a rule; B reads this
 ON CONFLICT (key) DO NOTHING;
+
+-- Added later, and created by the API itself at startup (app/schema.py) so existing volumes get them too:
+-- the kpi_alerts table and the kpi.<name>.warn / kpi.<name>.crit config keys.

@@ -11,6 +11,7 @@ const EnginesLayout = lazy(() => import("../pages/EnginesLayout").then((m) => ({
 const DetectionEngine = lazy(() => import("../pages/DetectionEngine").then((m) => ({ default: m.DetectionEngine })));
 const RemediationEngine = lazy(() => import("../pages/RemediationEngine").then((m) => ({ default: m.RemediationEngine })));
 const Login = lazy(() => import("../pages/Login"));
+const Thresholds = lazy(() => import("../pages/Thresholds"));
 const page = (element: ReactNode) => <Suspense fallback={null}>{element}</Suspense>;
 
 // The design review page (/kit): only while developing. The demo build leaves it out entirely.
@@ -28,6 +29,8 @@ export const router = createBrowserRouter([
         children: [
           { path: "/", element: page(<Landing />) },
           { path: "/live", element: page(<LiveDashboard />) },
+          // Everyone signed in can read the lines; only an admin can change them (the page says so).
+          { path: "/thresholds", element: page(<Thresholds />) },
           {
             path: "/engines",
             element: page(<EnginesLayout />),

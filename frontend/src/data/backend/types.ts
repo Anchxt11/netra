@@ -43,7 +43,49 @@ export type BackendMessage =
   | { type: "events"; data: EnrichedEvent[]; server_ts: string; dropped?: number }
   | { type: "alert"; data: AlertRow; server_ts: string }
   | { type: "incident_update"; data: AlertRow; server_ts: string }
+  | { type: "kpi"; data: KpiSnapshotWire; server_ts: string }
+  | { type: "kpi_alert"; data: KpiAlertWire; server_ts: string }
   | { type: "pong"; server_ts: string };
+
+/** One KPI in the `kpi` message (contracts/LIVE_API.md 4.1). */
+export interface KpiReadingWire {
+  name: string;
+  unit: string;
+  value_1m: number | null;
+  value_5m: number | null;
+  warn: number | null;
+  crit: number | null;
+  level: string;
+  alert_id: number | null;
+}
+
+/** `kpi`, every 5 s. */
+export interface KpiSnapshotWire {
+  computed_at: string;
+  kpis: KpiReadingWire[];
+}
+
+/** `kpi_alert` and GET /kpi/alerts (contracts/LIVE_API.md 4.2). */
+export interface KpiAlertWire {
+  id: number | null;
+  kind: string;
+  origin: string;
+  kpi: string;
+  level: string;
+  state: string;
+  value: number;
+  threshold: number | null;
+  window: string;
+  started_at: string;
+  updated_at: string;
+  cleared_at: string | null;
+}
+
+/** GET /kpi: the latest reading and each KPI's 1-minute value over the last few minutes. */
+export interface KpiReport {
+  latest: KpiSnapshotWire | null;
+  history: { computed_at: string; values: Record<string, number | null> }[];
+}
 
 /** GET /freshness: p50 and p95 of (stored_ts - event_ts) over a sliding window. */
 export interface FreshnessReport {

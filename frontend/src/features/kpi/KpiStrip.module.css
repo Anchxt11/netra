@@ -1,0 +1,200 @@
+/* The KPI strip: one quiet card, five cells split by hairlines. Height is fixed (--kpi-strip in
+   LiveDashboard.module.css) so the dashboard below and the fixes overlay can count on it. */
+.strip {
+  height: var(--kpi-strip, 76px);
+  display: flex;
+  align-items: stretch;
+  border-radius: var(--r-panel);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: var(--glass-hi);
+  overflow: hidden;
+}
+
+.cell {
+  flex: 1 1 0;
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 2px;
+  padding: 9px 16px 8px;
+  border-right: 1px solid var(--line);
+  transition: background-color 160ms ease;
+}
+
+.cell:hover,
+.cell:focus-visible {
+  background: var(--panel-2);
+}
+
+.cell:focus-visible {
+  outline: 2px solid var(--rust);
+  outline-offset: -4px;
+  border-radius: var(--r-row);
+}
+
+.top,
+.mid,
+.foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.top {
+  justify-content: space-between;
+}
+
+.label {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pill {
+  flex: none;
+  font-family: var(--font-data);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  padding: 3px 7px;
+  border-radius: var(--r-chip);
+  border: 1px solid var(--line);
+}
+
+.quiet {
+  color: var(--muted);
+}
+
+.ok {
+  color: var(--ok);
+  border-color: rgba(76, 141, 255, 0.35);
+}
+
+.warn {
+  color: var(--rust);
+  border-color: var(--rust);
+}
+
+.crit {
+  color: var(--bg);
+  background: var(--rust);
+  border-color: var(--rust);
+}
+
+.mid {
+  justify-content: space-between;
+}
+
+.value {
+  font-family: var(--font-num);
+  font-size: 24px;
+  font-weight: 300;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-hi);
+  white-space: nowrap;
+}
+
+.faint {
+  color: var(--faint);
+}
+
+.unit {
+  margin-left: 4px;
+  font-size: 12px;
+  letter-spacing: 0;
+  color: var(--muted);
+}
+
+.pending {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.spark {
+  flex: none;
+  overflow: visible;
+}
+
+.sparkLine {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.25;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.sparkDot {
+  fill: var(--text-hi);
+}
+
+.sparkHot {
+  fill: var(--rust);
+}
+
+.foot {
+  font-size: 11px;
+  color: var(--faint);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.foot span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.alertNote {
+  color: var(--rust);
+}
+
+.alerting .label {
+  color: var(--text);
+}
+
+.edit {
+  flex: none;
+  align-self: center;
+  margin: 0 16px;
+  font-size: 12px;
+  color: var(--muted);
+  text-decoration: none;
+  border-radius: var(--r-btn);
+  padding: 6px 4px;
+}
+
+.edit:hover {
+  color: var(--text-hi);
+}
+
+.edit:focus-visible {
+  outline: 2px solid var(--rust);
+  outline-offset: 2px;
+}
+
+/* Short screens: label and value only; the lines are still in each cell's spoken label and on /thresholds. */
+@media (max-height: 820px) {
+  .cell {
+    grid-template-rows: auto 1fr;
+    padding: 7px 14px 6px;
+  }
+
+  .foot {
+    display: none;
+  }
+
+  .value {
+    font-size: 21px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cell {
+    transition: none;
+  }
+}

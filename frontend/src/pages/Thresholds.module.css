@@ -1,0 +1,160 @@
+.page {
+  width: min(960px, 100%);
+  margin: 0 auto;
+  padding: 24px 0 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.title {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  color: var(--text-hi);
+}
+
+.lead {
+  margin: 0;
+  max-width: 68ch;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 20px;
+  border-radius: var(--r-panel);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: var(--glass-hi);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(140px, 1.2fr) minmax(80px, 0.7fr) minmax(170px, 1.3fr) minmax(170px, 1.3fr) 96px;
+  align-items: center;
+  column-gap: 16px;
+  padding: 14px 0 4px;
+  border-top: 1px solid var(--line);
+}
+
+.header {
+  padding: 8px 0;
+  border-top: none;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.name {
+  font-size: 14px;
+  color: var(--text-hi);
+}
+
+.now {
+  font-family: var(--font-data);
+  font-size: 13px;
+  color: var(--text);
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.input {
+  width: 96px;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--edge, var(--line));
+  border-radius: var(--r-btn);
+  background: rgba(0, 0, 0, 0.28);
+  font-family: var(--font-data);
+  font-size: 14px;
+  color: var(--text-hi);
+}
+
+.input:hover:not(:disabled) {
+  border-color: var(--edge-hover, var(--line));
+}
+
+.input:focus-visible {
+  outline: 2px solid var(--rust);
+  outline-offset: 2px;
+}
+
+.input:disabled {
+  opacity: 0.6;
+}
+
+.input::placeholder {
+  color: var(--faint);
+}
+
+.unit {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.rowOk,
+.rowError {
+  grid-column: 1 / -1;
+  min-height: 18px;
+  margin: 4px 0 6px;
+  font-size: 13px;
+}
+
+.rowOk {
+  color: var(--ok);
+}
+
+.rowError {
+  color: var(--text-hi);
+}
+
+.error,
+.waiting {
+  margin: 0;
+  padding: 16px 0;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.back {
+  align-self: flex-start;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.back:hover {
+  color: var(--text-hi);
+}
+
+.back:focus-visible {
+  outline: 2px solid var(--rust);
+  outline-offset: 2px;
+  border-radius: 4px;
+}

@@ -5,8 +5,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from . import consumers, db
+from . import consumers, db, kpi
 from .routes import auth, config, events, freshness, incidents, ws
+from .routes import kpi as kpi_routes
 from .settings import settings
 from .ws import manager
 
@@ -16,7 +17,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await db.init_pool()
-    tasks = consumers.start_all()
+    tasks = consumers.start_all() + [kpi.start()]
     yield
     for t in tasks:
         t.cancel()
@@ -31,7 +32,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-for r in (auth.router, events.router, incidents.router, freshness.router, config.router, ws.router):
+for r in (auth.router, events.router, incidents.router, freshness.router, config.router, kpi_routes.router, ws.router):
     app.include_router(r)
 
 

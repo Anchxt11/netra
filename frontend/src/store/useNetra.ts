@@ -1,17 +1,28 @@
 // The app's shared state. Fed only by the DataSource (mock or WebSocket); pages read from here.
 import { useMemo } from "react";
 import { create } from "zustand";
-import type { BenignAnomaly, FeedEvent, Incident, PipelineHealth, TrafficSecond } from "../data/types";
-import { createDataSource, loginRequired, type ConnectionStatus, type DataSource, type Decision, type ServerMessage } from "../data/source";
+import type { BenignAnomaly, FeedEvent, Incident, KpiAlert, KpiPoint, KpiSnapshot, PipelineHealth, TrafficSecond } from "../data/types";
+import {
+  createDataSource,
+  loginRequired,
+  type ConnectionStatus,
+  type DataSource,
+  type Decision,
+  type ServerMessage,
+  type ThresholdControl,
+} from "../data/source";
 import { rankIncidents } from "../lib/rank";
 import { SCENARIO_LENGTH_MS, type ScenarioName } from "../data/scenarios/demo";
 import { SESSION_ENDED, useSession } from "./useSession";
+import { kpiAlertSentence } from "../lib/kpiFormat";
 
 const MAX_EXPIRED = 50;
 const MAX_BENIGN = 20;
 const EPS_HISTORY = 30;
 const TRAFFIC_SECONDS = 60;
 const FEED_LENGTH = 40;
+const KPI_TREND_POINTS = 180; // 15 minutes of readings, one every 5 s
+const MAX_KPI_ALERTS = 50;
 
 /** Exactly one thing is selected: an incident, or a judged-normal item. */
 export type Selection = { kind: "incident" | "benign"; id: string } | null;
@@ -51,6 +62,12 @@ interface NetraState {
   traffic: TrafficSecond[];
   /** Recent events, newest first: the live feed's list. */
   feed: FeedEvent[];
+  /** The latest KPI reading (every 5 s), or null until the first one. */
+  kpi: KpiSnapshot | null;
+  /** Past readings, oldest first: the strip's small trends. */
+  kpiTrend: KpiPoint[];
+  /** KPI alerts by id, firing and recently cleared. */
+  kpiAlerts: Record<string, KpiAlert>;
   selection: Selection;
   decisions: Record<string, DecisionRecord>; // by incident id
   toast: Toast | null;
@@ -90,6 +107,9 @@ export const useNetra = create<NetraState>()((set) => ({
   epsHistory: [],
   traffic: [],
   feed: [],
+  kpi: null,
+  kpiTrend: [],
+  kpiAlerts: {},
   selection: null,
   decisions: {},
   toast: null,
@@ -154,6 +174,9 @@ const EMPTY = {
   epsHistory: [],
   traffic: [],
   feed: [],
+  kpi: null,
+  kpiTrend: [],
+  kpiAlerts: {},
   selection: null,
   decisions: {},
   toast: null,
@@ -196,6 +219,31 @@ function apply(msg: ServerMessage) {
         feed: msg.payload.events.length ? [...msg.payload.events, ...s.feed].slice(0, FEED_LENGTH) : s.feed,
       }));
       break;
+    case "kpi":
+      useNetra.setState((s) => ({
+        kpi: msg.payload,
+        kpiTrend: [...s.kpiTrend, { t: msg.payload.computedAt, values: Object.fromEntries(msg.payload.kpis.map((k) => [k.name, k.value1m])) }].slice(-KPI_TREND_POINTS),
+      }));
+      break;
+    case "kpi_history":
+      useNetra.setState({ kpiTrend: msg.payload.slice(-KPI_TREND_POINTS) });
+      break;
+    case "kpi_alert":
+      useNetra.setState((s) => {
+        const a = msg.payload;
+        const key = String(a.id ?? `${a.origin}:${a.kpi}:${a.startedAt}`);
+        const prev = s.kpiAlerts[key];
+        if (prev && Date.parse(prev.updatedAt) > Date.parse(a.updatedAt)) return s; // an older copy (REST after the socket)
+        const kept = Object.entries({ ...s.kpiAlerts, [key]: a })
+          .sort(([, x], [, y]) => Date.parse(y.updatedAt) - Date.parse(x.updatedAt))
+          .slice(0, MAX_KPI_ALERTS);
+        const opened = a.state === "firing" && (!prev || prev.state !== "firing" || (prev.level === "warn" && a.level === "crit"));
+        return {
+          kpiAlerts: Object.fromEntries(kept),
+          toast: opened ? { id: (s.toast?.id ?? 0) + 1, text: kpiAlertSentence(a), tone: "neutral" as const } : s.toast,
+        };
+      });
+      break;
     case "health":
       useNetra.setState((s) => ({
         health: msg.payload,
@@ -203,6 +251,11 @@ function apply(msg: ServerMessage) {
       }));
       break;
   }
+}
+
+/** The KPI lines, read and changed through whichever source is connected. */
+export function thresholdControl(): ThresholdControl | null {
+  return source?.thresholds ?? null;
 }
 
 function onStatus(connection: ConnectionStatus) {

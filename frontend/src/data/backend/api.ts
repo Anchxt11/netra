@@ -1,5 +1,5 @@
 // REST calls to the backend API (api/app/routes on the backend branch). Spec: contracts/API_SPEC.md there.
-import type { AlertRow, EnrichedEvent, FreshnessReport, LoginResponse, ServerHealth } from "./types";
+import type { AlertRow, EnrichedEvent, FreshnessReport, KpiAlertWire, KpiReport, LoginResponse, ServerHealth } from "./types";
 
 export class ApiError extends Error {
   /** HTTP status, or 0 when the server could not be reached at all. */
@@ -39,6 +39,14 @@ export function createApi(base: string) {
     health: () => call<ServerHealth>(base, "/health"),
     updateIncident: (token: string, id: number, body: { status?: "acknowledged" | "resolved"; notes?: string }) =>
       call<AlertRow>(base, `/incidents/${id}`, { method: "PATCH", body: JSON.stringify(body) }, token),
+    /** The latest KPI reading and the trend behind it (contracts/LIVE_API.md 4.1). 404 on an API without KPIs. */
+    kpi: (token: string, minutes = 15) => call<KpiReport>(base, `/kpi?minutes=${minutes}`, {}, token),
+    kpiAlerts: (token: string, state: "firing" | "all" = "firing") =>
+      call<KpiAlertWire[]>(base, `/kpi/alerts?state=${state}`, {}, token),
+    config: (token: string) => call<Record<string, unknown>>(base, "/config", {}, token),
+    /** Admin only: 403 for an analyst, 422 for a value the API refuses. */
+    putConfig: (token: string, key: string, value: unknown) =>
+      call<{ key: string; value: unknown }>(base, `/config/${encodeURIComponent(key)}`, { method: "PUT", body: JSON.stringify({ value }) }, token),
   };
 }
 

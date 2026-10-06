@@ -5,6 +5,7 @@ import type { ConnectionStatus, DataSource, Decision, ServerMessage } from "../s
 import { ApiError, createApi } from "./api";
 import { Correlator } from "./correlate";
 import { HealthTracker } from "./health";
+import { kpiAlertFromApi, kpiHistoryFromApi, kpiSnapshotFromApi, thresholdsFromConfig } from "./kpi";
 import { isRealModel } from "./rules";
 import { TrafficMeter } from "./traffic";
 import type { AlertRow, BackendMessage, EnrichedEvent } from "./types";
@@ -83,6 +84,22 @@ export function createBackendSource({ apiUrl, wsUrl, getToken }: Options): DataS
         }
       };
 
+      // The KPI strip's past and any alert still open. An API without KPIs answers 404: the strip shows PENDING.
+      const backfillKpi = async (token: string) => {
+        try {
+          const [report, firing] = await Promise.all([api.kpi(token), api.kpiAlerts(token)]);
+          if (stopped) return;
+          onMessage({ type: "kpi_history", payload: kpiHistoryFromApi(report) });
+          for (const w of [...firing].reverse()) {
+            const a = kpiAlertFromApi(w);
+            if (a) onMessage({ type: "kpi_alert", payload: a });
+          }
+          if (report.latest) onMessage({ type: "kpi", payload: kpiSnapshotFromApi(report.latest) });
+        } catch (e) {
+          if (e instanceof ApiError && e.status === 401) unauthorized();
+        }
+      };
+
       // On every (re)connect: the recent past, so a reload does not start from an empty screen.
       const backfill = async (token: string) => {
         try {
@@ -113,6 +130,14 @@ export function createBackendSource({ apiUrl, wsUrl, getToken }: Options): DataS
           case "alert":
             alert(msg.data);
             break;
+          case "kpi":
+            onMessage({ type: "kpi", payload: kpiSnapshotFromApi(msg.data) });
+            break;
+          case "kpi_alert": {
+            const a = kpiAlertFromApi(msg.data);
+            if (a) onMessage({ type: "kpi_alert", payload: a });
+            break;
+          }
           // incident_update (a status change made elsewhere) and pong need nothing on screen yet.
         }
       };
@@ -131,6 +156,7 @@ export function createBackendSource({ apiUrl, wsUrl, getToken }: Options): DataS
           onMessage({ type: "health", payload: health.snapshot(now()) }); // not a second-old "stalled"
           onStatus("open");
           void backfill(token);
+          void backfillKpi(token);
         };
         ws.onmessage = (e) => {
           const msg = parse(e.data);
@@ -175,6 +201,26 @@ export function createBackendSource({ apiUrl, wsUrl, getToken }: Options): DataS
         tracker = null;
         log.clear();
       };
+    },
+
+    // GET /config for anyone signed in; PUT /config is admin only (the API answers 403 otherwise).
+    thresholds: {
+      async get() {
+        const token = getToken();
+        if (!token) throw new Error("Sign in to see the thresholds.");
+        return thresholdsFromConfig(await api.config(token));
+      },
+      async set(name, level, value) {
+        const token = getToken();
+        if (!token) throw new Error("Sign in to change the thresholds.");
+        try {
+          await api.putConfig(token, `kpi.${name}.${level}`, value);
+        } catch (e) {
+          if (e instanceof ApiError && e.status === 403) throw new Error("Only an admin can change thresholds.");
+          if (e instanceof ApiError && e.status === 0) throw new Error("The server cannot be reached. Nothing was saved.");
+          throw new Error("The server did not save this line. Nothing changed.");
+        }
+      },
     },
 
     /** Recorded on the backend: the first alert row of the incident gets the decision log in its notes. */

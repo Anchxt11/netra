@@ -4,6 +4,7 @@ import logging
 
 import asyncpg
 
+from . import schema
 from .security import hash_password
 from .settings import settings
 
@@ -33,6 +34,8 @@ async def init_pool():
             await asyncio.sleep(2)
     else:
         raise RuntimeError("postgres unreachable")
+    async with _pool.acquire() as c:
+        await schema.apply(c)
     await seed_users()
 
 

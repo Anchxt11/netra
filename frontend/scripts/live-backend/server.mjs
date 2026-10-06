@@ -5,6 +5,8 @@
 //   npm run live-backend -- --backend <backend checkout> [simulator options]
 //   then: npm run dev:live   (the dashboard on the real-backend code path)
 //
+// Live KPIs too (the `kpi` and `kpi_alert` messages, GET /kpi, GET /kpi/alerts, GET and PUT /config).
+//
 // Test switches (not in the real API):
 //   POST /_dev/stall?seconds=20   stop delivering events, like a stuck pipeline
 //   POST /_dev/drop               drop every WebSocket, like a network blip
@@ -16,6 +18,8 @@ import { createServer } from "node:http";
 import { dirname, resolve } from "node:path";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
+// The dashboard's copy of the KPI crossing rules (the API's own is api/app/kpi_rules.py; they match).
+import { KPI_NAMES, KPI_ORDER, KpiAlerter, levelOf } from "../../src/data/kpi.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -33,6 +37,15 @@ const USERS = [
 ];
 const FLUSH_MS = 250;
 const MAX_PER_PUSH = 200;
+const KPI_EVERY_MS = 5000;
+// The API's starting lines (api/app/kpi_rules.py DEFAULT_THRESHOLDS), as `config` rows.
+const DEFAULT_LINES = {
+  events_per_sec: [50, 100],
+  login_failure_rate: [0.2, 0.4],
+  http_5xx_rate: [0.02, 0.05],
+  bytes_out_per_min: [200_000_000, 1_000_000_000],
+  rule_hit_rate: [0.05, 0.15],
+};
 
 // ------------------------------------------------------------------ state
 const events = []; // newest last, with stored_ts
@@ -41,6 +54,11 @@ let buffer = [];
 let stalledUntil = 0;
 let refuseWritesUntil = 0;
 const clients = new Set();
+const config = { freshness_sla_p95_seconds: 5, freshness_window_minutes: 5, rules_enabled: {} };
+for (const [name, [warn, crit]] of Object.entries(DEFAULT_LINES)) {
+  config[`kpi.${name}.warn`] = warn;
+  config[`kpi.${name}.crit`] = crit;
+}
 
 const now = () => new Date().toISOString();
 const parseFeatures = (ev) => {
@@ -103,6 +121,84 @@ setInterval(() => {
   buffer = [];
   broadcast("events", batch.slice(-MAX_PER_PUSH), { dropped: Math.max(0, batch.length - MAX_PER_PUSH) });
 }, FLUSH_MS);
+
+// ------------------------------------------------------------------ live KPIs (like api/app/kpi.py)
+const kpiAlerter = new KpiAlerter();
+const kpiRows = []; // the kpi_alerts table
+const kpiFiring = new Map(); // KPI name -> its firing row
+const kpiHistory = []; // { computed_at, values }, the last hour
+let kpiLatest = null;
+const lineOf = (v) => (typeof v === "number" && Number.isFinite(v) ? v : null);
+const ratio = (part, whole) => (whole ? Math.round((part / whole) * 10_000) / 10_000 : null);
+
+function kpiValues() {
+  const t = Date.now();
+  const c = { e1: 0, e5: 0, l1: 0, l5: 0, lf1: 0, lf5: 0, r1: 0, r5: 0, x1: 0, x5: 0, b1: 0, b5: 0, h1: 0, h5: 0 };
+  for (let i = events.length - 1; i >= 0; i--) {
+    const ev = events[i];
+    const age = t - Date.parse(ev.stored_ts);
+    if (age > 300_000) break;
+    const one = age <= 60_000;
+    const login = ev.event_type === "login";
+    const req = ev.event_type === "http_request";
+    const add = (k, yes) => yes && ((c[`${k}5`] += 1), one && (c[`${k}1`] += 1));
+    add("e", true);
+    add("l", login);
+    add("lf", login && ev.status === "failure");
+    add("r", req);
+    add("x", req && Number(ev.http_status) >= 500);
+    add("h", Array.isArray(ev.rule_hits) && ev.rule_hits.length > 0);
+    c.b5 += Number(ev.bytes_out) || 0;
+    if (one) c.b1 += Number(ev.bytes_out) || 0;
+  }
+  return {
+    events_per_sec: [Math.round((c.e1 / 60) * 100) / 100, Math.round((c.e5 / 300) * 100) / 100],
+    login_failure_rate: [ratio(c.lf1, c.l1), ratio(c.lf5, c.l5)],
+    http_5xx_rate: [ratio(c.x1, c.r1), ratio(c.x5, c.r5)],
+    bytes_out_per_min: [c.b1, Math.round(c.b5 / 5)],
+    rule_hit_rate: [ratio(c.h1, c.e1), ratio(c.h5, c.e5)],
+  };
+}
+
+setInterval(() => {
+  const at = now();
+  const values = kpiValues();
+  const lines = Object.fromEntries(KPI_NAMES.map((n) => [n, { warn: lineOf(config[`kpi.${n}.warn`]), crit: lineOf(config[`kpi.${n}.crit`]) }]));
+  const levels = Object.fromEntries(KPI_NAMES.map((n) => [n, levelOf(values[n][0], lines[n].warn, lines[n].crit)]));
+  for (const [name, t] of Object.entries(kpiAlerter.observe(levels))) {
+    const value = values[name][0];
+    const threshold = lines[name][t.level];
+    let row = kpiFiring.get(name);
+    if (t.action === "open" || !row) {
+      row = { id: kpiRows.length + 1, kind: "threshold", origin: "api", kpi: name, level: t.level, state: "firing", value, threshold, window: "1m", started_at: at, updated_at: at, cleared_at: null };
+      kpiRows.push(row);
+    } else if (t.action === "level") Object.assign(row, { level: t.level, value, threshold, updated_at: at });
+    else Object.assign(row, { state: "cleared", value, threshold: threshold ?? row.threshold, updated_at: at, cleared_at: at });
+    if (row.state === "firing") kpiFiring.set(name, row);
+    else kpiFiring.delete(name);
+    broadcast("kpi_alert", row);
+    console.log(`kpi alert ${row.id}: ${name} ${row.state} ${row.level} at ${value}`);
+  }
+  kpiLatest = {
+    computed_at: at,
+    kpis: KPI_ORDER.map(({ name, unit }) => ({
+      name, unit, value_1m: values[name][0], value_5m: values[name][1], warn: lines[name].warn, crit: lines[name].crit,
+      level: levels[name], alert_id: kpiFiring.get(name)?.id ?? null,
+    })),
+  };
+  kpiHistory.push({ computed_at: at, values: Object.fromEntries(KPI_NAMES.map((n) => [n, values[n][0]])) });
+  if (kpiHistory.length > 720) kpiHistory.shift();
+  broadcast("kpi", kpiLatest);
+}, KPI_EVERY_MS);
+
+/** Why PUT /config may not store this (api/app/kpi_rules.py check_config_value), or null. */
+function configProblem(key, value) {
+  if (!key.startsWith("kpi.")) return null;
+  const m = /^kpi\.([a-z0-9_]+)\.(warn|crit)$/.exec(key);
+  if (!m || !KPI_NAMES.includes(m[1])) return `Unknown KPI threshold '${key}'.`;
+  if (value !== null && (typeof value !== "number" || value < 0)) return "A threshold is a number of 0 or more, or null for no line.";
+  return null;
+}
 
 // ------------------------------------------------------------------ tokens (HS256, like PyJWT)
 const b64 = (v) => Buffer.from(typeof v === "string" ? v : JSON.stringify(v)).toString("base64url");
@@ -198,6 +294,26 @@ const server = createServer(async (req, res) => {
   if (!me) return send(res, 401, { detail: "Invalid or expired token" });
 
   if (path === "/auth/me") return send(res, 200, { id: Number(me.sub), username: me.username, role: me.role });
+  if (path === "/kpi") {
+    const since = Date.now() - Math.min(60, Number(url.searchParams.get("minutes") ?? 15)) * 60_000;
+    return send(res, 200, { latest: kpiLatest, history: kpiHistory.filter((h) => Date.parse(h.computed_at) >= since) });
+  }
+  if (path === "/kpi/alerts") {
+    const all = url.searchParams.get("state") === "all";
+    return send(res, 200, kpiRows.filter((r) => all || r.state === "firing").slice(-500).reverse());
+  }
+  if (path === "/config" && req.method === "GET") return send(res, 200, config);
+  const ck = path.match(/^\/config\/(.+)$/);
+  if (ck && req.method === "PUT") {
+    if (me.role !== "admin") return send(res, 403, { detail: "Insufficient role" });
+    const key = decodeURIComponent(ck[1]);
+    const { value = null } = await readBody(req);
+    const problem = configProblem(key, value);
+    if (problem) return send(res, 422, { detail: problem });
+    config[key] = value;
+    console.log(`config ${key} = ${JSON.stringify(value)} (by ${me.username})`);
+    return send(res, 200, { key, value });
+  }
   if (path === "/events/recent") {
     const limit = Math.min(1000, Number(url.searchParams.get("limit") ?? 100));
     return send(res, 200, events.slice(-limit).reverse().map(parseFeatures));

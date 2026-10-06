@@ -104,6 +104,54 @@ export interface TrafficSecond {
   ai: number; // flagged by the AI engine
 }
 
+// ---------------------------------------------------------------- live KPIs (contracts/LIVE_API.md 4.1, 4.2)
+
+export type KpiName = "events_per_sec" | "login_failure_rate" | "http_5xx_rate" | "bytes_out_per_min" | "rule_hit_rate";
+export type KpiUnit = "events/s" | "ratio" | "bytes/min";
+/** One reading's own level. "no_data" when the value could not be measured (a rate of no events). */
+export type KpiLevel = "ok" | "warn" | "crit" | "no_data";
+
+export interface KpiReading {
+  name: KpiName;
+  unit: KpiUnit;
+  value1m: number | null; // compared with the lines
+  value5m: number | null; // context for the trend
+  warn: number | null; // null = no line
+  crit: number | null;
+  level: KpiLevel;
+  alertId: number | string | null; // this KPI's firing alert, if any
+}
+
+/** Every 5 s: all five KPIs, in the strip's order. */
+export interface KpiSnapshot {
+  computedAt: string;
+  kpis: KpiReading[];
+}
+
+/** A past reading for the strip's small trend: each KPI's 1-minute value. */
+export interface KpiPoint {
+  t: string;
+  values: Partial<Record<KpiName, number | null>>;
+}
+
+/** Opens after 2 breaches in a row, clears after 2 normal readings. Sent whole on every change. */
+export interface KpiAlert {
+  id: number | string | null; // null for an alert the dashboard raised itself (kind "sla")
+  kind: "threshold" | "sla";
+  origin: "api" | "browser";
+  kpi: string;
+  level: "warn" | "crit";
+  state: "firing" | "cleared";
+  value: number;
+  threshold: number | null;
+  window: string;
+  startedAt: string;
+  updatedAt: string;
+  clearedAt: string | null;
+}
+
+export type KpiThresholds = Record<KpiName, { warn: number | null; crit: number | null }>;
+
 export interface ModelStatus {
   name: "ATDE" | "CRIE";
   version: string;

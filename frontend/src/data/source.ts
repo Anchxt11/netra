@@ -1,6 +1,17 @@
 // The ONE interface the frontend talks to. Two implementations: the mock engine
 // (default) and the real backend. Swapping them needs no UI changes.
-import type { BenignAnomaly, FeedEvent, Incident, PipelineHealth, TrafficSecond } from "./types";
+import type {
+  BenignAnomaly,
+  FeedEvent,
+  Incident,
+  KpiAlert,
+  KpiName,
+  KpiPoint,
+  KpiSnapshot,
+  KpiThresholds,
+  PipelineHealth,
+  TrafficSecond,
+} from "./types";
 import type { ScenarioName } from "./scenarios/demo";
 import { createMockSource } from "./mockEngine";
 import { createBackendSource } from "./backend/backendSource";
@@ -16,6 +27,12 @@ export type ServerMessage =
   | { type: "health"; payload: PipelineHealth }
   /** Once a second: counts for all traffic, and a sample of the events behind them. */
   | { type: "traffic"; payload: { second: TrafficSecond; events: FeedEvent[] } }
+  /** Every 5 s: the five live KPIs (contracts/LIVE_API.md 4.1). */
+  | { type: "kpi"; payload: KpiSnapshot }
+  /** The last few minutes of KPI readings, so the strip's trend is not empty after a (re)connect. */
+  | { type: "kpi_history"; payload: KpiPoint[] }
+  /** A KPI alert opened, changed level or cleared (contracts/LIVE_API.md 4.2). */
+  | { type: "kpi_alert"; payload: KpiAlert }
   | { type: "hello"; payload: { serverTime: string } };
 
 /** Frontend to backend: an analyst approved or rejected a recommended fix. */
@@ -23,6 +40,13 @@ export interface Decision {
   incidentId: string;
   actionId: string;
   decision: "approve" | "reject";
+}
+
+/** The KPI lines: anyone may read them, only an admin may change them on the real backend. */
+export interface ThresholdControl {
+  get(): Promise<KpiThresholds>;
+  /** `value` null removes the line. Rejects with a message to show when it was not saved. */
+  set(name: KpiName, level: "warn" | "crit", value: number | null): Promise<void>;
 }
 
 /** "closed" = lost, retrying. "unauthorized" = the login is no longer valid: sign in again. */
@@ -41,6 +65,7 @@ export interface DataSource {
   /** Start receiving messages. Returns a function that disconnects. */
   connect(onMessage: (msg: ServerMessage) => void, onStatus: (status: ConnectionStatus) => void): () => void;
   sendDecision(decision: Decision): void;
+  readonly thresholds: ThresholdControl;
   readonly demo?: DemoControl;
 }
 

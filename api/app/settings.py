@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     cors_origins: str = "*"            # comma separated
     ws_flush_ms: int = 250             # event batching interval
     ws_max_events_per_push: int = 200  # cap per push; extras are counted in `dropped`
+    kpi_interval_seconds: int = 5      # how often the KPI loop reads ClickHouse
 
 
 settings = Settings()

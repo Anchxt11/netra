@@ -1,24 +1,42 @@
 /*
-  1440x900: 268 | incident | 384. Narrower screens: slimmer side columns, the centre shrinks;
-  below about 860 tall the page scrolls vertically (never sideways).
-  82px = header top padding + header + gap + bottom padding (AppShell).
+  1440x900: the KPI strip on top, then 268 | incident | 384. Narrower screens: slimmer side columns,
+  the centre shrinks; below about 810 tall the page scrolls vertically (never sideways).
+  --top = the pinned header (56px, with its top padding) + the gap under it; AppShell adds
+  --page-pad at the bottom.
 */
-.dash {
+.page {
+  --top: calc(56px + var(--gap));
+  --kpi-strip: 76px;
   --col-left: 268px;
   --col-right: 384px;
-  /* the fixes overlay covers the centre column */
-  --fix-inset: 82px calc(var(--col-right) + var(--page-pad) + var(--gap)) 20px calc(var(--col-left) + var(--page-pad) + var(--gap));
+  /* the fixes overlay covers the centre column, below the KPI strip */
+  --fix-inset: calc(var(--top) + var(--kpi-strip) + var(--gap)) calc(var(--col-right) + var(--page-pad) + var(--gap)) 20px calc(var(--col-left) + var(--page-pad) + var(--gap));
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  height: calc(100vh - var(--top) - var(--page-pad));
+  min-height: calc(620px + var(--kpi-strip) + var(--gap));
+}
+
+.dash {
+  flex: 1;
+  min-height: 0;
   display: grid;
   grid-template-columns: var(--col-left) minmax(0, 1fr) var(--col-right);
   gap: var(--gap);
-  height: calc(100vh - 82px);
-  min-height: 620px;
 }
 
 @media (max-width: 1400px) {
-  .dash {
+  .page {
     --col-left: 240px;
     --col-right: 330px;
+  }
+}
+
+/* Short screens (1280x720): a slimmer strip without its foot line (KpiStrip.module.css). */
+@media (max-height: 820px) {
+  .page {
+    --kpi-strip: 58px;
   }
 }
 

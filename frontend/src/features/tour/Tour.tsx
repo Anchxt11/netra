@@ -39,6 +39,11 @@ const STEPS: TourStep[] = [
     text: "All traffic, normal included, second by second. Rust and lilac are what the rules and the AI flagged.",
   },
   {
+    target: "kpis",
+    title: "Live KPIs",
+    text: "Five numbers from all traffic over the last minute. Each turns to warning or critical at its line; two readings in a row raise an alert.",
+  },
+  {
     target: "scope",
     title: "Threat scope",
     text: "All open incidents at a glance. Hover any tile to open it; the closer a dot is to the centre, the less time is left.",

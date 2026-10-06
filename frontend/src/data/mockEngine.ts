@@ -1,10 +1,11 @@
 // The simulated backend. Emits the same envelope messages as the real WebSocket, on timers,
 // from a fixed seed. Background behaviour only; the scripted demo scenarios come later.
 // Spec: docs/DATA_CONTRACT.md, "Mock engine".
-import type { AttackType, BenignAnomaly, BenignKind, FeedEvent, Incident, PipelineHealth, Signal, SignalLevel } from "./types";
+import type { AttackType, BenignAnomaly, BenignKind, FeedEvent, Incident, KpiAlert, KpiPoint, PipelineHealth, Signal, SignalLevel } from "./types";
 import type { ConnectionStatus, DataSource, Decision, ServerMessage } from "./source";
 import { createRng } from "./rng";
 import { attackEvent, normalEvent } from "./traffic";
+import { MockKpi, pointOf, type SecondCounts } from "./mockKpi";
 import {
   ADMIN_COMMANDS,
   AI_POINTS,
@@ -26,6 +27,8 @@ const SEED = 20261001;
 const TICK_MS = 1000;
 const OPEN_MIN = 6;
 const OPEN_MAX = 10;
+const KPI_EVERY_TICKS = 5; // a KPI reading every 5 s, like the backend
+const KPI_HISTORY_S = 15 * 60; // the strip's trend starts with 15 minutes behind it
 
 type Strength = "weak" | "medium" | "strong";
 type AiMode = "none" | "mixed" | "only";
@@ -63,6 +66,11 @@ class MockEngine {
   private baseEps = 214;
   private boost: { start: number; rampMs: number; factor: number; holdUntil: number; end: number } | null = null;
   private holdSpawnsUntil = 0; // background incidents pause while a scripted story plays
+  // Live KPIs: their own generator too, and the lines survive a demo reset (they are settings).
+  private kr = createRng(SEED + 13);
+  kpi = new MockKpi();
+  private kpiTicks = 0;
+  private stuffing: { from: number; until: number } | null = null;
 
   constructor() {
     this.health = this.initialHealth(Date.now());
@@ -73,6 +81,7 @@ class MockEngine {
     const now = Date.now();
     emit({ type: "hello", payload: { serverTime: iso(now) } });
     emit({ type: "health", payload: structuredClone(this.health) });
+    this.startKpi(now);
 
     // Never an empty screen on first load: a morning's worth of state already exists.
     this.addBenign("flash_crowd", now - 21 * 60_000, false);
@@ -113,6 +122,10 @@ class MockEngine {
     this.baseEps = 214;
     this.boost = null;
     this.holdSpawnsUntil = 0;
+    this.kr = createRng(SEED + 13);
+    this.kpi = new MockKpi(this.kpi.thresholds);
+    this.kpiTicks = 0;
+    this.stuffing = null;
     this.health = this.initialHealth(Date.now());
     this.start(this.emit);
   }
@@ -135,6 +148,7 @@ class MockEngine {
     const id = String(this.nextNumber++).padStart(4, "0");
     this.holdSpawnsUntil = t0 + s.endsAt + 10_000;
     this.boost = { start: t0, rampMs: s.rampMs, factor: 1.8, holdUntil: t0 + s.endsAt, end: t0 + s.endsAt + 6000 };
+    this.stuffing = { from: t0 + 2000, until: t0 + s.endsAt }; // the failed logins behind it
     let live: Live | null = null;
 
     for (const step of s.signals) {
@@ -248,6 +262,7 @@ class MockEngine {
       this.updateHealth(now);
       this.emit({ type: "health", payload: structuredClone(this.health) });
       this.emitTraffic(now, false);
+      this.kpiSecond(now, 0, 0);
       return;
     }
 
@@ -279,11 +294,12 @@ class MockEngine {
 
     this.updateHealth(now);
     this.emit({ type: "health", payload: structuredClone(this.health) });
-    this.emitTraffic(now, true);
+    const { total, rule } = this.emitTraffic(now, true);
+    this.kpiSecond(now, total, rule);
   }
 
   /** The live monitor: this second's counts (all traffic) and a sample of the events behind them. */
-  private emitTraffic(now: number, flowing: boolean) {
+  private emitTraffic(now: number, flowing: boolean): { total: number; rule: number } {
     const tr = this.tr;
     const events: FeedEvent[] = [];
     let rule = 0;
@@ -308,6 +324,56 @@ class MockEngine {
     const total = flowing ? this.health.eventsPerSec : 0;
     events.sort((a, b) => Date.parse(b.ts) - Date.parse(a.ts));
     this.emit({ type: "traffic", payload: { second: { t: iso(now), normal: Math.max(0, total - rule - ai), rule, ai }, events } });
+    return { total, rule };
+  }
+
+  // ---------------------------------------------------------------- live KPIs
+
+  /** What one second of the simulated feed held: mostly page requests, some logins, a little data out. */
+  private kpiCounts(now: number, total: number, rule: number): SecondCounts {
+    const r = this.kr;
+    const baseLogins = Math.round(total * 0.08);
+    // Credential stuffing: a burst of logins against many accounts, nearly all failing.
+    const stuffed = this.stuffing && now >= this.stuffing.from && now < this.stuffing.until ? r.int(40, 50) : 0;
+    const requests = Math.max(0, total - baseLogins - stuffed - r.int(2, 6));
+    return {
+      events: total,
+      logins: baseLogins + stuffed,
+      loginFailures: Math.round(baseLogins * (0.04 + r() * 0.04)) + Math.round(stuffed * 0.97),
+      requests,
+      errors5xx: Math.round(requests * (0.002 + r() * 0.004)),
+      bytes: total * r.int(9_000, 14_000),
+      ruleHits: Math.min(total, rule),
+    };
+  }
+
+  private kpiSecond(now: number, total: number, rule: number) {
+    this.kpi.push(this.kpiCounts(now, total, rule));
+    if (++this.kpiTicks % KPI_EVERY_TICKS !== 0) return;
+    const { snapshot, alerts } = this.kpi.read(now);
+    for (const a of alerts) this.emit({ type: "kpi_alert", payload: a });
+    this.emit({ type: "kpi", payload: snapshot });
+  }
+
+  /** A quiet quarter of an hour already behind the strip, so its trends are not empty on first load. */
+  private startKpi(now: number) {
+    const history: KpiPoint[] = [];
+    const raised = new Map<KpiAlert["id"], KpiAlert>(); // only if someone set lines the quiet past crosses
+    let eps = 214;
+    for (let s = KPI_HISTORY_S; s > 0; s--) {
+      eps = Math.max(180, Math.min(260, eps + this.kr.int(-8, 8)));
+      const t = now - s * 1000;
+      this.kpi.push(this.kpiCounts(t, eps, this.kr.int(0, 9)));
+      if (s % KPI_EVERY_TICKS !== 0) continue;
+      const { snapshot, alerts } = this.kpi.read(t);
+      alerts.forEach((a) => raised.set(a.id, a));
+      history.push(pointOf(snapshot));
+    }
+    const { snapshot, alerts } = this.kpi.read(now);
+    alerts.forEach((a) => raised.set(a.id, a));
+    this.emit({ type: "kpi_history", payload: history });
+    for (const a of raised.values()) if (a.state === "firing") this.emit({ type: "kpi_alert", payload: a });
+    this.emit({ type: "kpi", payload: snapshot });
   }
 
   // ---------------------------------------------------------------- incidents
@@ -619,6 +685,13 @@ export function createMockSource(): DataSource {
     },
     sendDecision(decision: Decision) {
       engine.decide(decision);
+    },
+    // The simulated feed has no accounts: its lines live in this tab and change only the simulation.
+    thresholds: {
+      get: async () => structuredClone(engine.kpi.thresholds),
+      set: async (name, level, value) => {
+        engine.kpi.thresholds[name][level] = value;
+      },
     },
     demo: {
       run: (name) => engine.run(name),
