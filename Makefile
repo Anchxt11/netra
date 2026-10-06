@@ -1,10 +1,11 @@
 # ─── Netra Makefile ────────────────────────────────────────────────────────────
 COMPOSE  := docker compose
 PROFILE  := --profile sim
+LAB      := --profile lab
 VENV     := .venv/bin
 
-.PHONY: help up sim down restart logs logs-processor logs-generator \
-        build test lint topics lag status clean
+.PHONY: help up sim lab down restart logs logs-processor logs-generator \
+        build test lint topics lag status clean lab-down lab-logs attack
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -18,13 +19,19 @@ up: ## Start infra (Redpanda, console, processor) — no generator
 sim: ## Start full stack including the traffic generator
 	$(COMPOSE) $(PROFILE) up -d --build
 
+lab: ## Start lab profile (Juice Shop + nginx + attackers + Vector + normalizer)
+	$(COMPOSE) $(LAB) up -d --build
+
+lab-full: ## Start both sim and lab profiles together
+	$(COMPOSE) $(PROFILE) $(LAB) up -d --build
+
 down: ## Stop and remove all containers
-	$(COMPOSE) $(PROFILE) down
+	$(COMPOSE) $(PROFILE) $(LAB) down
 
 restart: down sim ## Rebuild and restart everything
 
 build: ## Build processor and generator images
-	$(COMPOSE) $(PROFILE) build
+	$(COMPOSE) $(PROFILE) $(LAB) build
 
 # ─── Logs ─────────────────────────────────────────────────────────────────────
 
@@ -81,7 +88,7 @@ test-quick: ## Run tests without verbose output
 # ─── Utilities ────────────────────────────────────────────────────────────────
 
 clean: ## Remove volumes, caches, and stopped containers
-	$(COMPOSE) $(PROFILE) down -v --remove-orphans
+	$(COMPOSE) $(PROFILE) $(LAB) down -v --remove-orphans
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	rm -rf .pytest_cache htmlcov .coverage
 
@@ -92,3 +99,26 @@ generator-fast: ## Run generator in fast mode (no pacing, 1000 events then exit)
 generator-no-attacks: ## Run generator with clean traffic only (no attacks)
 	$(COMPOSE) $(PROFILE) run --rm generator \
 		python web_traffic_sim.py --bootstrap redpanda:9092 --rate 10 --no-attacks --labels /data/labels.jsonl
+
+# ─── Lab Profile ──────────────────────────────────────────────────────────────
+
+lab-down: ## Stop lab profile containers only
+	$(COMPOSE) $(LAB) down
+
+lab-logs: ## Tail lab container logs
+	$(COMPOSE) $(LAB) logs -f --tail 50
+
+lab-nginx-logs: ## Tail raw nginx JSON log (real data view)
+	$(COMPOSE) $(LAB) logs -f nginx
+
+lab-status: ## Show lab container status
+	$(COMPOSE) $(LAB) ps
+
+attack: ## Run an attack scenario: make attack SCENARIO=brute_force
+	docker compose exec attacker attack-runner $(SCENARIO)
+
+attack-full: ## Run all attack scenarios in sequence
+	docker compose exec attacker attack-runner full
+
+consume-lab: ## Consume live events from events.lab (Ctrl+C to stop)
+	docker exec redpanda rpk topic consume events.lab --offset end -f json
