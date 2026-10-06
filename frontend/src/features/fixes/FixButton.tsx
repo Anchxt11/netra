@@ -69,7 +69,6 @@ export function FixButton({ incident }: { incident: Incident }) {
         >
           <div className={styles.overlayHead}>
             <h3 className={styles.overlayTitle}>Fixes for {incident.name.toLowerCase()}</h3>
-            <span className={styles.overlayNote}>From a fixed list of 14 actions. Nothing runs until you approve.</span>
             <button type="button" className={styles.close} onClick={close}>
               Close
             </button>

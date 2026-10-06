@@ -117,6 +117,7 @@
 }
 
 .overlayTitle {
+  margin-right: auto;
   white-space: nowrap;
   font-size: 22px;
   font-weight: 400;
