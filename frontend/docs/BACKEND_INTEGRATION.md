@@ -1,89 +1,72 @@
 # Connecting the backend to the dashboard
 
-Written 2026-10-01 from the team repo (github.com/Anchxt11/netra). Read with `DATA_CONTRACT.md`.
+Updated 2026-10-06 from the team repo (github.com/Anchxt11/netra), branch `feat/person-a-infrastructure` at 2b127ea.
+The frontend side is done: the dashboard runs on the real backend as it is today.
 
-## Where the backend is today
-| part | branch | state |
-|---|---|---|
-| Traffic simulator (`generator/web_traffic_sim.py`) | `feat/person-a-infrastructure` | done. 7 attacks, 2 benign anomalies, `--scenario` to trigger one, ground-truth `labels.jsonl` |
-| Kafka (Redpanda) + topics `events.raw`, `events.enriched`, `alerts` | `feat/person-a-infrastructure` | done (`docker-compose.yml`) |
-| Processor: features, 10 Sigma-style rules, `DummyScorer`, alerts | `feat/person-a-infrastructure` | done, with tests |
-| ClickHouse tables (`events_raw`, `events_enriched`) | `feat/person-a-clickhouse` | schema only |
-| API (`api/*.py`) | both | **empty files**: nothing for the dashboard to connect to yet |
-| `main` | | only the starting folders, plus our frontend |
+## Where things are
+| part | state |
+|---|---|
+| Simulator, Redpanda, processor (10 rules, 31 tests), ClickHouse, Postgres, FastAPI (login, REST, WebSocket, `/freshness`) | done, one command (`make sim`), on `feat/person-a-infrastructure`, **not on `main` yet** |
+| ATDE (Isolation Forest + XGBoost) | in progress; the processor still runs `DummyScorer` (hand-written weights, never shown as AI) |
+| CRIE | not started: the dashboard shows MITRE's mitigations with CRIE PENDING |
+| Dashboard on the real backend | **done** (this document) |
+| Dashboard in the team repo | not yet: the frontend commits are only on this machine's `main` |
 
-## The gap
-The dashboard shows **incidents**. The backend emits **alerts**:
-`{ alert_id, rule_id, model, severity, event_ids, created_ts }`, one per rule hit per event.
+## How the dashboard reads the backend
+Set `VITE_DATA_SOURCE=ws` (or use the `:live` scripts below). Code: `src/data/backend/`.
+- **Sign in** (`/login`, `POST /auth/login`): analyst or admin. The token lives in the tab only (sessionStorage) and signs out when it expires (60 min). Every page needs a session in this mode; the simulated site needs none.
+- **WebSocket** `ws://…/ws?token=…`: `hello`, `events` (enriched events, batched every 250 ms), `alert` (one row per alert). A closed socket retries (1 s, 2 s, 4 s … 10 s) and shows RECONNECTING; code 4401 signs out with "Your session ended. Sign in again."
+- **On (re)connect** it reads `GET /events/recent` (1000) and `GET /alerts/recent` (500), so a reload is not empty. Repeated alerts are counted once.
+- **Grouping happens in the browser** (`correlate.ts`, tested in `tests/correlate.test.ts`), because the API stores one incident per alert:
+  - same attack + same source = one incident (address for logins and scans, account for admin and data, the whole site for floods);
+  - one rule = one signal; repeats add points, up to double the rule's base;
+  - an address failing on 3 or more accounts is credential stuffing, and stuffing addresses join one campaign (signal SPRAY);
+  - a successful login from an attacking address marks the account taken over (signal IN, severity 5);
+  - a failed admin login during a password attack, or a data transfer by an admin already under suspicion, joins that incident;
+  - `suspicious_ip` only adds to an open incident of that address;
+  - the deadline is the attack type's window from the first alert; an approved incident is closed.
+- **Health** (top bar, SYSTEM): events per second as they arrive; freshness p50/p95 from `GET /freshness` every 5 s; server problems from `GET /health` every 10 s; feed STALLED after 5 s without events, DOWN after 15 s. Anything the backend does not measure shows PENDING (EVENTS TODAY, models, retraining).
+- **Decisions:** approving writes the decision log into the incident's first backend row (`PATCH /incidents/{id}`, notes, status `acknowledged`). A failed save shows in pink in SYSTEM.
 
-| the dashboard needs | the backend has | so |
-|---|---|---|
-| incidents (grouped signals) | one alert per event, and a windowed rule fires again on every event past its threshold | group and de-duplicate alerts into incidents |
-| attention score (0 to 100) | nothing | points per rule, summed per incident |
-| severity 1 to 5 | low / medium / high / critical per rule | severity per attack type (table below) |
-| time left (`staleBy`) | nothing | window per attack type (DATA_CONTRACT.md) |
-| entities (addresses, users, hosts) | only `event_ids` | look the events up in `events.enriched` |
-| plain sentences | rule titles | a sentence per rule (table below) |
-| "detected by AI" | `risk_score` from `DummyScorer`, which is hand-written rules, not a model | **never show it as the AI engine**: ATDE shows PENDING until the real model replaces `DummyScorer` |
-| health (events/s, freshness, feed status) | `processed_ts` on enriched events | compute from the enriched stream |
-| fixes (CRIE) | nothing | empty, so the dashboard shows MITRE's mitigations (already built) |
-| judged normal (flash crowd, backup) | nothing yet | none until the backend adds benign checks |
-
-## The plan: one small bridge service in `api/`
-A FastAPI service (the empty `api/` folder) that:
-1. Reads `alerts` and `events.enriched` from Redpanda.
-2. **Correlates** alerts into incidents: key = attack family + source address (user for admin rules); one signal per rule per incident, its count updated on repeats; attention = sum of rule points, capped at 100.
-3. Computes **health** every second: events/s, freshness p95 (time from `event_ts` to now), detections per minute, feed live / stalled (5 s silent) / down (15 s).
-4. Serves the WebSocket the frontend already speaks, at `ws://localhost:8000/ws`: `hello`, `incident.upsert`, `incident.expire`, `health` (see DATA_CONTRACT.md "WebSocket envelope").
-5. Accepts `decision` messages (approve / reject) and stores them (a ClickHouse table later: CRIE's training data).
-
-The frontend needs almost no change: `src/data/wsSource.ts` already speaks this envelope. Run it with `VITE_DATA_SOURCE=ws`.
-
-### Proposed rule mapping (to confirm with the backend team)
-| backend rule | becomes | severity | points | sentence on the dashboard |
+### Rule mapping (in `rules.ts`; severity is the backend's own: low 2, medium 3, high 4, critical 5)
+| backend rule | shows as | attack type | points | grouped by |
 |---|---|---|---|---|
-| `brute_force` | brute_force | 3 | 20 | {n} failed logins from {ip} in a minute |
-| `credential_stuffing` | credential_stuffing | 4 | 20 | {ip} is failing logins across many accounts |
-| `suspicious_login` | admin_abuse | 5 | 15 | Failed login on an admin account ({user}) |
-| `privilege_escalation` | admin_abuse | 5 | 20 | {user} ran a command with sudo |
-| `malicious_process` | admin_abuse | 5 | 30 | Suspicious command: {process} |
-| `data_exfiltration` | data_exfiltration | 5 | 30 | {size} sent out in a single transfer |
-| `web_scan` | web_scan | 2 | 20 | {ip} requested sensitive or injection paths |
-| `excessive_requests` | http_flood | 4 | 15 | {ip} sent over 100 requests in a minute |
-| `http_flood` | http_flood | 4 | 25 | {ip} sent over 200 requests in 30 seconds |
-| `suspicious_ip` | adds to that address's open incident | n/a | 15 | Traffic from a watch-listed address ({ip}) |
+| `brute_force` | BF | brute force, or stuffing (3+ accounts) | 20 | address |
+| `credential_stuffing` | CS | the same login incident | 20 | address |
+| `suspicious_login` | ADM | admin abuse (or the login attack it is part of) | 15 | account |
+| `privilege_escalation` | SUDO | admin abuse | 20 | account |
+| `malicious_process` | PROC | admin abuse | 30 | account |
+| `data_exfiltration` | EXF | data exfiltration (admin abuse if that admin is already open) | 30 | account |
+| `web_scan` | SCAN | web scan | 20 | address |
+| `excessive_requests` | RATE | HTTP flood | 15 | site |
+| `http_flood` | FLOOD | HTTP flood | 25 | site |
+| `suspicious_ip` | IOC | adds to that address's incident | 15 | address |
+| a model's alert (`rule_id` null) | ATDE | adds to that address's or account's incident | 20 | only if the model is not the dummy |
 
-Notes for the backend team:
-- `credential_stuffing` and `brute_force` currently match the same thing (failed logins per IP); stuffing should count **distinct users** per IP.
-- Windowed rules fire on every event past the threshold, so expect alert floods. The bridge de-duplicates, but a cooldown in the processor would help.
-- `account_takeover` has no rule yet (new IP then success then sensitive action).
+## Run it
+**With the real stack (needs Docker Desktop):** in the backend checkout `make sim`, then in `frontend/`:
+```
+npm run dev:live            # development, http://localhost:5174
+npm run build:live          # the demo build (dist-live/), then:
+npm run preview:live        # http://localhost:4174
+```
+Sign in with the backend's development accounts (`api/app/settings.py`). Change them, and `jwt_secret`, before anything public.
 
-## Build order
-| phase | what | time | who |
-|---|---|---|---|
-| 0 | Backend merges into `main` (or names one branch); Docker Desktop on the demo laptop; stack runs locally | 30 min | backend + you |
-| 1 | Agree the mapping above; update DATA_CONTRACT.md to match the real backend | 45 min | you + Claude Code |
-| 2 | The bridge in `api/`: correlator (with tests on recorded alerts), health, WebSocket, decisions | 2 to 3 h | you + Claude Code, or backend |
-| 3 | Frontend on the live feed: connection states, nothing branching on the source | 1 h | you + Claude Code |
-| 4 | End to end with `--scenario credential_stuffing` and friends; tune points and windows | 1 h | everyone |
-| 5 | Later: the real ML scorer (ATDE live), CRIE, decisions to ClickHouse, hosting the backend | later | ML + backend |
+**Without Docker (frontend testing):** a stand-in for the API that runs the backend team's real simulator and rule engine in Python (no Kafka, no databases):
+```
+npm run live-backend -- --backend <path to a checkout of the backend branch> --rate 12 --warmup 15 --attack-every 45
+npm run dev:live
+```
+Test switches: `POST http://localhost:8000/_dev/stall?seconds=20` (feed stalls), `/_dev/drop` (connection drops), `/_dev/expire` (session ends), `/_dev/refuse-writes?seconds=30` (decisions fail to save).
 
-The public Vercel site stays on the simulated feed: it cannot reach a backend on someone's laptop. A live-backend demo runs locally (`npm run dev` with `VITE_DATA_SOURCE=ws`) unless the backend is hosted (for example on Azure).
+The public Vercel site stays on the simulated feed: it cannot reach a backend on a laptop.
 
-## Prompts for Claude Code (paste one at a time; wait, check, commit)
-Backend phases run outside `frontend/`, so open Claude Code at the repo root (or the worktree in prompt 1) for prompts 1 to 3.
-
-**1. Get the backend running**
-> Create a git worktree of origin/feat/person-a-infrastructure at ../netra-backend (don't touch my main branch). Then walk me through starting the stack with Docker step by step, and prove events are flowing on events.raw, events.enriched and alerts. Stop if Docker isn't installed and tell me what to install.
-
-**2. Agree the contract**
-> Read ../netra-backend (contracts/, processor/, rules/sigma/) and frontend/docs/BACKEND_INTEGRATION.md. Update frontend/docs/DATA_CONTRACT.md so it describes the real backend: alert shape, rule ids, severities, and the mapping table. Mark anything unconfirmed as (confirm). No code yet.
-
-**3. Build the bridge**
-> In ../netra-backend/api, build the FastAPI bridge described in frontend/docs/BACKEND_INTEGRATION.md: read alerts and events.enriched from Redpanda, correlate alerts into Incident objects exactly as in DATA_CONTRACT.md, compute PipelineHealth every second, serve the WebSocket envelope at ws://localhost:8000/ws, and accept decision messages. Never label DummyScorer output as AI: report ATDE as pending. Add unit tests for the correlator using recorded alerts, add the service to docker-compose, and give me the commands to run it.
-
-**4. Point the dashboard at it**
-> Run the frontend with VITE_DATA_SOURCE=ws against the bridge. Make the connecting and offline states clear (boot screen, header, an honest empty dashboard), check that the SIMULATED FEED chip disappears, and that nothing else in the UI depends on which source is active. Run npm run build.
-
-**5. End to end**
-> Start the simulator with --scenario credential_stuffing, then the other scenarios. Check the dashboard tells the same story as demo mode. List every difference from the mock and propose fixes (points, windows, sentences). Don't change the backend's code without asking me.
+## Asks for the backend team (small, in order of value)
+1. **Merge `feat/person-a-infrastructure` into `main`**, and the frontend with it (a pull request from this machine).
+2. **Put the event's `ip`, `user` and `host` in each alert** (`processor/alerts.py`). The dashboard then needs no event lookups, and history after a reload is complete (today alerts older than the last 1000 events are counted but cannot be grouped).
+3. **A cooldown on windowed rules.** They fire on every event past the threshold (549 alerts in 30 minutes in our test run). The dashboard copes; the alerts table and the DETECTIONS chart would read better.
+4. **`credential_stuffing` should count distinct accounts per address.** Today it counts failed logins, so a fast password guess trips it (the dashboard decides stuffing by accounts instead).
+5. **Floods per site, not per address.** The simulator's flood comes from 30 to 120 addresses, so the per-address `http_flood` threshold rarely fires.
+6. **ATDE:** emit a model alert (`rule_id: null`, `model: "<name and version>"`, the event's `risk_score`) above a threshold. The dashboard shows it as the AI engine automatically. Note the training data (cloud flow logs) and the simulator's events (web, login, process) have different fields: decide the feature mapping, or replay held-out flow logs as their own stream.
+7. **Production settings:** `cors_origins` to the dashboard's address (today `*`), a real `jwt_secret`, non-default passwords.
+8. Later: a `decisions` table (approve, reject, who, when) instead of incident notes; it becomes CRIE's training data.

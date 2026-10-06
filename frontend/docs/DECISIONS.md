@@ -27,9 +27,22 @@ file and those two disagree, this file describes what is built. Open items at th
 - **D3FEND:** actions without a mapped technique show "D3FEND: PENDING".
 - **Engine pages** show an honest standby (stages to come, model card read from the fixture, PENDING for anything missing) until the ML team's export arrives with `"source": "model-export"`.
 
+## Live backend mode (2026-10-06)
+- **The backend's own protocol wins** over DATA_CONTRACT.md's WebSocket envelope: `{ type, data, server_ts }` with `hello`, `events`, `alert`, plus REST. The old `wsSource.ts` (our envelope) is gone; `src/data/backend/` translates instead. Details: BACKEND_INTEGRATION.md.
+- **Grouping alerts into incidents happens in the browser** (`src/data/backend/correlate.ts`), because the API stores one incident per alert. It can move into the API later with the same rules and tests.
+- **Two signals of our own:** SPRAY (one campaign failing on many accounts, +30) and IN (a login that worked from an attacking address, +30, severity 5, "…, account taken over"). They come from the events, so they are shown like rules (violet).
+- **Stuffing is decided by accounts (3 or more), not by the backend rule's name**, which counts failed logins per address.
+- **Repeats add evidence:** a rule's points grow by a tenth per repeat, up to double. Without this, an attack the backend sees with one rule could never leave WATCH.
+- **Severity is the backend's word:** low 2, medium 3, high 4, critical 5.
+- **Sign-in page:** a glass card (a decision, not data): SIGN IN in Michroma, labels in Plex Mono, one rust button. Error text stays neutral (a wrong password is not a pipeline failure). The header shows the role chip and SIGN OUT on the real backend.
+- **New connection labels** in the live trace: CONNECTING (muted) and RECONNECTING (pink), alongside LIVE, FEED STALLED and FEED DOWN.
+- **Honesty on live data:** EVENTS TODAY, freshness, models and retraining show PENDING until the backend measures them; JUDGED NORMAL is 0 (no such checks yet); fixes fall back to MITRE's mitigations while CRIE is pending.
+- **Bug fix:** the pixel field crashed when a window briefly measured 0 wide (a hidden or resizing tab). It now keeps at least one cell.
+
 ## Open items
 - Prompts J and K: build the engine walkthroughs when the ML team's `atde_samples.json` and `crie_samples.json` arrive.
-- Backend: WebSocket URL and message types, points for every rule, stale-by windows, where ground-truth labels live (see DATA_CONTRACT.md "Still open").
+- Backend: the asks in BACKEND_INTEGRATION.md (merge to main, event fields in alerts, rule cooldowns, ATDE model alerts). Points and windows are ours until the team confirms them.
+- Live mode has no fix cards until CRIE exists, so APPROVE FIX is only reachable on the simulated feed.
 - Reduced motion on the landing: transforms and the pixel break-apart are off and steps crossfade; PAGES.md's "five stacked still frames" layout is not built.
 - `public/brand/hero-fallback.png` is not needed (the globe is plain canvas, no WebGL) and was not created.
 - Yapari licence for the wordmark (see START_HERE.md).
