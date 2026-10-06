@@ -1,159 +1,180 @@
-// Landing (/): a scroll story. The stage stays pinned while scrolling moves through the steps.
-// Minimal by design: NETRA, one line, one button; then, per step, a title, one sentence and a
-// tiny colour key. Spec: docs/PAGES.md section 4.
-import { useRef, useState, type CSSProperties } from "react";
-import {
-  AnimatePresence,
-  motion,
-  useMotionValueEvent,
-  useReducedMotion,
-  useScroll,
-  useSpring,
-  useTransform,
-} from "motion/react";
-import { Link } from "react-router-dom";
-import { GlassCard } from "../components/GlassCard";
-import { StepRail } from "../landing/StepRail";
-import { StepStage } from "../landing/StepStage";
+// Landing (/), v2: a calm product page (DESIGN.md v2, PAGES.md section 4).
+// Hero with the cooling-words line and the dotted globe; then the ONE particle moment: on scroll the
+// globe's dots break apart and re-form as the dashboard, and the live product shot takes over.
+// Then how it works (hover-alive cards), why NETRA, enterprise, and the live dashboard itself.
+import { useRef } from "react";
+import { motion, useReducedMotion, useScroll, useSpring, useTransform } from "motion/react";
+import { Globe } from "../landing/Globe";
+import { CoolingWords } from "../landing/CoolingWords";
+import { HowItWorks } from "../landing/HowItWorks";
+import { ProductShot } from "../landing/ProductShot";
+import { SHOT, dashboardOutline } from "../landing/dashboardOutline";
 import { DASHBOARD_ANCHOR, DashboardSection } from "../landing/DashboardSection";
-import { STEPS, pad2, type KeySwatch } from "../landing/steps";
 import styles from "./Landing.module.css";
 
-// Steps built so far. The scroll only reaches these, so the story never shows an empty step.
-const BUILT_STEPS = 5;
-// Scroll distance per step, in viewport heights: enough room for each step to settle.
-const PER_STEP_VH = 120;
+const WHY = [
+  ["Ranked by time left", "Severity alone ignores the clock. Every incident carries a deadline."],
+  ["Rules and AI, side by side", "Each warning sign says which engine found it and what it added."],
+  ["Every score explained", "Risk is severity times attention times urgency, shown, never hidden."],
+  ["A person approves", "Fixes come from a fixed list of 14 actions. Nothing runs on its own."],
+  ["Freshness you can see", "A live meter shows how old the data on screen is, against a written target."],
+  ["Noise becomes incidents", "Hundreds of alerts from one attack arrive as one story with one deadline."],
+];
 
-const SWATCH: Record<KeySwatch, CSSProperties> = {
-  heat: { background: "var(--heat-1)" },
-  cold: { background: "var(--heat-4)" },
-  rule: { background: "var(--rule)" },
-  ai: { background: "var(--ai)" },
-  rust: { background: "var(--rust)" },
-  ring: { border: "1.5px solid var(--rust)", borderRadius: "50%" },
-  ok: { background: "var(--ok)" },
-};
+/** Glides to the live dashboard at the end of the page. */
+function toDashboard(e: React.MouseEvent, smooth: boolean) {
+  e.preventDefault();
+  document.getElementById(DASHBOARD_ANCHOR)?.scrollIntoView({ behavior: smooth ? "smooth" : "auto" });
+}
 
 // Default export so the router can lazy-load it (the globe libraries stay out of the dashboard).
 export default function Landing() {
-  const scrollRef = useRef<HTMLElement>(null);
+  const heroRef = useRef<HTMLElement>(null);
   const still = useReducedMotion() ?? false;
-  const { scrollYProgress } = useScroll({ target: scrollRef, offset: ["start start", "end end"] });
-  // A spring between the wheel and the story: each notch glides instead of jumping.
-  const smooth = useSpring(scrollYProgress, { stiffness: 70, damping: 20, mass: 0.6, restDelta: 0.0001 });
-  // t runs 0 (step 1) to BUILT_STEPS - 1 (last built step); fractions are the moves between steps.
-  const t = useTransform(still ? scrollYProgress : smooth, [0, 1], [0, BUILT_STEPS - 1]);
-  const [current, setCurrent] = useState(0);
-  useMotionValueEvent(t, "change", (v) => setCurrent(Math.min(BUILT_STEPS - 1, Math.round(v))));
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end end"] });
+  const p = useSpring(scrollYProgress, { stiffness: 80, damping: 22, mass: 0.6, restDelta: 0.0001 });
 
-  // Step 1's hero gives way as the globe starts to break apart; the step card takes its place.
-  const heroOpacity = useTransform(t, [0.02, 0.2], [1, 0]);
-  const heroY = useTransform(t, [0.02, 0.2], still ? [0, 0] : [0, -20]);
-  const cardOpacity = useTransform(t, [0.3, 0.46], [0, 1]);
-  const cardY = useTransform(t, [0.3, 0.46], still ? [0, 0] : [16, 0]);
-  const cardStep = STEPS[Math.max(1, current)];
-  // Step 5: once the fix is approved, the final call to action appears in the step card.
-  const finalCta = useTransform(t, [3.84, 3.92], [0, 1]);
-  const [ctaLive, setCtaLive] = useState(false);
-  useMotionValueEvent(finalCta, "change", (v) => setCtaLive(v > 0.5));
+  // The hero copy gives way; the globe stops swaying, glides to the centre, breaks apart and
+  // re-forms as the dashboard; the live product shot then appears exactly over the dots.
+  const copyOpacity = useTransform(p, [0.04, 0.22], [1, 0]);
+  const copyY = useTransform(p, [0.04, 0.22], [0, -24]);
+  const sway = useTransform(p, [0, 0.12], [1, 0]);
+  const stageX = useTransform(p, [0.08, 0.45], ["24vw", "0vw"]);
+  const morph = useTransform(p, [0.24, 0.7], [0, 1]);
+  const globeVisible = useTransform(p, [0.8, 0.9], [1, 0]);
+  const shotOpacity = useTransform(p, [0.74, 0.88], [0, 1]);
+  const ribbonOpacity = useTransform(p, [0, 0.4], [0.32, 0.1]);
 
   return (
     <>
-    <section ref={scrollRef} className={styles.scroller} style={{ height: `calc(100vh + ${(BUILT_STEPS - 1) * PER_STEP_VH}vh)` }}>
-      <div className={styles.landing}>
-        <div className={styles.copy}>
-          <motion.div
-            className={styles.hero}
-            style={{ opacity: heroOpacity, y: heroY, pointerEvents: current === 0 ? "auto" : "none" }}
-            aria-hidden={current !== 0}
-          >
-            <h1 className={styles.mark}>
-              <img src="/brand/netra-wordmark-cropped.svg" alt="NETRA" />
-            </h1>
-            <p className={styles.line}>
+      <section ref={heroRef} className={`${styles.heroScroll} ${still ? styles.static : ""}`}>
+        <div className={styles.sticky}>
+          <motion.div className={styles.ribbon} style={still ? undefined : { opacity: ribbonOpacity }} aria-hidden="true" />
+          <motion.div className={styles.copy} style={still ? undefined : { opacity: copyOpacity, y: copyY }}>
+            <span className={styles.kicker}>
+              <i aria-hidden="true" />
+              Real-time security risk, ranked by the time left to act
+            </span>
+            <h1 className={styles.headline}>
               Security decisions while the data is <em>still warm.</em>
-            </p>
-            <Link to="/live" className={styles.cta} tabIndex={current === 0 ? 0 : -1}>
-              OPEN LIVE DASHBOARD
-            </Link>
-            <GlassCard className={styles.caption}>
-              <span className={styles.captionLabel}>STEP 01, {STEPS[0].label}</span>
-              <p>{STEPS[0].caption}</p>
-            </GlassCard>
+            </h1>
+            <CoolingWords />
+            <div className={styles.actions}>
+              <a href={`#${DASHBOARD_ANCHOR}`} className={styles.primary} onClick={(e) => toDashboard(e, !still)}>
+                See it live
+              </a>
+              <a href="#how" className={styles.ghost}>
+                How it works
+              </a>
+            </div>
           </motion.div>
 
-          {/* Steps 2 to 5: what this step shows, in one sentence, and how to read the drawing. */}
-          <motion.div className={styles.stepCardWrap} style={{ opacity: cardOpacity, y: cardY }} aria-hidden={current === 0}>
-            <GlassCard className={styles.stepCard}>
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.div
-                  key={cardStep.n}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  aria-live="polite"
-                >
-                  <span className={styles.captionLabel}>STEP {pad2(cardStep.n)}</span>
-                  <h2 className={styles.stepTitle}>{cardStep.label}</h2>
-                  <p className={styles.stepText}>{cardStep.caption}</p>
-                  {cardStep.key && (
-                    <ul className={styles.key}>
-                      {cardStep.key.map((k) => (
-                        <li key={k.text}>
-                          <i style={SWATCH[k.swatch]} aria-hidden="true" />
-                          {k.text}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  {cardStep.n === STEPS.length && (
-                    <motion.div style={{ opacity: finalCta, pointerEvents: ctaLive ? "auto" : "none" }}>
-                      {/* The live dashboard is right below the story: this glides down to it. */}
-                      <a
-                        href={`#${DASHBOARD_ANCHOR}`}
-                        className={`${styles.cta} ${styles.finalCta}`}
-                        tabIndex={ctaLive ? 0 : -1}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          document.getElementById(DASHBOARD_ANCHOR)?.scrollIntoView({ behavior: still ? "auto" : "smooth" });
-                        }}
-                      >
-                        SEE IT LIVE
-                      </a>
-                    </motion.div>
-                  )}
-                </motion.div>
-              </AnimatePresence>
-            </GlassCard>
+          <motion.div className={styles.stage} style={still ? undefined : { x: stageX }}>
+            <motion.div className={styles.globeLayer} style={still ? undefined : { opacity: globeVisible }}>
+              <Globe sway={sway} morph={morph} visible={globeVisible} targets={dashboardOutline} />
+            </motion.div>
+            {!still && (
+              <motion.div
+                className={styles.shot}
+                style={{
+                  opacity: shotOpacity,
+                  left: `${(SHOT.x / 760) * 100}%`,
+                  top: `${(SHOT.y / 760) * 100}%`,
+                  width: `${(SHOT.w / 760) * 100}%`,
+                }}
+              >
+                <ProductShot />
+              </motion.div>
+            )}
           </motion.div>
-        </div>
 
-        <div className={styles.stageWrap}>
-          <StepStage t={t} still={still} />
+          {!still && (
+            <motion.p className={styles.shotCaption} style={{ opacity: shotOpacity }}>
+              The live dashboard, running below on a simulated feed.
+            </motion.p>
+          )}
         </div>
+      </section>
 
-        <ol className={styles.counter} aria-label="Steps">
-          {STEPS.map((s, i) => (
-            <li
-              key={s.n}
-              className={`${i === current ? styles.on : ""} ${i >= BUILT_STEPS ? styles.later : ""}`}
-              aria-current={i === current ? "step" : undefined}
-            >
-              {pad2(s.n)}
-            </li>
+      {still && (
+        <section className={styles.section}>
+          <ProductShot />
+        </section>
+      )}
+
+      <section id="how" className={styles.section}>
+        <div className={styles.intro}>
+          <span className={styles.eyebrow}>How it works</span>
+          <h2 className={styles.h2}>From a flood of events to the one that matters.</h2>
+          <p className={styles.sub}>Five steps. Hover a card and its drawing comes alive.</p>
+        </div>
+        <HowItWorks />
+      </section>
+
+      <section id="why" className={styles.section}>
+        <div className={styles.intro}>
+          <span className={styles.eyebrow}>Why NETRA</span>
+          <h2 className={styles.h2}>Most dashboards show you alerts. NETRA tells you which one first, and why.</h2>
+        </div>
+        <div className={styles.why}>
+          {WHY.map(([title, text]) => (
+            <div key={title} className={styles.whyCell}>
+              <h3>{title}</h3>
+              <p>{text}</p>
+            </div>
           ))}
-        </ol>
+        </div>
+      </section>
 
-        <StepRail t={t} current={current} built={BUILT_STEPS} />
-      </div>
-    </section>
+      <section id="enterprise" className={styles.section}>
+        <div className={styles.intro}>
+          <span className={styles.eyebrow}>Enterprise</span>
+          <h2 className={styles.h2}>Built to the brief's enterprise bar, and measured.</h2>
+        </div>
+        <div className={styles.enterprise}>
+          <div className={styles.entCard}>
+            <span className={styles.entLabel}>Freshness SLA</span>
+            <span className={styles.entBig}>
+              5<span> s p95</span>
+            </span>
+            <p>The target from an event happening to it showing on screen, measured at every hop.</p>
+          </div>
+          <div className={styles.entCard}>
+            <span className={styles.entLabel}>Concurrent load</span>
+            <span className={styles.entBig}>
+              10<span>×</span>
+            </span>
+            <p>Normal traffic with many dashboards open. Results: PENDING until the load test runs.</p>
+          </div>
+          <div className={styles.entCard}>
+            <span className={styles.entLabel}>Failure alerting</span>
+            <span className={styles.entText}>Scheduled jobs that tell you when they fail</span>
+            <p>A stalled feed, a slow pipeline or a failed job shows on screen in red, with words.</p>
+          </div>
+          <div className={styles.entCard}>
+            <span className={styles.entLabel}>Roles and audit</span>
+            <span className={styles.entText}>Analyst and admin sign-in, every decision logged</span>
+            <p>On the live backend, nothing runs without a named person approving it.</p>
+          </div>
+        </div>
+      </section>
 
-    {/* After the story: the real thing. */}
-    <DashboardSection />
+      <section className={styles.section}>
+        <div className={styles.cta}>
+          <h2 className={styles.ctaTitle}>Watch the data cool.</h2>
+          <p className={styles.sub}>The live dashboard runs right below, on a simulated feed.</p>
+          <a href={`#${DASHBOARD_ANCHOR}`} className={styles.primary} onClick={(e) => toDashboard(e, !still)}>
+            Open the live dashboard
+          </a>
+        </div>
+      </section>
 
-    {/* Closing band, at the very end. */}
-    <footer className={styles.band}>Built on Microsoft Azure, ONNX Runtime and LightGBM from Microsoft Research.</footer>
+      <DashboardSection />
+
+      <footer className={styles.band}>
+        <span className={styles.wordmark}>NETRA</span>
+        <span>Microsoft Innovate 2026, Problem 34 · Simulated feed on this site</span>
+      </footer>
     </>
   );
 }

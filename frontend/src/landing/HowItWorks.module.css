@@ -1,0 +1,264 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.card {
+  grid-column: span 2;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 26px;
+  border-radius: var(--r-glass);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: var(--glass-hi);
+  transition:
+    transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1),
+    background 0.45s,
+    border-color 0.45s;
+}
+
+.wide {
+  grid-column: span 3;
+}
+
+.card:hover,
+.card:focus-visible {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.14);
+  background: var(--ember-light), var(--panel-2);
+}
+
+.step {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.art {
+  width: 100%;
+  height: 170px;
+}
+
+.text {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--text-hi);
+}
+
+.ai {
+  color: var(--ai);
+}
+
+/* 01: dots flowing in */
+.flow {
+  fill: none;
+  stroke: var(--faint);
+  stroke-width: 2;
+  stroke-dasharray: 2 10;
+  animation: flow 1.4s linear infinite;
+  animation-play-state: paused;
+  transition: stroke 0.3s;
+}
+
+.target {
+  fill: none;
+  stroke: var(--rust);
+  stroke-width: 1.5;
+}
+
+@keyframes flow {
+  to {
+    stroke-dashoffset: -48;
+  }
+}
+
+/* 02: a scan passes; one dot is caught by a rule, one by the AI */
+.dot {
+  fill: #3a3836;
+}
+
+.hitRule,
+.hitAi {
+  transition: fill 0.4s 0.6s;
+}
+
+.scan {
+  fill: var(--text-hi);
+  opacity: 0;
+  animation: scan 2.2s ease-in-out infinite;
+  animation-play-state: paused;
+  transition: opacity 0.3s;
+}
+
+@keyframes scan {
+  from {
+    transform: translateX(-10px);
+  }
+  to {
+    transform: translateX(250px);
+  }
+}
+
+/* 03: lines draw to one account */
+.link {
+  stroke: var(--rust);
+  stroke-dasharray: 120;
+  stroke-dashoffset: 120;
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.node {
+  fill: none;
+  stroke: var(--muted);
+}
+
+.account {
+  fill: var(--rust);
+}
+
+/* 04: the ring cools from ember to ash */
+.seg {
+  fill: none;
+  stroke-width: 10;
+  stroke-linecap: round;
+  transition: stroke 0.35s;
+}
+
+.s1,
+.s4 {
+  stroke: var(--heat-1);
+}
+
+.s2,
+.s3 {
+  stroke: var(--heat-2);
+}
+
+.clock {
+  font-family: var(--font-ui);
+  font-weight: 200;
+  font-size: 26px;
+  fill: var(--text-hi);
+}
+
+/* 05: the fixes fan out and the first is approved */
+.fan {
+  transform-origin: 100px 140px;
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.back {
+  fill: #1b1b1e;
+  stroke: rgba(255, 255, 255, 0.14);
+}
+
+.front {
+  fill: #232327;
+  stroke: rgba(255, 255, 255, 0.2);
+}
+
+.bar1 {
+  fill: var(--muted);
+}
+
+.bar2 {
+  fill: var(--stale);
+}
+
+.tick,
+.tickMark {
+  opacity: 0;
+  transition: opacity 0.3s 0.5s;
+}
+
+.tick {
+  fill: var(--ok);
+}
+
+.tickMark {
+  fill: none;
+  stroke: var(--on-ok);
+  stroke-width: 2.5;
+}
+
+/* Alive on contact */
+.card:hover .flow,
+.card:focus-visible .flow {
+  animation-play-state: running;
+  stroke: var(--text-hi);
+}
+
+.card:hover .scan,
+.card:focus-visible .scan {
+  animation-play-state: running;
+  opacity: 0.5;
+}
+
+.card:hover .hitRule,
+.card:focus-visible .hitRule {
+  fill: var(--rust);
+}
+
+.card:hover .hitAi,
+.card:focus-visible .hitAi {
+  fill: var(--ai);
+}
+
+.card:hover .link,
+.card:focus-visible .link {
+  stroke-dashoffset: 0;
+}
+
+.card:hover .s1,
+.card:focus-visible .s1 {
+  stroke: var(--stale);
+  transition-delay: 0.05s;
+}
+
+.card:hover .s2,
+.card:focus-visible .s2 {
+  stroke: var(--stale);
+  transition-delay: 0.2s;
+}
+
+.card:hover .s3,
+.card:focus-visible .s3 {
+  stroke: var(--heat-4);
+  transition-delay: 0.35s;
+}
+
+.card:hover .s4,
+.card:focus-visible .s4 {
+  stroke: var(--heat-3);
+  transition-delay: 0.5s;
+}
+
+.card:hover .fanLeft,
+.card:focus-visible .fanLeft {
+  transform: translate(-46px, 6px) rotate(-8deg);
+}
+
+.card:hover .fanRight,
+.card:focus-visible .fanRight {
+  transform: translate(46px, 6px) rotate(8deg);
+}
+
+.card:hover .tick,
+.card:hover .tickMark,
+.card:focus-visible .tick,
+.card:focus-visible .tickMark {
+  opacity: 1;
+}
+
+@media (max-width: 1100px) {
+  .card,
+  .wide {
+    grid-column: span 3;
+  }
+}

@@ -1,12 +1,11 @@
-// The landing globe (step 1, INGEST): rust pixel land, a faint graticule, a halo, and dashed arcs
-// carrying pale-yellow events (heat-1: the data is fresh) to "YOUR NETWORK".
-// Moving to step 2, the land pixels break apart and rearrange into the network drawing (`morph`).
+// The landing globe: rust pixel land, a faint graticule, a halo, and dashed arcs carrying events
+// to "YOUR NETWORK". On scroll, the land pixels break apart and re-form as another drawing
+// (`targets`, e.g. the dashboard's outline) as `morph` goes from 0 to 1.
 // Drawn on canvas with d3-geo. Geometry from docs/reference/landing-step1.html (a 760px stage).
 import { useEffect, useRef } from "react";
 import type { MotionValue } from "motion/react";
 import { geoDistance, geoGraticule10, geoOrthographic, geoPath } from "d3-geo";
 import { ARCS, HOME_ROTATION, TARGET, buildLandDots, type LonLat } from "./globeData";
-import { targetPoints, type TargetKind } from "./networkGeometry";
 import { createRng } from "../data/rng";
 import styles from "./Globe.module.css";
 
@@ -22,6 +21,14 @@ const GRATICULE = geoGraticule10();
 const HALF_PI = Math.PI / 2;
 const MAX_DELAY = 0.35; // share of the morph by which the last pixel has set off
 const DOT = 3.4;
+
+/** A point of the drawing the pixels re-form into, in the 760px stage coordinates. */
+export type TargetKind = "floor" | "block" | "stream" | "hot";
+export interface TargetPoint {
+  x: number;
+  y: number;
+  kind: TargetKind;
+}
 
 // Where each kind of line in the drawing lands, and how its pixels look there.
 const LOOK: Record<TargetKind, { g: number; b: number; a: number; size: number }> = {
@@ -39,12 +46,12 @@ interface Particle {
 }
 
 let landCache: LonLat[] | null = null;
-let particleCache: Particle[] | null = null;
+const particleCache = new WeakMap<() => TargetPoint[], Particle[]>();
 
 const ease = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2);
 
-/** Pair every visible land pixel (globe at rest) with a point on the network drawing. */
-function buildParticles(land: LonLat[]): Particle[] {
+/** Pair every visible land pixel (globe at rest) with a point on the target drawing. */
+function buildParticles(land: LonLat[], targetsOf: () => TargetPoint[]): Particle[] {
   const proj = geoOrthographic().scale(292).translate([380, 380]).rotate(HOME_ROTATION).clipAngle(90);
   const centre: LonLat = [-HOME_LON, -TILT];
   const src: { x: number; y: number; a: number }[] = [];
@@ -56,7 +63,7 @@ function buildParticles(land: LonLat[]): Particle[] {
     const n = d / HALF_PI;
     src.push({ x: xy[0], y: xy[1], a: 0.95 - 0.65 * n * n });
   }
-  const targets = targetPoints();
+  const targets = targetsOf();
   // Sorting both along the same diagonal keeps the flow coherent: pixels travel as a sweep, not a tangle.
   src.sort((p, q) => p.x + p.y * 0.6 - (q.x + q.y * 0.6));
   targets.sort((p, q) => p.x + p.y * 0.6 - (q.x + q.y * 0.6));
@@ -82,17 +89,19 @@ function buildParticles(land: LonLat[]): Particle[] {
 interface Props {
   /** 0 to 1: how much the globe sways. Scrolling on brings it to rest before it breaks apart. */
   sway?: MotionValue<number>;
-  /** 0 to 1: the land pixels break apart and rearrange into the network drawing. */
+  /** 0 to 1: the land pixels break apart and rearrange into the `targets` drawing. */
   morph?: MotionValue<number>;
+  /** The drawing the pixels re-form into. Required for `morph`. */
+  targets?: () => TargetPoint[];
   /** The canvas layer's opacity: nothing is drawn once it has faded out. */
   visible?: MotionValue<number>;
 }
 
-export function Globe({ sway, morph, visible }: Props) {
+export function Globe({ sway, morph, visible, targets }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const live = useRef({ sway, morph, visible });
-  live.current = { sway, morph, visible };
+  const live = useRef({ sway, morph, visible, targets });
+  live.current = { sway, morph, visible, targets };
 
   useEffect(() => {
     const wrap = wrapRef.current;
@@ -123,7 +132,7 @@ export function Globe({ sway, morph, visible }: Props) {
       const cx = size / 2;
       const cy = size / 2;
       const R = 292 * k;
-      const m = still ? 0 : (live.current.morph?.get() ?? 0);
+      const m = still || !live.current.targets ? 0 : (live.current.morph?.get() ?? 0);
       const amp = live.current.sway?.get() ?? 1;
       const lon = still || m > 0 ? HOME_LON : HOME_LON + amp * SWAY_DEG * Math.sin((2 * Math.PI * tSec) / SWAY_PERIOD_S);
       const proj = geoOrthographic().scale(R).translate([cx, cy]).rotate([lon, TILT]).clipAngle(90);
@@ -195,7 +204,13 @@ export function Globe({ sway, morph, visible }: Props) {
     };
 
     const drawParticles = (m: number, k: number) => {
-      const parts = (particleCache ??= buildParticles(land));
+      const targetsOf = live.current.targets;
+      if (!targetsOf) return;
+      let parts = particleCache.get(targetsOf);
+      if (!parts) {
+        parts = buildParticles(land, targetsOf);
+        particleCache.set(targetsOf, parts);
+      }
       for (const p of parts) {
         const local = Math.max(0, Math.min(1, (m - p.delay) / (1 - MAX_DELAY)));
         const e = ease(local);
