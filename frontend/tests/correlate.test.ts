@@ -95,7 +95,25 @@ test("failures across many accounts become one credential stuffing campaign", ()
   const merged = live.get("0001")!;
   assert.deepEqual(merged.entities.ips.sort(), ["203.0.113.1", "203.0.113.2"]);
   assert.equal(merged.entities.users.length, 6);
-  assert.equal(merged.signals[0].sentence, "Failed logins on 6 different accounts from 2 addresses");
+  const spray = merged.signals.find((s) => s.ruleId === "SPRAY");
+  assert.equal(spray?.sentence, "Failed logins on 6 different accounts from 2 addresses");
+  assert.equal(merged.signals.find((s) => s.ruleId === "BF")?.sentence, "6 failed logins in 2 min, 5 or more a minute per address");
+  // The campaign is stronger evidence than the one rule the backend has for it.
+  assert.equal(merged.attentionScore, 20 + 10 + 30);
+});
+
+test("a login that works after the guessing means the account was taken over", () => {
+  const { c, live } = setup();
+  const login = { event_type: "login", user: "maria.silva", ip: "203.0.113.9" };
+  for (let i = 0; i < 6; i++) hit(c, "brute_force", { ...login, status: "failure" }, T0 + i * 1000);
+  c.addEvents([event({ ...login, status: "success" }, T0 + 7000)], T0 + 7000);
+  const inc = [...live.values()][0];
+  assert.equal(inc.name, "Brute force, account taken over");
+  assert.equal(inc.severity, 5);
+  assert.equal(inc.signals.at(-1)?.sentence, "maria.silva logged in from 203.0.113.9 after 6 failed attempts");
+  // Someone else logging in from elsewhere changes nothing.
+  c.addEvents([event({ event_type: "login", user: "j.okafor", ip: "198.51.100.3", status: "success" })], T0 + 8000);
+  assert.equal([...live.values()][0].signals.length, 2);
 });
 
 test("a watch-listed address adds to its open incident and opens none on its own", () => {
@@ -123,20 +141,24 @@ test("the placeholder scorer is never shown as AI; a real model is", () => {
   assert.equal(inc.severity, 5);
 });
 
-test("an alert that arrives before its event waits for it, then goes without", () => {
+test("an alert that arrives before its event waits for it", () => {
   const { c, live } = setup();
   const ev = event({ ip: "192.0.2.9", event_type: "http_request", path: "/.env" });
   c.addAlert(alert("web_scan", ev), T0);
   assert.equal(live.size, 0);
   c.addEvents([ev], T0 + 300);
   assert.deepEqual([...live.values()][0].entities.ips, ["192.0.2.9"]);
+});
 
-  const lost = event({ ip: "192.0.2.10" });
-  c.addAlert(alert("web_scan", lost), T0);
+test("an alert whose event never comes opens no incident, unless it needs no source", () => {
+  const { c, live } = setup();
+  c.addAlert(alert("web_scan", event({ ip: "192.0.2.10" })), T0); // which address? unknown
   c.tick(T0 + 1000);
-  assert.equal(live.size, 1);
   c.tick(T0 + 3000);
-  assert.equal(live.size, 2);
+  assert.equal(live.size, 0);
+  c.addAlert(alert("http_flood", event({}), T0, { severity: "critical" }), T0); // a flood is grouped by site
+  c.tick(T0 + 6000);
+  assert.equal([...live.values()][0]?.attackType, "http_flood");
 });
 
 test("the same alert twice counts once (a reconnect replays recent alerts)", () => {

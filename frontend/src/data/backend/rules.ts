@@ -3,7 +3,7 @@
 // Thresholds in the sentences are the rules' own. Severity comes from the backend's alert.
 import type { AttackType, Severity } from "../types";
 
-export type RuleKey = "ip" | "user" | "host";
+export type RuleKey = "ip" | "user" | "site";
 
 export interface BackendRule {
   /** Short label in the escalation list. */
@@ -11,7 +11,7 @@ export interface BackendRule {
   attackType: AttackType;
   /** Points for the first hit. Repeats add up to the same again (see `rulePoints`). */
   points: number;
-  /** Which part of the event says "same attack": one address, one account, or one target host. */
+  /** Which part of the event says "same attack": one address, one account, or the whole site (a flood hits every web host). */
   key: RuleKey;
 }
 
@@ -23,9 +23,9 @@ export const BACKEND_RULES: Record<string, BackendRule> = {
   malicious_process: { code: "PROC", attackType: "admin_abuse", points: 30, key: "user" },
   data_exfiltration: { code: "EXF", attackType: "data_exfiltration", points: 30, key: "user" },
   web_scan: { code: "SCAN", attackType: "web_scan", points: 20, key: "ip" },
-  // One flood comes from many addresses, so it is grouped by the host it hits.
-  excessive_requests: { code: "RATE", attackType: "http_flood", points: 15, key: "host" },
-  http_flood: { code: "FLOOD", attackType: "http_flood", points: 25, key: "host" },
+  // One flood comes from many addresses at every web host, so it is one attack on the site.
+  excessive_requests: { code: "RATE", attackType: "http_flood", points: 15, key: "site" },
+  http_flood: { code: "FLOOD", attackType: "http_flood", points: 25, key: "site" },
 };
 
 /** suspicious_ip never opens an incident: it adds to the open incident of that address. */

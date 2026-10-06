@@ -13,6 +13,12 @@ const LOGIN_MEMORY_MS = 10 * 60_000; // failed logins remembered per address
 const BRUTE_FORCE_WINDOW_MS = 60_000; // the backend rule's own window (rules/sigma/brute_force.yaml)
 const EVENT_IDS_PER_SIGNAL = 10;
 
+/** Signals this grouping step derives from the events themselves (shown like rules: they are rules, ours). */
+const DERIVED = {
+  spray: { ruleId: "spray", code: "SPRAY", points: 30 }, // one campaign, many accounts
+  loggedIn: { ruleId: "logged_in", code: "IN", points: 30 }, // a login that worked, from an attacking address
+};
+
 interface SignalDraft {
   ruleId: string; // backend rule id, or "model"
   code: string;
@@ -78,6 +84,7 @@ export class Correlator {
         list.push({ user, at: Date.parse(ev.event_ts) || now });
         this.failures.set(ev.ip, list);
       }
+      if (ev.event_type === "login" && ev.status === "success" && ev.ip && user) this.loggedIn(ev, user, now);
     }
     for (const id of this.events.keys()) {
       if (this.events.size <= EVENT_CACHE) break;
@@ -153,6 +160,9 @@ export class Correlator {
 
     const rule = BACKEND_RULES[row.rule_id];
     if (!rule) return; // a rule this dashboard does not know yet
+    // Without its event we cannot tell which attack this belongs to (an old alert after a reload).
+    // It still counts in DETECTIONS / MIN; it just opens no incident of its own.
+    if (!ev && rule.key !== "site") return;
 
     let type = rule.attackType;
     let key: string;
@@ -166,12 +176,14 @@ export class Correlator {
       key = guessing.key;
     } else if (type === "brute_force" || type === "credential_stuffing") {
       // One address failing on many accounts is stuffing; many such addresses are one campaign.
+      // Decided by the accounts, not the rule's name: the backend's credential_stuffing rule counts
+      // failed logins per address, so a fast guess at one password trips it too (its README says so).
       const accounts = ev?.ip ? this.accountsFrom(ev.ip, now) : 0;
       const campaign = this.findCampaign(ip);
       if (campaign) {
         type = "credential_stuffing";
         key = campaign.key;
-      } else if (row.rule_id === "credential_stuffing" || accounts >= STUFFING_ACCOUNTS) {
+      } else if (accounts >= STUFFING_ACCOUNTS) {
         type = "credential_stuffing";
         key = `credential_stuffing:${ev?.path ?? "/login"}`;
         const solo = this.open.get(`brute_force:${ip}`);
@@ -192,10 +204,36 @@ export class Correlator {
 
     const draft = this.open.get(key) ?? this.create(type, key, ts);
     this.addSignal(draft, row.rule_id, rule.code, rule.points, ts, severity, row, ev);
-    if (type === "credential_stuffing" && ev?.ip) {
-      for (const f of this.failures.get(ev.ip) ?? []) draft.users.add(f.user);
+    if (draft.attackType === "credential_stuffing") {
+      if (ev?.ip) for (const f of this.failures.get(ev.ip) ?? []) draft.users.add(f.user);
+      this.derive(draft, DERIVED.spray, ts, severity, ev, false);
     }
     this.publish(draft);
+  }
+
+  /**
+   * A successful login from an address that was guessing passwords: the attacker got in.
+   * The backend has no rule for this (account_takeover), so the grouping step spots it.
+   */
+  private loggedIn(ev: EnrichedEvent, user: string, now: number) {
+    const ip = ev.ip as string;
+    const d = this.open.get(`brute_force:${ip}`) ?? this.findCampaign(ip);
+    if (!d || !d.users.has(user)) return; // only an account they were attacking
+    this.derive(d, DERIVED.loggedIn, Date.parse(ev.event_ts) || now, 5, ev, true);
+    this.publish(d);
+  }
+
+  /** A signal the grouping step found by itself (no backend row behind it). */
+  private derive(d: Draft, kind: { ruleId: string; code: string; points: number }, ts: number, severity: Severity, ev: EnrichedEvent | undefined, count: boolean) {
+    const s = d.signals.get(kind.code) ?? { ...kind, base: kind.points, hits: 0, firstTs: ts, lastTs: ts, severity, eventIds: [], bytes: 0 };
+    if (count || s.hits === 0) s.hits += 1;
+    s.lastTs = Math.max(s.lastTs, ts);
+    s.severity = Math.max(s.severity, severity) as Severity;
+    if (ev) {
+      s.last = ev;
+      s.eventIds = [...s.eventIds, ev.event_id].slice(-EVENT_IDS_PER_SIGNAL);
+    }
+    d.signals.set(kind.code, s);
   }
 
   private create(type: AttackType, key: string, ts: number): Draft {
@@ -311,15 +349,28 @@ export class Correlator {
     const user = known(ev?.user) ?? "an unknown account";
     const host = ev?.host ?? "a server";
     switch (s.ruleId) {
-      case "brute_force":
+      case "brute_force": {
+        const since = d.createdAt - BRUTE_FORCE_WINDOW_MS;
         if (d.attackType === "credential_stuffing") {
-          return `Failed logins on ${d.users.size} different accounts from ${addresses(d.ips.size)}`;
+          const total = [...d.ips].reduce((sum, a) => sum + this.failuresFrom(a, since), 0);
+          const minutes = Math.max(1, Math.ceil((s.lastTs - since) / 60_000));
+          return `${total} failed logins in ${minutes} min, 5 or more a minute per address`;
         }
         return ev?.ip
-          ? `${this.failuresFrom(ev.ip, d.createdAt - BRUTE_FORCE_WINDOW_MS)} failed logins for ${user} from ${ip}`
+          ? `${this.failuresFrom(ev.ip, since)} failed logins for ${user} from ${ip}`
           : `5 or more failed logins from one address within a minute${times(s.hits)}`;
+      }
+      case DERIVED.spray.ruleId:
+        return `Failed logins on ${d.users.size} different accounts from ${addresses(d.ips.size)}`;
+      case DERIVED.loggedIn.ruleId: {
+        if (d.attackType === "brute_force" && ev?.ip) {
+          const fails = (this.failures.get(ev.ip) ?? []).filter((f) => f.user === user && f.at >= d.createdAt - BRUTE_FORCE_WINDOW_MS).length;
+          return `${user} logged in from ${ip} after ${fails} failed attempts`;
+        }
+        return `${user} logged in from ${ip}, one of the attacking addresses${s.hits > 1 ? ` (${s.hits} accounts so far)` : ""}`;
+      }
       case "credential_stuffing":
-        return `20 or more failed logins from ${ip} within 30 seconds${times(s.hits)}`;
+        return `20 or more failed logins from ${d.attackType === "credential_stuffing" ? "one address" : ip} within 30 seconds${times(s.hits)}`;
       case "suspicious_login":
         return `Failed login on an admin account (${user})${times(s.hits)}`;
       case "privilege_escalation":
@@ -362,7 +413,7 @@ export class Correlator {
     const incident: Incident = {
       id: d.id,
       attackType: d.attackType,
-      name: scenario.name,
+      name: d.signals.has(DERIVED.loggedIn.code) ? `${scenario.name}, account taken over` : scenario.name,
       mitre: scenario.mitre,
       severity: Math.max(...ordered.map((s) => s.severity)) as Severity,
       attentionScore: Math.min(100, signals.reduce((sum, s) => sum + s.points, 0)),
