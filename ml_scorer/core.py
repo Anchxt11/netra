@@ -86,12 +86,14 @@ class Scorer:
                 src, dst = flow_ips(stream, r["message_sanitized"])
                 rule_flagged = bool(r.get("rule_hits"))
                 risk = round(min(max(res["anomaly_score"], 0.0), 1.0), 4)
+                row_source = r.get("source")  # present on replay rows; absent on live rows
                 scores.append({
                     "event_id": str(r["event_id"]), "stream_name": stream, "model": res["model"],
                     "scored_ts": utc_iso(), "anomaly_score": res["anomaly_score"], "risk_score": risk,
                     "is_anomaly": int(res["is_anomaly"]), "family": res["family"],
                     "probability": res["probability"], "rule_flagged": int(rule_flagged),
                     "src_ip": src, "reasons": json.dumps(res["reasons"]),
+                    **( {"source": row_source} if row_source is not None else {}),
                 })
                 # A rule already flagged it: attach the model's view so the incident gets a risk score.
                 # Not flagged: alert only when anomalous, at most once a minute per source address.
@@ -110,6 +112,7 @@ class Scorer:
                     "probability": res["probability"], "anomaly_score": res["anomaly_score"], "risk_score": risk,
                     "reasons": [{**x, "baseline": None} for x in res["reasons"]],
                     "rule_flagged": rule_flagged,
+                    **( {"source": row_source} if row_source is not None else {}),
                 })
                 self.totals["alerts"] += 1
         return alerts, scores
