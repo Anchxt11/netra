@@ -51,6 +51,10 @@ class RuleEngine:
     def __init__(self,rules):
         self.rules=rules
         self.windows=defaultdict(deque)
+        # Cooldown: a windowed rule fires once per (rule, ip), then stays quiet for its own timeframe.
+        # Without it a flood raised one alert per request (about 90,000 in one lab run), filling the
+        # alert producer's queue and Postgres with copies of the same alert.
+        self.fired={}
     @classmethod
     def from_directory(cls,directory:Path):
         rules=[]
@@ -69,5 +73,8 @@ class RuleEngine:
                 cutoff=now-rule.timeframe
                 while window and window[0]<cutoff: window.popleft()
                 if len(window)<rule.count: continue
+                last=self.fired.get(key)
+                if last is not None and now-last<rule.timeframe: continue
+                self.fired[key]=now
             hits.append(RuleHit(rule.id,rule.severity,rule.title))
         return hits

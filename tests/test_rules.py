@@ -240,3 +240,23 @@ def test_features_large_bytes():
     f = build_features(event)
     assert f['bytes_out_large'] is True
     assert f['is_data_transfer'] is True
+
+
+# --------------------------------------------------------------------------- cooldown (one alert per window, not per event)
+
+def test_a_flood_alerts_once_per_window_not_once_per_request():
+    e = RuleEngine.from_directory(RULES)
+    x = {'event_type': 'http_request', 'ip': '10.0.0.91', 'user': '-', 'status': 'success', 'path': '/', 'http_status': 200}
+    fired = [i for i in range(1000) if any(h.rule_id == 'http_flood' for h in e.evaluate(x, now=i * 0.01))]
+    assert len(fired) == 1  # 1,000 requests in 10 s: one http_flood alert, not 800
+    window = next(r.timeframe for r in e.rules if r.id == 'http_flood')
+    later = e.evaluate(x, now=fired[0] * 0.01 + window + 0.01)
+    assert any(h.rule_id == 'http_flood' for h in later)  # still flooding a window later: alerts again
+
+
+def test_cooldown_is_per_address():
+    e = RuleEngine.from_directory(RULES)
+    base = {'event_type': 'login', 'status': 'failure', 'user': 'alice'}
+    for ip in ('10.0.0.1', '10.0.0.2'):
+        hits = [e.evaluate({**base, 'ip': ip}, now=float(i)) for i in range(5)]
+        assert any(h.rule_id == 'brute_force' for h in hits[-1])

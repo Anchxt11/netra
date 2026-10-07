@@ -1,5 +1,6 @@
 import json, logging, os
 from confluent_kafka import Consumer, Producer, KafkaError, TopicPartition
+from .alerts import produce_waiting
 from .config import *
 
 log=logging.getLogger(__name__)
@@ -46,7 +47,7 @@ class ProcessorConsumer:
             try:
                 event=json.loads(msg.value().decode())
                 enriched,hits=self.handler(event)
-                self.producer.produce(ENRICHED_TOPIC,key=str(event.get('ip','')),value=json.dumps(enriched,separators=(',',':')),on_delivery=self._delivered)
+                produce_waiting(self.producer,ENRICHED_TOPIC,key=str(event.get('ip','')),value=json.dumps(enriched,separators=(',',':')),on_delivery=self._delivered)
                 for hit in hits: self.alert_emitter.emit(hit.rule_id,hit.severity,event)
                 self.producer.poll(0)
                 done+=1

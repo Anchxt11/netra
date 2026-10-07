@@ -92,3 +92,20 @@ def test_bad_input_is_skipped_but_its_offset_moves_on():
 def test_an_empty_poll_commits_nothing():
     pc, consumer, *_ = make([[]])
     assert pc.run_batch() == 0 and consumer.commits == []
+
+
+def test_a_full_producer_queue_waits_and_retries_instead_of_dropping():
+    from processor.alerts import produce_waiting
+    calls = {"produce": 0, "poll": 0}
+
+    class Full:
+        def produce(self, topic, **kw):
+            calls["produce"] += 1
+            if calls["produce"] < 3:
+                raise BufferError("Local: Queue full")
+
+        def poll(self, t):
+            calls["poll"] += 1
+
+    produce_waiting(Full(), "alerts", key="a", value="{}")
+    assert calls == {"produce": 3, "poll": 2}

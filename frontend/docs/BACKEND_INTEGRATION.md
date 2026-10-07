@@ -75,7 +75,7 @@ The public Vercel site stays on the simulated feed: it cannot reach a backend on
 ## Asks for the backend team (small, in order of value)
 1. **Merge `feat/person-a-infrastructure` into `main`**, and the frontend with it (a pull request from this machine).
 2. **Put the event's `ip`, `user` and `host` in each alert** (`processor/alerts.py`). The dashboard then needs no event lookups, and history after a reload is complete (today alerts older than the last 1000 events are counted but cannot be grouped).
-3. **A cooldown on windowed rules.** They fire on every event past the threshold (549 alerts in 30 minutes in our test run). The dashboard copes; the alerts table and the DETECTIONS chart would read better.
+3. **Done 2026-10-07 (`processor/rule_engine.py`): a windowed rule now fires once per address per window.** Was: **A cooldown on windowed rules.** They fire on every event past the threshold (549 alerts in 30 minutes in our test run). The dashboard copes; the alerts table and the DETECTIONS chart would read better.
 4. **`credential_stuffing` should count distinct accounts per address.** Today it counts failed logins, so a fast password guess trips it (the dashboard decides stuffing by accounts instead).
 5. **Floods per site, not per address.** The simulator's flood comes from 30 to 120 addresses, so the per-address `http_flood` threshold rarely fires.
 6. **ATDE:** emit a model alert (`rule_id: null`, `model: "<name and version>"`, the event's `risk_score`) above a threshold. The dashboard shows it as the AI engine automatically. Note the training data (cloud flow logs) and the simulator's events (web, login, process) have different fields: decide the feature mapping, or replay held-out flow logs as their own stream.
