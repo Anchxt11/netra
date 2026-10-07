@@ -25,24 +25,66 @@ Generator ─► Redpanda [events.raw] ─► Processor ─► Redpanda [events.
 
 ## Quick Start
 
+We provide two separate ways to generate activity: the **Live Lab** (real HTTP requests via Juice Shop) or the **Synthetic Generator** (purely mathematical traffic generation).
+
+### 1. Starting the Environment
+
+To run the full end-to-end pipeline with the **Live Lab** (recommended):
 ```bash
-# Start everything (Redpanda, processor, console)
+# 1. Start the core infrastructure (Redpanda, DB, Processor, API, Console)
 make up
 
-# Start with the traffic generator (includes simulated attacks)
-make sim
-
-# View logs
-make logs
-
-# Run unit tests
-make test
-
-# Stop everything
-make down
+# 2. Start the Live Lab (Juice Shop, Nginx, Vector, and the auto-attack bots)
+make lab
 ```
 
-After starting, open:
+*(Optional)* If you prefer to run the mathematical **Synthetic Generator** instead of the Live Lab:
+```bash
+make sim
+```
+*Note: Do not run `make sim` and `make lab` at the same time, as they simulate overlapping scenarios using different techniques.*
+
+### 2. Managing the Environment
+
+```bash
+# View real-time logs of the Live Lab components
+make lab-logs
+
+# View logs of the core infrastructure (Processor, API, etc.)
+make logs
+
+# Run the unit test suite
+make test
+
+# Stop all running containers gracefully (preserves data)
+make down
+
+# Stop everything and WIPE all data volumes (resets Kafka, DB, ClickHouse to zero)
+make clean
+```
+
+### 3. Triggering Manual Attacks (Live Lab)
+
+While the `make lab` command automatically runs a background orchestrator that fires cyberattacks at random intervals, you can also force specific attacks to happen immediately on-demand.
+
+```bash
+# Trigger a specific attack scenario instantly
+make attack SCENARIO=brute_force
+
+# Available scenarios to pass to SCENARIO=:
+#   web_scan              (Path and param fuzzing)
+#   brute_force           (Password guessing)
+#   credential_stuffing   (Distributed login spray)
+#   http_flood            (L7 DDoS)
+#   sqli                  (SQL injection)
+#   data_exfiltration     (Huge file downloads)
+#   account_takeover      (Successful login from high-risk IP)
+
+# Trigger ALL attack scenarios sequentially
+make attack-full
+```
+
+After starting the stack, open:
 - **Redpanda Console** — [http://localhost:8080](http://localhost:8080) — inspect topics and messages live
 - **FastAPI Backend** — runs on `http://localhost:8000`. Test via `curl http://localhost:8000/health`.
 
@@ -170,9 +212,23 @@ class Scorer(ABC):
 
 Current implementation: `DummyScorer` (heuristic weights). Drop-in replacement with `IsolationForest`/`XGBoost` model by implementing the `Scorer` interface.
 
-## Generator Attack Scenarios
+## Attack Scenarios (Live Lab & Synthetic)
 
-The simulator generates realistic web/auth/endpoint telemetry and injects 7 attack types after a configurable warmup period:
+### Live Lab Scenarios (Orchestrated by `auto_attack.py`)
+These are launched via real HTTP requests (using `ffuf`, `ab`, `sqlmap`, etc.) from the attacker containers in the Lab Profile:
+
+| Scenario              | Tool Used  | Description                                        |
+|-----------------------|------------|----------------------------------------------------|
+| `web_scan`            | `ffuf`     | High-volume path and param fuzzing                 |
+| `brute_force`         | `ffuf`     | Password guessing against `/rest/user/login`       |
+| `credential_stuffing` | `ffuf`     | Distributed login spray across many accounts       |
+| `http_flood`          | `ab`       | L7 DDoS using 50 concurrent connections            |
+| `sqli`                | `sqlmap`   | Automated SQL injection against the product search |
+| `data_exfiltration`   | `curl`     | Rapid download of huge backup files from `/ftp`    |
+| `account_takeover`    | `curl`     | Successful login from a high-risk geo IP (RU/CN)   |
+
+### Synthetic Generator Scenarios
+The simulator (`make sim`) generates fake telemetry and injects these mathematical patterns without doing any real HTTP networking:
 
 | Scenario              | Description                                        |
 |-----------------------|----------------------------------------------------|

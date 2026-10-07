@@ -1,0 +1,41 @@
+# Vector config — tail nginx JSON logs and ship to events.lab Kafka topic
+# Wraps each line in {"kind": "web", "raw": "<original line>"} envelope
+
+sources:
+  nginx_logs:
+    type: file
+    include:
+      - /logs/nginx/netra.json
+    read_from: end                          # only new lines from this point
+    fingerprint:
+      strategy: device_and_inode            # survive log rotation
+    line_delimiter: "\n"
+
+transforms:
+  wrap_nginx:
+    type: remap
+    inputs:
+      - nginx_logs
+    source: |
+      .kind = "web"
+      .raw = string!(.message)
+      del(.message)
+      del(.host)
+      del(.source_type)
+      del(.file)
+      del(.timestamp)
+
+sinks:
+  kafka_lab:
+    type: kafka
+    inputs:
+      - wrap_nginx
+    bootstrap_servers: redpanda:9092
+    topic: events.lab
+    encoding:
+      codec: json
+    batch:
+      timeout_secs: 0.1                    # ~100ms linger to protect freshness
+    buffer:
+      type: memory
+      max_events: 500
