@@ -13,14 +13,16 @@ interface Props {
   selected?: boolean;
   /** WATCH rows are dimmed. */
   dimmed?: boolean;
+  /** New alerts that just joined this incident (a repeated attack): shown for a few seconds. */
+  bump?: number;
   onSelect?: () => void;
 }
 
 /** One incident in Needs attention: a dot for time left (ember to ash), the name, the time. Exactly one row is selected. */
-export function QueueRow({ score, name, detectedBy, mitreId, remaining, timeLeftMs, selected, dimmed, onSelect }: Props) {
+export function QueueRow({ score, name, detectedBy, mitreId, remaining, timeLeftMs, selected, dimmed, bump, onSelect }: Props) {
   const cold = isGoingCold(remaining);
   const time = formatCountdown(timeLeftMs);
-  const cls = [styles.row, selected && styles.selected, dimmed && !selected && styles.dimmed].filter(Boolean).join(" ");
+  const cls = [styles.row, selected && styles.selected, dimmed && !selected && styles.dimmed, bump && styles.bumped].filter(Boolean).join(" ");
   const by = detectedBy === "both" ? "rules and AI" : detectedBy === "ai" ? "AI" : "rules";
 
   return (
@@ -30,7 +32,7 @@ export function QueueRow({ score, name, detectedBy, mitreId, remaining, timeLeft
       aria-pressed={selected}
       onClick={onSelect}
       data-row
-      aria-label={`${name}, ${time} left${cold ? ", going cold" : ""}, attention ${score}, found by ${by}${mitreId ? `, ${mitreId}` : ""}`}
+      aria-label={`${name}, ${time} left${cold ? ", going cold" : ""}, attention ${score}, found by ${by}${mitreId ? `, ${mitreId}` : ""}${bump ? `, ${bump} new ${bump === 1 ? "alert" : "alerts"}` : ""}`}
     >
       <i className={styles.dot} style={{ background: heatColor(remaining) }} aria-hidden="true" />
       <span className={styles.nameCol} aria-hidden="true">
@@ -38,7 +40,11 @@ export function QueueRow({ score, name, detectedBy, mitreId, remaining, timeLeft
         <span className={styles.meta}>
           {score}
           {detectedBy !== "rule" && <span className={styles.ai}> · AI</span>}
-          {mitreId && <span className={styles.mitre}> · {mitreId}</span>}
+          {bump ? (
+            <span className={styles.bump}> · +{bump} {bump === 1 ? "alert" : "alerts"}</span>
+          ) : (
+            mitreId && <span className={styles.mitre}> · {mitreId}</span>
+          )}
         </span>
       </span>
       <span className={cold ? styles.cold : styles.time} aria-hidden="true">

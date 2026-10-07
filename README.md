@@ -44,15 +44,6 @@ make sim
 ```
 *Note: Do not run `make sim` and `make lab` at the same time, as they simulate overlapping scenarios using different techniques.*
 
-**If `--build` (or `make replay`) hangs or fails pulling base images** with `dial tcp [2606:...]:443: connect: network is unreachable` or a TLS timeout, Docker is resolving Docker Hub over IPv6 on a network with no working IPv6 route. This is a laptop network issue, not a NETRA bug; the Azure VM doesn't have it. Use either fix:
-```bash
-# A: tell Docker not to use IPv6, then restart it
-echo '{ "ipv6": false, "ip6tables": false }' | sudo tee /etc/docker/daemon.json && sudo systemctl restart docker
-# B: prefer IPv4 for name lookups on this machine (Linux/glibc)
-echo 'precedence ::ffff:0:0/96  100' | sudo tee -a /etc/gai.conf
-```
-If `/etc/docker/daemon.json` already exists, add the two keys to it rather than overwriting the file. If neither fix works, pull the images on another network (`docker compose --profile lab --profile replay pull`) and build without `--pull`.
-
 ### 2. Managing the Environment
 
 ```bash
@@ -71,6 +62,14 @@ make down
 # Stop everything and WIPE all data volumes (resets Kafka, DB, ClickHouse to zero)
 make clean
 ```
+
+### Troubleshooting: builds fail with "network is unreachable" (IPv6)
+If `make up`, `make lab` or `make replay` stops at `load metadata for docker.io/library/python:3.12-slim` with `dial tcp [2600:...]:443: connect: network is unreachable`, the network resolves Docker Hub over IPv6 but has no IPv6 route. Containers already running are not affected (the build fails before anything restarts). In order of preference:
+1. Use another network (a phone hotspot usually works) and run the command again.
+2. On Linux, prefer IPv4 for name lookups: add the line `precedence ::ffff:0:0/96  100` to `/etc/gai.conf` (`sudo nano /etc/gai.conf`), then `sudo systemctl restart docker` and run the command again.
+3. Or tell Docker not to use IPv6: `echo '{ "ipv6": false, "ip6tables": false }' | sudo tee /etc/docker/daemon.json && sudo systemctl restart docker` (if `/etc/docker/daemon.json` already exists, add the two keys to it rather than overwriting the file).
+4. If nothing works, pull the images on another network (`docker compose --profile lab --profile replay pull`) and build without `--pull`.
+5. To restart one service without building (its image must already exist): `docker compose --profile lab up -d <service>`.
 
 ### 3. Triggering Manual Attacks (Live Lab)
 

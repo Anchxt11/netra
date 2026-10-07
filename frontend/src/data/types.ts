@@ -76,6 +76,8 @@ export interface Incident {
   entities: { users: string[]; ips: string[]; hosts: string[] };
   signals: Signal[];
   fixes: Fix[]; // empty while CRIE is pending
+  /** Backend alerts grouped into this incident (live backend only). */
+  alerts?: number;
   fallback?: { technique: string; mitigations: { id: string; name: string }[] };
 }
 

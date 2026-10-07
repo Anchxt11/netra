@@ -57,6 +57,7 @@ test("a rule that keeps firing on one address is one incident, not one per alert
   assert.equal(inc.signals.length, 1);
   assert.equal(inc.signals[0].ruleId, "BF");
   assert.match(inc.signals[0].sentence, /^12 failed logins for maria\.silva from 198\.51\.100\.7$/);
+  assert.equal(inc.alerts, 12); // the backend alerts behind it: a repeated attack grows this, not the row count
   assert.equal(inc.severity, 4); // "high" from the backend
   assert.equal(inc.attentionScore, 40); // 20 points, +2 per repeat, capped at double
   assert.deepEqual(inc.fixes, []); // no CRIE: the fallback mitigations show instead

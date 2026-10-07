@@ -516,6 +516,7 @@ export class Correlator {
       status: "open",
       entities: { users: [...d.users], ips: [...d.ips], hosts: [...d.hosts] },
       signals,
+      alerts: d.rows.length,
       fixes: [], // CRIE is not connected: the dashboard shows MITRE's mitigations instead
       fallback: { technique: scenario.mitre.id, mitigations: scenario.mitigations },
     };
