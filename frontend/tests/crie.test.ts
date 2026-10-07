@@ -49,16 +49,17 @@ test("CRIE's input: the attack, its technique, the backend rules, and who is inv
   });
 });
 
-test("CRIE's input carries model 1's view; an unnamed anomaly has no technique", () => {
+test("CRIE's input carries model 1's view of an unnamed anomaly that joined a rule incident", () => {
   const { c, live } = setup();
+  hit(c, "web_scan", { ip: "10.0.4.17", event_type: "http_request", path: "/admin" });
   c.addAlert({
     id: 1, alert_id: "m1", rule_id: null, model: "atde-1.0.0", severity: "low", event_ids: ["f1"], status: "open",
     created_ts: new Date(T0).toISOString(), ip: "10.0.4.17", user: "-", host: "10.0.9.2", class: "anomaly",
     probability: null, anomaly_score: 0.74, risk_score: 0.74, reasons: [{ feature: "cnt_60s", value: 42 }, { feature: "nports_60s", value: 9 }],
   }, T0);
+  assert.equal(live.size, 1); // joined the rule incident; no AI-only incident
   const input = c.crieInput([...live.keys()][0]);
-  assert.equal(input?.mitre_technique, null);
-  assert.equal(input?.detected_by, "ai");
+  assert.equal(input?.detected_by, "both");
   assert.deepEqual(input?.model, { attack_family: "UNKNOWN", confidence: null, is_unknown: true, if_score: 0.74, top3: ["cnt_60s", "nports_60s"] });
 });
 

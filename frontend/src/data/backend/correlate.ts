@@ -270,7 +270,7 @@ export class Correlator {
   /**
    * A model's alert (ATDE). On an event a rule flagged, it joins that rule's incident and gives it the
    * model's score and reasons. On its own, it joins an open incident from the same source, or opens an
-   * AI-only one: the attack the model names, or "Unusual activity".
+   * AI-only one for an attack the model names. An unnamed anomaly ("Unusual activity") opens nothing.
    */
   private model(row: AlertRow, ev: EnrichedEvent | undefined, ts: number, severity: Severity) {
     if (!isRealModel(row.model)) return; // the placeholder scorer is not AI
@@ -279,6 +279,7 @@ export class Correlator {
       // A flagged event whose rule incident is gone (decided, expired, or from before a reload): nothing to attach to.
       if (row.rule_flagged) return;
       const type = attackTypeOfClass(row.class);
+      if (type === "unusual_activity") return; // the team chose not to show unnamed anomalies
       const key = `${type}:${ev?.ip ?? ev?.host ?? "unknown"}`;
       draft = this.open.get(key) ?? this.create(type, key, ts);
     }

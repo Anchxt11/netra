@@ -186,29 +186,13 @@ test("a flagged event whose rule incident is gone adds nothing", () => {
   assert.equal(live.size, 0);
 });
 
-test("a model alert with no rule hit opens an AI-only incident, without waiting for an event", () => {
+test("a model alert with no rule hit that names no attack opens no incident", () => {
   const { c, live } = setup();
   c.addAlert(modelAlert({}), T0);
-  assert.equal(live.size, 1);
-  const inc = [...live.values()][0];
-  assert.equal(inc.attackType, "unusual_activity");
-  assert.equal(inc.name, "Unusual activity");
-  assert.equal(inc.detectedBy, "ai");
-  assert.equal(inc.mitre.id, ""); // the model named no technique, so none is shown
-  assert.deepEqual(inc.fallback?.mitigations, []);
-  assert.equal(inc.severity, 2); // "low": a model alone never raises critical
-  assert.equal(inc.attentionScore, 20);
-  assert.deepEqual(inc.entities, { users: [], ips: ["10.0.4.17"], hosts: ["10.0.9.2"] });
-
-  // The same address again joins it.
-  c.addAlert(modelAlert({ risk_score: 0.9 }, T0 + 60_000), T0 + 60_000);
-  assert.equal(live.size, 1);
-  const again = [...live.values()][0];
-  assert.match(again.signals[0].sentence, /^AI engine: unusual for this address, score 0\.90\. .* \(2 times\)$/);
-  assert.equal(again.attentionScore, 22);
+  assert.equal(live.size, 0);
 });
 
-test("a model alert that names a known attack opens that attack; other classes stay unusual activity", () => {
+test("a model alert that names a known attack opens that attack; other classes open nothing", () => {
   const { c, live } = setup();
   c.addAlert(modelAlert({ class: "Credential Attack / Brute Force", probability: 0.93, severity: "high", reasons: [] }), T0);
   const brute = [...live.values()][0];
@@ -217,9 +201,8 @@ test("a model alert that names a known attack opens that attack; other classes s
   assert.equal(brute.signals[0].sentence, "AI engine: looks like Credential Attack / Brute Force (probability 0.93), score 0.74");
 
   c.addAlert(modelAlert({ class: "DoS / Flooding", probability: 0.95, ip: "10.0.4.99", reasons: [] }), T0);
-  const dos = [...live.values()].find((i) => i.entities.ips.includes("10.0.4.99"));
-  assert.equal(dos?.attackType, "unusual_activity");
-  assert.equal(dos?.signals[0].sentence, "AI engine: looks like DoS / Flooding (probability 0.95), score 0.74");
+  assert.equal(live.size, 1);
+  assert.equal([...live.values()].some((i) => i.entities.ips.includes("10.0.4.99")), false);
 });
 
 test("a model alert from an address with an open rule incident joins it", () => {
