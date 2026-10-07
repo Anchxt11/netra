@@ -1,0 +1,17 @@
+.wrap {
+  position: relative;
+}
+
+/* The scan line: a thin rust edge with a soft ember glow trailing above it. */
+.line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  margin-top: -2px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--rust) 15%, #ffb38a 50%, var(--rust) 85%, transparent);
+  box-shadow:
+    0 0 18px 2px rgba(228, 87, 46, 0.55),
+    0 -40px 60px -20px rgba(228, 87, 46, 0.25);
+}

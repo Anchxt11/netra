@@ -1,7 +1,7 @@
 /* Sits right under the pinned header when scrolled to (68px = header top 12 + 44 + gap 12). */
 .section {
   scroll-margin-top: 68px;
-  margin-top: 40px;
+  margin-top: 140px; /* room to breathe after the enterprise cards */
 }
 
 /* Holds the dashboard's height before it loads, so the page does not jump. */

@@ -1,7 +1,8 @@
 // Landing (/), v2: a calm product page (DESIGN.md v2, PAGES.md section 4).
 // Hero with the cooling-words line and the dotted globe; then the ONE particle moment: on scroll the
 // globe's dots break apart and re-form as the NETRA eye. Then how it works (hover-alive cards),
-// why NETRA, enterprise and the live dashboard, each easing in quietly as it scrolls into view.
+// why NETRA and enterprise, each easing in quietly as it scrolls into view; then the live dashboard,
+// which powers on once behind a scan line.
 import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion, useScroll, useSpring, useTransform } from "motion/react";
 import { Globe } from "../landing/Globe";
@@ -9,6 +10,7 @@ import { CoolingWords } from "../landing/CoolingWords";
 import { HowItWorks } from "../landing/HowItWorks";
 import { loadMarkTargets } from "../landing/markTargets";
 import { Reveal } from "../landing/Reveal";
+import { ScanReveal } from "../landing/ScanReveal";
 import type { TargetPoint } from "../landing/Globe";
 import { DASHBOARD_ANCHOR, DashboardSection } from "../landing/DashboardSection";
 import styles from "./Landing.module.css";
@@ -143,9 +145,9 @@ export default function Landing() {
         </div>
       </section>
 
-      <Reveal kind="settle">
+      <ScanReveal>
         <DashboardSection />
-      </Reveal>
+      </ScanReveal>
 
       <footer className={styles.band}>
         <span className={styles.wordmark}>NETRA</span>

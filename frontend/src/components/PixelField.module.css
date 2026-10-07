@@ -6,14 +6,70 @@
   pointer-events: none;
 }
 
-/* Soft CSS glow in the same places as the dot blobs, so glass has something to blur. */
+/* Soft CSS glow in the same places as the dot blobs, so glass has something to blur. Each glow
+   drifts with its blob (same loop length), moved by transform only so it costs the browser nothing. */
 .glow {
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(640px 520px at 16% 96%, rgba(255, 74, 38, 0.34), transparent 70%),
-    radial-gradient(560px 460px at 88% 10%, rgba(150, 40, 82, 0.3), transparent 70%),
-    radial-gradient(380px 300px at 63% 64%, rgba(255, 120, 50, 0.12), transparent 70%);
+}
+
+.glow i {
+  position: absolute;
+  border-radius: 50%;
+  will-change: transform;
+  animation: wander var(--period) ease-in-out infinite;
+}
+
+.g1 {
+  --period: 26s;
+  left: calc(16% - 640px);
+  top: calc(96% - 520px);
+  width: 1280px;
+  height: 1040px;
+  background: radial-gradient(closest-side, rgba(255, 74, 38, 0.34), transparent);
+}
+
+.g2 {
+  --period: 30s;
+  left: calc(88% - 560px);
+  top: calc(10% - 460px);
+  width: 1120px;
+  height: 920px;
+  background: radial-gradient(closest-side, rgba(150, 40, 82, 0.3), transparent);
+  animation-delay: -11s;
+}
+
+.g3 {
+  --period: 22s;
+  left: calc(63% - 380px);
+  top: calc(64% - 300px);
+  width: 760px;
+  height: 600px;
+  background: radial-gradient(closest-side, rgba(255, 120, 50, 0.14), transparent);
+  animation-delay: -6s;
+}
+
+/* About the canvas blobs' drift (12% of the screen), traced as a slow loop. */
+@keyframes wander {
+  0%,
+  100% {
+    transform: translate(0, 12vh);
+  }
+  25% {
+    transform: translate(12vw, 0);
+  }
+  50% {
+    transform: translate(0, -12vh) scale(1.06);
+  }
+  75% {
+    transform: translate(-12vw, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glow i {
+    animation: none;
+  }
 }
 
 /* Each canvas pixel is scaled to a 9px cell, then the mask keeps only a 3px square of it. */

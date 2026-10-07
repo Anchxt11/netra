@@ -7,20 +7,20 @@ interface Blob {
   r: number; // radius in px at 1440 wide
   color: [number, number, number];
   strength: number;
-  period: number; // seconds for one drift loop (40 to 60 s)
+  period: number; // seconds for one drift loop (22 to 30 s; keep in step with the glow in PixelField.module.css)
 }
 
 // Positions and colours from docs/reference/dashboard.html.
 const BLOBS: Blob[] = [
-  { x: 0.16, y: 0.92, r: 560, color: [255, 74, 38], strength: 1, period: 52 },
-  { x: 0.88, y: 0.13, r: 520, color: [168, 46, 92], strength: 0.85, period: 60 },
-  { x: 0.64, y: 0.67, r: 300, color: [255, 120, 50], strength: 0.45, period: 44 },
-  { x: 0.44, y: 0.1, r: 260, color: [255, 74, 38], strength: 0.25, period: 48 },
+  { x: 0.16, y: 0.92, r: 560, color: [255, 74, 38], strength: 1, period: 26 },
+  { x: 0.88, y: 0.13, r: 520, color: [168, 46, 92], strength: 0.85, period: 30 },
+  { x: 0.64, y: 0.67, r: 300, color: [255, 120, 50], strength: 0.45, period: 22 },
+  { x: 0.44, y: 0.1, r: 260, color: [255, 74, 38], strength: 0.25, period: 24 },
 ];
 
 const CELL = 9; // grid pitch in CSS px (the 3px dot is cut by a CSS mask)
 const FPS = 15;
-const DRIFT = 0.05; // how far blobs wander, as a share of the viewport
+const DRIFT = 0.12; // how far blobs wander, as a share of the viewport
 
 interface Props {
   /** 0 to 1. Overall brightness of the dots and the glow behind them. */
@@ -158,7 +158,11 @@ export function PixelField({ intensity = 1 }: Props) {
 
   return (
     <div className={styles.field} aria-hidden="true">
-      <div className={styles.glow} style={{ opacity: intensity }} />
+      <div className={styles.glow} style={{ opacity: intensity }}>
+        <i className={styles.g1} />
+        <i className={styles.g2} />
+        <i className={styles.g3} />
+      </div>
       <canvas ref={canvasRef} className={styles.canvas} />
     </div>
   );

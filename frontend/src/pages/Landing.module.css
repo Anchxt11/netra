@@ -2,9 +2,10 @@
   Landing v2. The hero section is taller than the screen; its inner stage stays pinned while the
   globe breaks apart into the dashboard. 68px = header top 12 + header 44 + gap 12.
 */
+/* 180vh: the morph takes about one long scroll (it used to take two). */
 .heroScroll {
   position: relative;
-  height: 240vh;
+  height: 180vh;
 }
 
 .sticky {
