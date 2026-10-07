@@ -20,7 +20,7 @@ class IncidentPatch(BaseModel):
 @router.get("/alerts/recent")
 async def recent_alerts(limit: int = Query(50, ge=1, le=500), _: CurrentUser = Depends(analyst_or_admin)):
     rows = await get_pool().fetch(
-        "SELECT id, alert_id, rule_id, model, title, severity, event_ids, status, created_ts "
+        f"SELECT id, alert_id, rule_id, model, title, severity, event_ids, status, created_ts, {repo.ALERT_FIELDS} "
         "FROM incidents ORDER BY created_ts DESC LIMIT $1",
         limit,
     )

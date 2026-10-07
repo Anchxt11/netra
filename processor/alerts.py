@@ -13,7 +13,9 @@ def utc_now_iso(): return datetime.now(timezone.utc).isoformat(timespec='millise
 class AlertEmitter:
     def __init__(self,producer,topic): self.producer=producer; self.topic=topic; self.on_delivery=None  # set by ProcessorConsumer
     def emit(self,rule_id,severity,event,model=None):
-        alert={'alert_id':str(uuid.uuid4()),'rule_id':rule_id,'model':model,'severity':severity,'event_ids':[event['event_id']],'created_ts':utc_now_iso()}
+        alert={'alert_id':str(uuid.uuid4()),'rule_id':rule_id,'model':model,'severity':severity,'event_ids':[event['event_id']],'created_ts':utc_now_iso(),
+               # contracts/LIVE_API.md 5.1: the event's address, account and host on every alert
+               'ip':event.get('ip'),'user':event.get('user'),'host':event.get('host')}
         kw={'on_delivery':self.on_delivery} if self.on_delivery else {}
         produce_waiting(self.producer,self.topic,key=str(event.get('ip','')),value=json.dumps(alert,separators=(',',':')),**kw)
         return alert

@@ -52,3 +52,28 @@ Model 1 reads **network flow records**: one row per connection, as an AWS VPC fl
 - The rolling features need history: a live scorer keeps 3600 s (Cisco) or 600 s (AWS) of rows per stream and scores each new row against it. Is that what they intended for live use?
 - The AWS anomaly cutoff gives precision 0.23 at recall 0.61 (Cisco 0.07 at 0.98, `metrics.json`). On a live stream most model alerts will be false positives, so the dashboard should present them as "unusual" signals that add to incidents, not as incidents on their own.
 - XGBoost: the source of per-direction counts, and test-split metrics for it.
+
+## The scoring service (B2): built, waiting for flow records
+`ml-scorer` (compose service, `ml_scorer/`) reads `events.enriched` and `flows.raw` in 1 s micro-batches. It scores every row model 1 can read: a flow record with `stream_name` and `message_sanitized`, using the bundle's `preprocess.py` and the stream's own history for the rolling windows.
+- **A row a rule flagged** gets a model alert attached to the same event (`rule_flagged: true`), so the incident gets a risk score.
+- **An unflagged anomalous row** gets a model alert that can open an AI-only incident, at most one per source address per minute, because precision is low.
+- **Alerts follow contract 5.1:** `rule_id` null, `model` `atde-1.0.0`, `severity` (never critical; an unclassified anomaly is low), `ip`, `user` and `host` (from the flow line), `class` (`anomaly`, or the XGBoost family), `probability`, `anomaly_score`, `risk_score` and `reasons`.
+- **Every score goes to ClickHouse `netra.ml_scores`.** The scorer creates the table.
+- **Heartbeat:** a Postgres `ml_models` row every 5 s. The API serves it as `GET /models` and the `models` message: ready under 15 s since the last heartbeat, offline after. The ops health watch checks it (`ml_scorer`, failed after 30 s), and the container healthcheck reads the same heartbeat file.
+- **Never fakes:** an HTTP event from `events.enriched` is counted as not scorable and never scored, and the processor's DummyScorer `risk_score` is never read. **So today, with no flow source, the scorer runs, reports ready with "no flow records received yet", and raises no AI alerts.** That stays true until the lab or a replay writes `flows.raw` (the two ways forward above).
+- **Rule alerts** from the processor now carry the event's `ip`, `user` and `host` too, and every incident row exposes the 5.1 fields from the stored alert.
+
+**Tested here** (`tests/test_ml_scorer.py`, on model 1's own held-out flow lines and a recorded Juice Shop event):
+- HTTP events are not scored.
+- Every flow row is scored, and anomalous ones raise alerts in the contract's shape.
+- The per-address cooldown holds.
+- A rule-flagged row always gets the model's view.
+- Rolling features carry across micro-batches: scores match scoring all rows at once.
+- `/models` and the incident fields were checked against a real (embedded) Postgres.
+
+**Only a run on the stack can prove:**
+- that the image builds with these pinned libraries (Python 3.12) and starts;
+- that it consumes from Redpanda, writes ClickHouse `ml_scores` and produces to `alerts`;
+- that the API turns those alerts into incidents and the dashboard shows the AI engine;
+- the scorer's speed with real history: rolling features are rebuilt over up to 20,000 history rows per batch, so throughput must be measured, and the history cap lowered if it falls behind;
+- that the healthcheck and the ops health watch go red when the scorer is stopped.

@@ -3,8 +3,14 @@ import uuid
 from .db import get_pool
 from .util import parse_ts
 
+# The alert fields of contracts/LIVE_API.md 5.1 come from the stored alert (payload), so rows stored
+# before an alert carried them read as null.
+ALERT_FIELDS = ("payload->>'ip' AS ip, payload->>'user' AS \"user\", payload->>'host' AS host, "
+                "payload->>'class' AS class, (payload->>'probability')::float AS probability, "
+                "(payload->>'anomaly_score')::float AS anomaly_score, (payload->>'risk_score')::float AS risk_score, "
+                "payload->'reasons' AS reasons")
 COLS = ("id, alert_id, rule_id, model, title, severity, event_ids, status, "
-        "assigned_to, notes, created_ts, updated_ts")
+        "assigned_to, notes, created_ts, updated_ts, " + ALERT_FIELDS)
 
 
 async def insert_incident(a: dict) -> dict | None:

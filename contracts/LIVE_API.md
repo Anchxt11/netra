@@ -33,7 +33,7 @@ Numbers in the examples are made up to show the shape. They are not results.
 | GET | `/kpi` | any user | exists | A1 |
 | GET | `/kpi/alerts` | any user | exists | A1 |
 | GET | `/traffic/recent` | any user | **new** | not assigned (see 4.3) |
-| GET | `/models` | any user | **new** | B2 |
+| GET | `/models` | any user | exists | B2 |
 | GET | `/jobs` | any user | exists | A3 |
 | GET | `/jobs/runs` | any user | exists | A3 |
 | GET | `/ops/alerts` | any user | exists | A3 |
@@ -53,7 +53,7 @@ Numbers in the examples are made up to show the shape. They are not results.
 | `traffic` | every 1 s | **new** | not assigned (see 4.3) |
 | `ops_alert` | an ops alert opens, changes level or clears | exists | A3 |
 | `job_runs` | a scheduled job finished a run | exists | A3 |
-| `models` | a model's status, version or metrics changed | **new** | B2 |
+| `models` | a model's status, version or metrics changed | exists | B2 |
 
 The browser sends only the text `ping`. Everything else it does (decisions, thresholds) goes through REST.
 
@@ -549,7 +549,9 @@ Which models are running, from what `ml-scorer` reports and from each bundle's o
 | `class` | string or `null` | `null` | the bundle's class name, or `"anomaly"` | **new** (B2) |
 | `probability` | 0 to 1, or `null` | `null` | the classifier's probability for `class` | **new** (B2) |
 | `anomaly_score` | 0 to 1, or `null` | `null` | the Isolation Forest score | **new** (B2) |
-| `reasons` | list, or `null` | `null` | the top 3 reasons, largest first | **new** (B2) |
+| `reasons` | list, or `null` | `null` | the top 3 reasons, largest first | exists (B2) |
+| `risk_score` | 0 to 1, or `null` | `null` | the anomaly score clamped to 0..1, so a rule's incident gets the model's risk | exists (B2) |
+| `rule_flagged` | bool, or absent | absent | true when a rule already flagged the same event: the model's view attached to it | exists (B2) |
 
 - `ip`, `user` and `host` go on **every** alert, rules included (ask 2 in `frontend/docs/BACKEND_INTEGRATION.md`). Then the dashboard can group alerts without looking up their events, including after a reload. When `event_ids` has several events, they come from the first one.
 - `class` is a class name from the bundle (the ML team confirms the list, B0). It is `"anomaly"` when the anomaly detector fires but the classifier names no attack class. The dashboard maps classes to its attack types; an AI-only alert with no known class becomes "Unusual activity" (build plan decision 3).

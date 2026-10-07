@@ -1,0 +1,10 @@
+# The versions model 1 was saved with (root requirements.txt): other versions can change the scores.
+joblib==1.6.0
+numpy==2.5.3
+pandas==3.0.6
+scikit-learn==1.9.1
+scipy==1.18.1
+shap==0.52.0
+xgboost==3.4.1
+confluent-kafka==2.10.1
+psycopg[binary]==3.2.3

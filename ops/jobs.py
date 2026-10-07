@@ -90,8 +90,20 @@ def _kafka() -> list[Check]:
     ]
 
 
+ML_SCORER_STALE_S = int(os.getenv("ML_SCORER_STALE_SECONDS", "30"))
+
+
+def _ml_scorer(store) -> Check:
+    rows = store.q("SELECT extract(epoch FROM now() - last_heartbeat_at) AS age FROM ml_models WHERE name = 'ATDE'")
+    if not rows or rows[0]["age"] is None:
+        return Check("ml_scorer", False, "The ML scorer has never reported (no ATDE heartbeat).")
+    age = float(rows[0]["age"])
+    return Check("ml_scorer", age < ML_SCORER_STALE_S, f"The ML scorer stopped reporting {age:.0f} s ago.", detail={"heartbeat_age_s": round(age, 1)})
+
+
 def health_watch(store) -> Outcome:
     checks = [
+        _check("ml_scorer", lambda: _ml_scorer(store), "The ML scorer's heartbeat cannot be read."),
         _check("api", _api, "The API is not answering."),
         _check("postgres", lambda: (store.q("SELECT 1"), Check("postgres", True, ""))[1], "Postgres is not answering."),
         _check("clickhouse", _clickhouse, "ClickHouse is not answering."),
