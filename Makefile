@@ -5,7 +5,7 @@ LAB      := --profile lab
 VENV     := .venv/bin
 
 .PHONY: help up sim lab replay down restart logs logs-processor logs-generator \
-        build test lint topics lag status clean lab-down lab-logs attack
+        build test lint topics lag status clean lab-down lab-logs attack auto-on auto-off
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -121,6 +121,12 @@ lab-status: ## Show lab container status
 
 attack: ## Run an attack scenario: make attack SCENARIO=brute_force (or evasion_low_slow_brute, etc.)
 	docker compose exec attacker attack-runner $(SCENARIO)
+
+auto-on: ## Background attacks ON (attacker2, 172.30.0.11, a random attack every 5 to 10 s)
+	$(COMPOSE) $(LAB) up -d attacker2
+
+auto-off: ## Background attacks OFF, e.g. before a judge runs their own attack
+	$(COMPOSE) $(LAB) stop -t 1 attacker2
 
 attack-full: ## Run all core attack scenarios in sequence
 	docker compose exec attacker attack-runner full
