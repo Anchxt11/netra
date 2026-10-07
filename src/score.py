@@ -2,6 +2,7 @@
 Module 1 entry point.
 
 Pipeline:
+
     backend rule hit
         -> immediate attack result
 
@@ -14,15 +15,14 @@ Pipeline:
 No labels are used by the Isolation Forest stage.
 
 The Isolation Forest stage must receive the SAME feature representation
-used during its training. This module therefore treats IF scoring as an
-adapter/stage rather than passing a raw event dict directly to sklearn.
+used during its training. This module therefore treats IF scoring as
+an adapter/stage rather than passing a raw event dict directly to sklearn.
 """
 
 import math
 import time
 
-
-# XGBoost stage
+from .if_stage import IFStage
 from .xgb_stage import XGBStage, build_xgb_features, UNKNOWN
 
 
@@ -60,6 +60,7 @@ REQUIRED = [
 
 def _finite_nonnegative(value, name):
     """Validate a numeric event field."""
+
     if (
         isinstance(value, bool)
         or not isinstance(value, (int, float))
@@ -73,6 +74,7 @@ def _finite_nonnegative(value, name):
 
 def _clamp01(value):
     """Clamp a numeric score into [0, 1]."""
+
     return min(max(float(value), 0.0), 1.0)
 
 
@@ -84,11 +86,21 @@ class Detector:
     """
     High-level detector.
 
+    Parameters
+    ----------
     if_stage:
         Adapter around the trained Isolation Forest.
+
         It must expose:
 
             score(event) -> float
+
+        or:
+
+            score(event) -> {
+                "score": ...,
+                "threshold": ...
+            }
 
         where the adapter is responsible for turning the event into the
         exact IF feature representation used during training.
@@ -108,8 +120,17 @@ class Detector:
             )
 
         # Keep the version visible in every result.
-        if_version = getattr(self.if_stage, "version", "if_unknown")
-        xgb_version = getattr(self.xgb, "version", "xgb_unknown")
+        if_version = getattr(
+            self.if_stage,
+            "version",
+            "if_unknown"
+        )
+
+        xgb_version = getattr(
+            self.xgb,
+            "version",
+            "xgb_unknown"
+        )
 
         self.version = f"m1-v1|if:{if_version}|xgb:{xgb_version}"
 
@@ -117,7 +138,7 @@ class Detector:
     # Public entry point
     # -----------------------------------------------------------------
 
-    def score_event(self, event, rule_hit=None, enriched_event=None):
+    def score_event(self, event, rule_hit=None):
         """
         Score one event.
 
@@ -167,6 +188,7 @@ class Detector:
 
         if rule_hit:
             category = rule_hit.get("category")
+
             severity = rule_hit.get(
                 "severity",
                 SEVERITY_BY_FAMILY.get(category, "high"),
@@ -185,14 +207,9 @@ class Detector:
                 ),
                 severity_source="rule",
             )
-            
-            try:
-                _if = self.if_stage.score(event)
-                out["model_score"] = _if["anomaly_score"]
-                out["score"] = _if["anomaly_score"]
-            except ValueError:
-                pass  # row has no flow features (e.g. web events)
-            
+
+            out["latency_ms"] = self._latency_ms(t0)
+
             return out
 
         # =============================================================
@@ -208,14 +225,34 @@ class Detector:
         # or:
         #
         #   score(event) -> {"score": ..., "threshold": ...}
-        #
+
         if isinstance(if_result, dict):
-            if_score = float(if_result["score"])
-            threshold = float(if_result["threshold"])
+
+            if "score" in if_result:
+                if_score = float(if_result["score"])
+                threshold = float(
+                    if_result.get("threshold", 0.0)
+                )
+
+            elif "decision_score" in if_result:
+                if_score = float(if_result["decision_score"])
+                threshold = 0.0
+
+            else:
+                raise ValueError(
+                    "Isolation Forest result must contain "
+                    "'score' or 'decision_score'."
+                )
+
         else:
             if_score = float(if_result)
+
             threshold = float(
-                getattr(self.if_stage, "threshold", 0.0)
+                getattr(
+                    self.if_stage,
+                    "threshold",
+                    0.0
+                )
             )
 
         if_score = _clamp01(if_score)
@@ -227,6 +264,7 @@ class Detector:
         # -------------------------------------------------------------
 
         if if_score < threshold:
+
             out.update(
                 detected_by="anomaly_model",
                 is_attack=False,
@@ -241,6 +279,7 @@ class Detector:
             )
 
             out["latency_ms"] = self._latency_ms(t0)
+
             return out
 
         # =============================================================
@@ -271,6 +310,7 @@ class Detector:
         # -------------------------------------------------------------
 
         if is_unknown:
+
             out.update(
                 detected_by="anomaly_model",
                 is_attack=True,
@@ -288,13 +328,13 @@ class Detector:
                     f"classifier is uncertain"
                 ),
             )
-            
 
         # -------------------------------------------------------------
         # Known XGBoost family
         # -------------------------------------------------------------
 
         else:
+
             severity = SEVERITY_BY_FAMILY.get(
                 attack_family,
                 "medium",
@@ -334,11 +374,13 @@ class Detector:
 
     @staticmethod
     def _validate_event(event):
+
         if not isinstance(event, dict):
             raise ValueError("event must be a dict")
 
         missing = [
-            key for key in REQUIRED
+            key
+            for key in REQUIRED
             if key not in event
         ]
 
@@ -361,6 +403,7 @@ class Detector:
 
     @staticmethod
     def _latency_ms(t0):
+
         return round(
             (time.perf_counter() - t0) * 1000,
             3,
@@ -371,7 +414,12 @@ class Detector:
 # Convenience function
 # ---------------------------------------------------------------------
 
-def score_event(event, rule_hit=None, if_stage=None, xgb_stage=None):
+def score_event(
+    event,
+    rule_hit=None,
+    if_stage=None,
+    xgb_stage=None,
+):
     """
     Functional entry point.
 

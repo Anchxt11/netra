@@ -1,43 +1,11 @@
-# Python
 __pycache__/
-*.py[cod]
-*.egg-info/
-.eggs/
-
-<<<<<<< HEAD
-# Virtual environments
-.venv/
-venv/
-
-# uv
-.uv-cache/
-
-# Environment variables
-.env
-.env.*.local
-
-# Testing / tooling caches
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-htmlcov/
-.coverage
-
-# IDE
-.idea/
-.vscode/
-*.swp
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Docker
-*.log
-=======
-data/
-
+*.pyc
 .ipynb_checkpoints/
-__pycache__/
-Untitled*.ipynb
->>>>>>> 18a90a7 (Add Model 1 ATDE pipeline v1.0.0)
+*.parquet
+*.zip
+*.rar
+*.pkl
+*.csv
+d3fend-full-mappings.csv
+enterprise-attack.json
+elastic/
