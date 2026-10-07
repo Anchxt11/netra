@@ -46,10 +46,12 @@ export function IncidentHero({ incident }: { incident: Incident }) {
           <h2 className={styles.name}>{incident.name}</h2>
           <p className={styles.who}>
             {who.join(" · ")}
-            {who.length > 0 && " · "}
-            <span className={styles.mono} title={incident.mitre.name}>
-              {incident.mitre.id}
-            </span>
+            {who.length > 0 && incident.mitre.id && " · "}
+            {incident.mitre.id && (
+              <span className={styles.mono} title={incident.mitre.name}>
+                {incident.mitre.id}
+              </span>
+            )}
           </p>
         </div>
         <FixButton incident={incident} />

@@ -254,9 +254,23 @@ export const SCENARIOS: Record<AttackType, ScenarioDef> = {
     ],
     mitigations: [{ id: "M1037", name: "Filter Network Traffic" }],
   },
+  // The AI engine alone, naming no known attack. No MITRE technique and no standard mitigations:
+  // nothing is claimed that the model did not say.
+  unusual_activity: {
+    name: "Unusual activity",
+    mitre: { id: "", name: "", tactic: "" },
+    severity: 2,
+    windowMin: 10,
+    path: [],
+    aiPattern: "activity",
+    fixes: [],
+    reasons: () => [],
+    mitigations: [],
+  },
 };
 
-export const ATTACK_TYPES = Object.keys(SCENARIOS) as AttackType[];
+/** The attacks the simulated feed plays. "Unusual activity" only comes from a real model on the live backend. */
+export const ATTACK_TYPES = (Object.keys(SCENARIOS) as AttackType[]).filter((t) => t !== "unusual_activity");
 
 export const BENIGN = {
   flash_crowd: {

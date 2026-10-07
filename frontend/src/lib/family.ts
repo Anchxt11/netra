@@ -22,6 +22,8 @@ const FAMILY_OF: Record<AttackType, Family> = {
   http_flood: "FLOOD",
   data_exfiltration: "DATA",
   admin_abuse: "ADMIN",
+  // An anomaly the AI engine cannot name: shown with probing for now (a sector of its own is a design decision).
+  unusual_activity: "WEB",
 };
 
 export const familyOf = (type: AttackType): Family => FAMILY_OF[type];

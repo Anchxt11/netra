@@ -13,6 +13,7 @@ const CRIE_STATE: Record<Exclude<ModelStatus["status"], "ready">, { chip: string
   pending: { chip: "CRIE PENDING", tone: "muted", sentence: "The remediation model is not ready yet." },
   training: { chip: "CRIE TRAINING", tone: "muted", sentence: "The remediation model is retraining." },
   failed: { chip: "CRIE FAILED", tone: "fail", sentence: "The remediation model failed to load." },
+  offline: { chip: "CRIE OFFLINE", tone: "fail", sentence: "The remediation model stopped responding." },
 };
 
 export function MitigationsCard({ incident, crie }: { incident: Incident; crie?: ModelStatus }) {
@@ -28,9 +29,12 @@ export function MitigationsCard({ incident, crie }: { incident: Incident; crie?:
         </Chip>
       )}
       <p className={styles.fallbackText}>
-        {state ? state.sentence : "No fix was confident enough."} Showing MITRE's standard mitigations for {technique}.
+        {state ? state.sentence : "No fix was confident enough."}{" "}
+        {technique
+          ? `Showing MITRE's standard mitigations for ${technique}.`
+          : "The AI engine could not name this attack, so there are no standard mitigations. Investigate before acting."}
       </p>
-      {mitigations.length > 0 ? (
+      {!technique ? null : mitigations.length > 0 ? (
         <ul className={styles.mitigations}>
           {mitigations.map((m) => (
             <li key={m.id}>

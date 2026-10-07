@@ -26,7 +26,8 @@ export type AttackType =
   | "web_scan"
   | "data_exfiltration"
   | "admin_abuse"
-  | "http_flood";
+  | "http_flood"
+  | "unusual_activity"; // the AI engine alone, naming no known attack (live backend only)
 export type BenignKind = "flash_crowd" | "nightly_backup";
 
 export type HeatState = "hot" | "warm" | "cool" | "stale";
@@ -156,7 +157,8 @@ export interface ModelStatus {
   name: "ATDE" | "CRIE";
   version: string;
   trainedAt: string | null;
-  status: "ready" | "training" | "failed" | "pending";
+  /** offline: it was ready, but has stopped reporting (contracts/LIVE_API.md 4.6). */
+  status: "ready" | "training" | "failed" | "pending" | "offline";
 }
 
 /** One scheduled job of the ops service (contracts/LIVE_API.md 4.5). */

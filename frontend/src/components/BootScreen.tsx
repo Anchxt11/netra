@@ -2,18 +2,22 @@
 import { useEffect, useRef, useState } from "react";
 import type { ModelStatus } from "../data/types";
 import { RULES } from "../data/catalog";
+import { BACKEND_RULES } from "../data/backend/rules";
 import { useNetra } from "../store/useNetra";
 import styles from "./BootScreen.module.css";
 
 const DURATION_MS = 1600;
 const SEGMENTS = 20;
-const RULE_COUNT = Object.keys(RULES).length;
+// The simulated feed's own rules, or the live backend's (its rules plus the watch list).
+const SIMULATED_RULES = Object.keys(RULES).length;
+const BACKEND_RULE_COUNT = Object.keys(BACKEND_RULES).length + 1;
 
 type Tone = "ok" | "muted" | "fail";
 
 function modelLine(m: ModelStatus | undefined): [string, Tone] {
   if (!m) return ["...", "muted"];
   if (m.status === "failed") return ["FAILED", "fail"];
+  if (m.status === "offline") return ["OFFLINE", "fail"];
   if (m.status === "pending") return ["PENDING", "muted"];
   if (m.status === "training") return ["TRAINING", "muted"];
   if (m.version === "example") return ["EXAMPLE", "muted"];
@@ -52,7 +56,7 @@ export function BootScreen({ onDone }: { onDone: () => void }) {
     connection === "open" ? (simulated ? ["SIMULATED FEED", "muted"] : ["OK", "ok"]) : connection === "closed" ? ["OFFLINE", "fail"] : ["...", "muted"];
   const lines: [string, [string, Tone]][] = [
     ["CONNECTING TO LIVE FEED", feed],
-    [`LOADING ${RULE_COUNT} DETECTION RULES`, ["OK", "ok"]],
+    [`LOADING ${simulated ? SIMULATED_RULES : BACKEND_RULE_COUNT} DETECTION RULES`, ["OK", "ok"]],
     ["ATDE", modelLine(models?.find((m) => m.name === "ATDE"))],
     ["CRIE", modelLine(models?.find((m) => m.name === "CRIE"))],
   ];

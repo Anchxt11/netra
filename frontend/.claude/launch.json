@@ -29,6 +29,15 @@
       "port": 5174
     },
     {
+      "name": "live-backend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "live-backend"
+      ],
+      "port": 8000
+    },
+    {
       "name": "preview-live",
       "runtimeExecutable": "npm",
       "runtimeArgs": [

@@ -81,12 +81,10 @@ export function createBackendSource({ apiUrl, wsUrl, getToken }: Options): DataS
 
       const alert = (row: AlertRow, live = true) => {
         if (corr.addAlert(row, now())) {
-          const model = !row.rule_id && isRealModel(row.model) ? row.model : null;
-          health.detection(model, Date.parse(row.created_ts) || now());
-          if (model && live) {
-            const ev = corr.event(row.event_ids?.[0]);
-            meter.addAi(ev, ev?.risk_score);
-          }
+          const byModel = !row.rule_id && isRealModel(row.model);
+          health.detection(byModel, Date.parse(row.created_ts) || now());
+          // The model's own score: an event's risk_score comes from the placeholder scorer.
+          if (byModel && live) meter.addAi(corr.event(row.event_ids?.[0]), row.risk_score ?? row.anomaly_score ?? undefined);
         }
       };
 
@@ -97,6 +95,16 @@ export function createBackendSource({ apiUrl, wsUrl, getToken }: Options): DataS
           if (stopped) return;
           health.setJobs(jobs);
           for (const a of ops) health.opsAlert(a);
+        } catch (e) {
+          if (e instanceof ApiError && e.status === 401) unauthorized();
+        }
+      };
+
+      // Which models are running. An API without /models (404): ATDE and CRIE stay PENDING.
+      const backfillModels = async (token: string) => {
+        try {
+          const models = await api.models(token);
+          if (!stopped) health.setModels(models);
         } catch (e) {
           if (e instanceof ApiError && e.status === 401) unauthorized();
         }
@@ -156,6 +164,9 @@ export function createBackendSource({ apiUrl, wsUrl, getToken }: Options): DataS
           case "ops_alert":
             health.opsAlert(msg.data);
             break;
+          case "models":
+            health.setModels(msg.data ?? []);
+            break;
           case "kpi":
             onMessage({ type: "kpi", payload: kpiSnapshotFromApi(msg.data) });
             break;
@@ -184,6 +195,7 @@ export function createBackendSource({ apiUrl, wsUrl, getToken }: Options): DataS
           void backfill(token);
           void backfillKpi(token);
           void backfillOps(token);
+          void backfillModels(token);
         };
         ws.onmessage = (e) => {
           const msg = parse(e.data);

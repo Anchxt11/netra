@@ -44,7 +44,7 @@ export function IncidentFocus({ incident }: { incident: Incident }) {
         <h2 className={styles.name}>{incident.name}</h2>
         <div className={styles.chips}>
           <DetectedChip by={incident.detectedBy} />
-          <Chip>{incident.mitre.id}</Chip>
+          {incident.mitre.id && <Chip>{incident.mitre.id}</Chip>}
           {users.length === 1 && <Chip>{users[0]}</Chip>}
           {users.length > 1 && <Chip>{users.length} ACCOUNTS</Chip>}
           {ips.length > 0 && <Chip>{ips.length === 1 ? "1 ADDRESS" : `${ips.length} ADDRESSES`}</Chip>}

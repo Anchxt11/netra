@@ -42,7 +42,7 @@ Model 1 was trained on **network-flow records** (packets, bytes, ports, protocol
 | B0 | send the ML team the missing files message | you | now |
 | B1 | load model 1, prove it scores like training, list the field gap | Track 1 | updated model pushed |
 | B2 | the scoring service: model 1 on all traffic, push | Track 1, then Anchit runs it | B1, field gap settled |
-| B3 | model 1 on the screen | Track 1 (touches `frontend/`) | B2 |
+| B3 | model 1 on the screen | **done** (Track 2) | B2 |
 | R1 | load CRIE and prove it matches the notebook | Track 1 | CRIE handed over |
 | R2 | the fix endpoint `POST /crie/recommend`, push | Track 1, then Anchit runs it | R1 |
 | R3 | CRIE's fixes on the screen | Track 1 (touches `frontend/`) | R2 |

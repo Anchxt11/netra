@@ -5,6 +5,7 @@
 import type { AttackType, Incident, Severity, SignalLevel } from "../types";
 import { formatBytes, SCENARIOS } from "../catalog.ts";
 import { AI, BACKEND_RULES, isRealModel, rulePoints, severityOf, STUFFING_ACCOUNTS, WATCHLIST, WATCHLIST_RULE } from "./rules.ts";
+import { aiSentence, attackTypeOfClass, type ModelView } from "./model.ts";
 import type { AlertRow, EnrichedEvent } from "./types";
 
 const EVENT_CACHE = 20_000; // enriched events kept to look up an alert's address, account and host
@@ -31,6 +32,7 @@ interface SignalDraft {
   last?: EnrichedEvent;
   bytes: number; // exfiltration: total sent
   model?: string;
+  view?: ModelView; // the AI engine's latest class, score and reasons
 }
 
 interface Draft {
@@ -103,7 +105,7 @@ export class Correlator {
   addAlert(row: AlertRow, now: number): boolean {
     if (!row?.alert_id || this.seen.has(row.alert_id)) return false;
     this.seen.add(row.alert_id);
-    if (this.eventOf(row) || !row.event_ids?.length) this.process(row, now);
+    if (!row.rule_id || this.eventOf(row) || !row.event_ids?.length) this.process(row, now);
     else this.pending.push({ row, since: now });
     return true;
   }
@@ -155,19 +157,29 @@ export class Correlator {
     return id ? this.events.get(id) : undefined;
   }
 
-  private process(row: AlertRow, now: number) {
+  /** The event, or else what the alert itself says about its source (contracts/LIVE_API.md 5.1). */
+  private sourceOf(row: AlertRow): EnrichedEvent | undefined {
     const ev = this.eventOf(row);
+    if (ev) return ev;
+    const ip = known(row.ip ?? undefined);
+    const user = known(row.user ?? undefined);
+    const host = known(row.host ?? undefined);
+    if (!ip && !user && !host) return undefined;
+    return { event_id: row.event_ids?.[0] ?? row.alert_id, event_ts: row.created_ts, ip, user, host };
+  }
+
+  private process(row: AlertRow, now: number) {
+    const ev = this.sourceOf(row);
     const ts = Date.parse(row.created_ts) || now;
     const severity = severityOf(row.severity ?? "medium");
 
-    // A watch-listed address or a model's opinion adds to an incident; on its own it opens none.
-    if (row.rule_id === WATCHLIST_RULE || !row.rule_id) {
-      const ai = !row.rule_id;
-      if (ai && !isRealModel(row.model)) return; // the placeholder scorer is not AI
+    if (!row.rule_id) return this.model(row, ev, ts, severity);
+
+    // A watch-listed address adds to an incident; on its own it opens none.
+    if (row.rule_id === WATCHLIST_RULE) {
       const draft = this.findBySource(ev);
       if (!draft) return;
-      const code = ai ? AI.code : WATCHLIST.code;
-      this.addSignal(draft, ai ? "model" : WATCHLIST_RULE, code, ai ? AI.points : WATCHLIST.points, ts, severity, row, ev, row.model ?? undefined);
+      this.addSignal(draft, WATCHLIST_RULE, WATCHLIST.code, WATCHLIST.points, ts, severity, row, ev);
       return this.publish(draft);
     }
 
@@ -220,6 +232,35 @@ export class Correlator {
     if (draft.attackType === "credential_stuffing") {
       if (ev?.ip) for (const f of this.failures.get(ev.ip) ?? []) draft.users.add(f.user);
       this.derive(draft, DERIVED.spray, ts, severity, ev, false);
+    }
+    this.publish(draft);
+  }
+
+  /**
+   * A model's alert (ATDE). On an event a rule flagged, it joins that rule's incident and gives it the
+   * model's score and reasons. On its own, it joins an open incident from the same source, or opens an
+   * AI-only one: the attack the model names, or "Unusual activity".
+   */
+  private model(row: AlertRow, ev: EnrichedEvent | undefined, ts: number, severity: Severity) {
+    if (!isRealModel(row.model)) return; // the placeholder scorer is not AI
+    let draft = (row.rule_flagged ? this.findByEvent(row.event_ids) : undefined) ?? this.findBySource(ev);
+    if (!draft) {
+      // A flagged event whose rule incident is gone (decided, expired, or from before a reload): nothing to attach to.
+      if (row.rule_flagged) return;
+      const type = attackTypeOfClass(row.class);
+      const key = `${type}:${ev?.ip ?? ev?.host ?? "unknown"}`;
+      draft = this.open.get(key) ?? this.create(type, key, ts);
+    }
+    this.addSignal(draft, "model", AI.code, AI.points, ts, severity, row, ev, row.model ?? undefined);
+    const s = draft.signals.get(AI.code);
+    if (s) {
+      s.view = {
+        model: row.model as string,
+        cls: row.class,
+        probability: row.probability,
+        score: row.risk_score ?? row.anomaly_score,
+        reasons: row.reasons,
+      };
     }
     this.publish(draft);
   }
@@ -340,6 +381,14 @@ export class Correlator {
     return best;
   }
 
+  private findByEvent(ids: string[] | undefined): Draft | undefined {
+    if (!ids?.length) return undefined;
+    for (const d of this.open.values()) {
+      for (const s of d.signals.values()) if (s.code !== AI.code && ids.some((id) => s.eventIds.includes(id))) return d;
+    }
+    return undefined;
+  }
+
   private findCampaign(ip: string): Draft | undefined {
     for (const d of this.open.values()) if (d.attackType === "credential_stuffing" && d.ips.has(ip)) return d;
     return undefined;
@@ -402,10 +451,9 @@ export class Correlator {
         return `200 or more requests within 30 seconds, from ${addresses(d.ips.size)}`;
       case WATCHLIST_RULE:
         return `Traffic from a watch-listed address (${ip})`;
-      default: {
-        const score = ev?.risk_score;
-        return `AI engine (${s.model}): this activity is unusual${score !== undefined ? ` (score ${score.toFixed(2)})` : ""}`;
-      }
+      default:
+        // Only the model's own score: an event's risk_score comes from the placeholder scorer.
+        return aiSentence(s.view ?? { model: s.model ?? "" }, s.hits);
     }
   }
 

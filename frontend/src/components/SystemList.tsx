@@ -17,6 +17,7 @@ function modelRow(m: ModelStatus | undefined, label: string): Row {
   const key = label;
   if (!m) return { key, label, value: "PENDING", tone: "muted" };
   if (m.status === "failed") return { key, label, value: "FAILED", tone: "fail" };
+  if (m.status === "offline") return { key, label, value: m.version ? `v${m.version} offline` : "offline", tone: "fail" };
   if (m.status === "pending") return { key, label, value: "PENDING", tone: "muted" };
   if (m.status === "training") return { key, label, value: "TRAINING", tone: "muted" };
   if (m.version === "example") return { key, label, value: "EXAMPLE", tone: "muted" };

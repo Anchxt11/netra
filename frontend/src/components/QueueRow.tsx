@@ -30,7 +30,7 @@ export function QueueRow({ score, name, detectedBy, mitreId, remaining, timeLeft
       aria-pressed={selected}
       onClick={onSelect}
       data-row
-      aria-label={`${name}, ${time} left${cold ? ", going cold" : ""}, attention ${score}, found by ${by}, ${mitreId}`}
+      aria-label={`${name}, ${time} left${cold ? ", going cold" : ""}, attention ${score}, found by ${by}${mitreId ? `, ${mitreId}` : ""}`}
     >
       <i className={styles.dot} style={{ background: heatColor(remaining) }} aria-hidden="true" />
       <span className={styles.nameCol} aria-hidden="true">
@@ -38,7 +38,7 @@ export function QueueRow({ score, name, detectedBy, mitreId, remaining, timeLeft
         <span className={styles.meta}>
           {score}
           {detectedBy !== "rule" && <span className={styles.ai}> · AI</span>}
-          <span className={styles.mitre}> · {mitreId}</span>
+          {mitreId && <span className={styles.mitre}> · {mitreId}</span>}
         </span>
       </span>
       <span className={cold ? styles.cold : styles.time} aria-hidden="true">

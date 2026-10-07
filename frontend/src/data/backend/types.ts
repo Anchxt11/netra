@@ -35,6 +35,42 @@ export interface AlertRow {
   status: "open" | "acknowledged" | "resolved";
   notes?: string | null;
   created_ts: string;
+  // contracts/LIVE_API.md 5.1 and 5.2: the event's source on every alert, and the model's view on a model's.
+  // Rows stored before these existed have them null or absent.
+  ip?: string | null;
+  user?: string | null;
+  host?: string | null;
+  /** The model's class name, or "anomaly" when it names no attack. */
+  class?: string | null;
+  probability?: number | null;
+  anomaly_score?: number | null;
+  risk_score?: number | null;
+  reasons?: ModelReason[] | null;
+  /** True when a rule already flagged the same event: the model's view attached to it. */
+  rule_flagged?: boolean | null;
+}
+
+/** One of a model alert's top reasons, largest first (contracts/LIVE_API.md 5.1). */
+export interface ModelReason {
+  feature: string;
+  value: number | string | null;
+  baseline?: number | null;
+  contribution?: number | null;
+  sentence?: string | null;
+}
+
+/** One model in the `models` message and GET /models (contracts/LIVE_API.md 4.6). */
+export interface ModelWire {
+  name: string;
+  model_id: string | null;
+  version: string | null;
+  status: "pending" | "ready" | "offline" | "training" | "failed";
+  trained_at: string | null;
+  loaded_at?: string | null;
+  last_heartbeat_at?: string | null;
+  detail: string | null;
+  metrics?: unknown;
+  scored_per_sec?: number | null;
 }
 
 /** WebSocket envelope from the backend: { type, data, server_ts }. */
@@ -47,6 +83,7 @@ export type BackendMessage =
   | { type: "job_runs"; data: JobRunWire[]; server_ts: string }
   | { type: "ops_alert"; data: OpsAlertWire; server_ts: string }
   | { type: "kpi_alert"; data: KpiAlertWire; server_ts: string }
+  | { type: "models"; data: ModelWire[]; server_ts: string }
   | { type: "pong"; server_ts: string };
 
 /** A row of job_runs (`job_runs` message, GET /jobs/runs). */

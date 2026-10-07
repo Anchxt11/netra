@@ -28,6 +28,7 @@ Set `VITE_DATA_SOURCE=ws` (or use the `:live` scripts below). Code: `src/data/ba
   - a failed admin login during a password attack, or a data transfer by an admin already under suspicion, joins that incident;
   - `suspicious_ip` only adds to an open incident of that address;
   - the deadline is the attack type's window from the first alert; an approved incident is closed.
+- **Models** (SYSTEM, boot screen): ATDE's and CRIE's status and version come from `GET /models` on connect and the `models` message after (contracts/LIVE_API.md 4.6), never from alerts. `offline` shows red. The AI engine's score is the model alert's own `risk_score`; an event's `risk_score` (the placeholder scorer's) is never shown.
 - **Health** (top bar, SYSTEM): events per second as they arrive; freshness p50/p95 from `GET /freshness` every 5 s; server problems from `GET /health` every 10 s; feed STALLED after 5 s without events, DOWN after 15 s. Anything the backend does not measure shows PENDING (EVENTS TODAY, models, retraining).
 - **Decisions:** approving writes the decision log into the incident's first backend row (`PATCH /incidents/{id}`, notes, status `acknowledged`). A failed save shows in pink in SYSTEM.
 
@@ -44,7 +45,7 @@ Set `VITE_DATA_SOURCE=ws` (or use the `:live` scripts below). Code: `src/data/ba
 | `excessive_requests` | RATE | HTTP flood | 15 | site |
 | `http_flood` | FLOOD | HTTP flood | 25 | site |
 | `suspicious_ip` | IOC | adds to that address's incident | 15 | address |
-| a model's alert (`rule_id` null) | ATDE | adds to that address's or account's incident | 20 | only if the model is not the dummy |
+| a model's alert (`rule_id` null) | ATDE | on a rule-flagged event: joins that rule's incident with the model's score and reasons. Otherwise joins an open incident from the same source, or opens an AI-only one: brute force or data exfiltration when the model names them, else "Unusual activity" (no MITRE technique, no standard mitigations) | 20 | the alert's `ip` (then `host`); never the placeholder scorer |
 
 ## Run it
 **With the real stack (needs Docker Desktop).** At the repo root, start the stack with one of:
@@ -68,7 +69,7 @@ Sign in with the backend's development accounts (`api/app/settings.py`). Change 
 npm run live-backend -- --backend <path to a checkout of the backend branch> --rate 12 --warmup 15 --attack-every 45
 npm run dev:live
 ```
-Test switches: `POST http://localhost:8000/_dev/stall?seconds=20` (feed stalls), `/_dev/drop` (connection drops), `/_dev/expire` (session ends), `/_dev/refuse-writes?seconds=30` (decisions fail to save).
+Test switches: `POST http://localhost:8000/_dev/stall?seconds=20` (feed stalls), `/_dev/drop` (connection drops), `/_dev/expire` (session ends), `/_dev/refuse-writes?seconds=30` (decisions fail to save), `/_dev/model?status=ready|offline|pending` (what `/models` says about ATDE), `/_dev/model-alert?ip=…[&flag=<event id>][&class=…]` (one model alert shaped like `ml-scorer`'s; test input only, there is no model in the stand-in).
 
 The public Vercel site stays on the simulated feed: it cannot reach a backend on a laptop.
 

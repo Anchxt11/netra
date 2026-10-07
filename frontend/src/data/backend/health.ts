@@ -1,7 +1,7 @@
 // Pipeline health on the real backend, built from what actually arrives plus GET /freshness and /health.
 // Anything the backend does not measure stays empty (PENDING on screen): nothing here is made up.
-import type { JobStatus, OpsAlert, PipelineHealth } from "../types";
-import type { FreshnessReport, JobRunWire, JobWire, OpsAlertWire, ServerHealth } from "./types";
+import type { JobStatus, ModelStatus, OpsAlert, PipelineHealth } from "../types";
+import type { FreshnessReport, JobRunWire, JobWire, ModelWire, OpsAlertWire, ServerHealth } from "./types";
 import type { ScreenMinute } from "./screenTime";
 
 const STALLED_MS = 5_000; // no events for 5 s: stalled
@@ -24,7 +24,7 @@ export class HealthTracker {
   private server: ServerHealth | null = null;
   private expired = 0;
   private decisions = { approved: 0, rejected: 0 };
-  private model: string | null = null;
+  private models: ModelStatus[] | null = null; // null until GET /models or the models message answers
   private unsavedAt = -Infinity;
   private screen: ScreenMinute[] = [];
   private jobs: Map<string, JobStatus> | null = null; // null until GET /jobs answers
@@ -56,6 +56,13 @@ export class HealthTracker {
     this.ops.set(a.id, { id: a.id, kind, source: a.source, level: a.level === "warn" ? "warn" : "crit", message: a.message, startedAt: a.started_at });
   }
 
+  /** GET /models or the `models` message: the full list, replacing what we had (contracts/LIVE_API.md 4.6). */
+  setModels(rows: ModelWire[]) {
+    this.models = rows
+      .filter((m) => m.name === "ATDE" || m.name === "CRIE")
+      .map((m) => ({ name: m.name as ModelStatus["name"], version: m.version ?? "", trainedAt: m.trained_at, status: m.status }));
+  }
+
   /** Time-to-screen minutes from the ScreenTimer. */
   setScreenTime(minutes: ScreenMinute[]) {
     this.screen = minutes;
@@ -72,14 +79,12 @@ export class HealthTracker {
     if (count > 0) this.lastEventAt = now;
   }
 
-  /** One backend alert: a rule hit, or a real model's. */
-  detection(byModel: string | null, at: number) {
+  /** One backend alert: a rule hit, or a real model's (DETECTIONS / MIN splits the two). */
+  detection(byModel: boolean, at: number) {
     const m = minuteOf(at);
     const b = this.perMinute.get(m) ?? { rule: 0, ai: 0 };
-    if (byModel) {
-      b.ai += 1;
-      this.model = byModel;
-    } else b.rule += 1;
+    if (byModel) b.ai += 1;
+    else b.rule += 1;
     this.perMinute.set(m, b);
   }
 
@@ -155,10 +160,10 @@ export class HealthTracker {
       detectionsPerMin,
       expiredToday: this.expired,
       judgedNormalToday: 0, // the backend has no "judged normal" checks yet
-      models: [
-        { name: "ATDE", version: this.model ?? "", trainedAt: null, status: this.model ? "ready" : "pending" },
-        { name: "CRIE", version: "", trainedAt: null, status: "pending" },
-      ],
+      // From the backend's own report, never guessed from alerts. An API without /models: both PENDING.
+      models: (["ATDE", "CRIE"] as const).map(
+        (name) => this.models?.find((m) => m.name === name) ?? { name, version: "", trainedAt: null, status: "pending" as const },
+      ),
       retraining: this.retraining(),
       alerts,
       jobs: this.jobs ? [...this.jobs.values()] : null,

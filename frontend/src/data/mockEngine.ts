@@ -578,6 +578,8 @@ class MockEngine {
         return { users: ["admin"], ips: [c.ip], hosts: ["db-01"] };
       case "http_flood":
         return { users: [], ips: c.ips, hosts: ["web-01", "web-02"] };
+      case "unusual_activity": // never simulated (ATTACK_TYPES leaves it out)
+        return { users: [], ips: [c.ip], hosts: [] };
     }
   }
 

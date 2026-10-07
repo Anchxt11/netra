@@ -12,6 +12,9 @@
 //   POST /_dev/drop               drop every WebSocket, like a network blip
 //   POST /_dev/expire             end every session (the socket closes with 4401)
 //   POST /_dev/refuse-writes?seconds=30   decisions fail to save (503)
+//   POST /_dev/model?status=ready|offline|pending   what GET /models and the `models` message say about ATDE
+//   POST /_dev/model-alert?ip=10.0.4.17[&flag=<event id>][&class=…]   one model alert shaped like ml-scorer's
+//        (contracts/LIVE_API.md 5.1). Test input only: there is no model in the stand-in.
 import { spawn } from "node:child_process";
 import { createHash, createHmac } from "node:crypto";
 import { createServer } from "node:http";
@@ -93,7 +96,13 @@ createInterface({ input: py.stdout }).on("line", (line) => {
     if (events.length > 20000) events.splice(0, events.length - 20000);
     buffer.push(parseFeatures(msg.data));
   } else if (msg.kind === "alert") {
-    const a = msg.data;
+    storeAlert(msg.data);
+  }
+});
+
+/** Stores an alert as an incident row and broadcasts it, with the 5.1 fields read from it like api/app/repo.py. */
+function storeAlert(a) {
+  {
     const row = {
       id: rows.length + 1,
       alert_id: a.alert_id,
@@ -108,12 +117,33 @@ createInterface({ input: py.stdout }).on("line", (line) => {
       payload: a,
       created_ts: a.created_ts,
       updated_ts: now(),
+      ip: a.ip ?? null,
+      user: a.user ?? null,
+      host: a.host ?? null,
+      class: a.class ?? null,
+      probability: a.probability ?? null,
+      anomaly_score: a.anomaly_score ?? null,
+      risk_score: a.model ? (a.risk_score ?? null) : null,
+      reasons: a.reasons ?? null,
+      rule_flagged: a.rule_flagged ?? null,
     };
     rows.push(row);
     const { payload: _p, ...cols } = row;
     broadcast("alert", cols);
   }
-});
+}
+
+// ------------------------------------------------------------------ models (contracts/LIVE_API.md 4.6)
+let atdeStatus = "pending";
+const CRIE_ROW = { name: "CRIE", model_id: null, version: null, status: "pending", trained_at: null, loaded_at: null,
+  last_heartbeat_at: null, detail: "Not in the live pipeline yet.", metrics: null, scored_per_sec: null };
+function modelsList() {
+  const atde = atdeStatus === "pending"
+    ? { ...CRIE_ROW, name: "ATDE", detail: "No model in the stand-in. Use POST /_dev/model to test." }
+    : { name: "ATDE", model_id: "atde-1.0.0", version: "1.0.0", status: atdeStatus, trained_at: null, loaded_at: now(),
+        last_heartbeat_at: now(), detail: null, metrics: null, scored_per_sec: null };
+  return [atde, CRIE_ROW];
+}
 
 setInterval(() => {
   if (!buffer.length) return;
@@ -284,6 +314,35 @@ const server = createServer(async (req, res) => {
     if (path === "/_dev/stall") stalledUntil = Date.now() + Number(url.searchParams.get("seconds") ?? 20) * 1000;
     if (path === "/_dev/refuse-writes") refuseWritesUntil = Date.now() + Number(url.searchParams.get("seconds") ?? 30) * 1000;
     if (path === "/_dev/drop") for (const c of clients) c.close(1012, "dropped for testing");
+    if (path === "/_dev/model") {
+      atdeStatus = url.searchParams.get("status") ?? "ready";
+      broadcast("models", modelsList());
+    }
+    if (path === "/_dev/model-alert") {
+      const flagged = url.searchParams.get("flag");
+      const ev = flagged ? events.find((e) => e.event_id === flagged) : undefined;
+      storeAlert({
+        alert_id: createHash("sha1").update(String(Math.random())).digest("hex"),
+        rule_id: null,
+        model: "atde-1.0.0",
+        severity: url.searchParams.get("severity") ?? "low",
+        event_ids: [flagged ?? `flow-${Date.now()}`],
+        created_ts: now(),
+        ip: ev?.ip ?? url.searchParams.get("ip") ?? "10.0.4.17",
+        user: ev?.user ?? "-",
+        host: ev?.host ?? "10.0.9.2",
+        class: url.searchParams.get("class") ?? "anomaly",
+        probability: url.searchParams.has("probability") ? Number(url.searchParams.get("probability")) : null,
+        anomaly_score: 0.81,
+        risk_score: 0.81,
+        reasons: [
+          { feature: "nports_60s", value: 9, baseline: null, contribution: -0.31, sentence: "nports 60s = 9" },
+          { feature: "cnt_60s", value: 42, baseline: null, contribution: -0.2, sentence: "cnt 60s = 42" },
+          { feature: "ndst_60s", value: 6, baseline: null, contribution: -0.08, sentence: "ndst 60s = 6" },
+        ],
+        rule_flagged: Boolean(ev),
+      });
+    }
     if (path === "/_dev/expire") {
       for (const c of clients) revoked.add(c.claims.iat), c.close(4401, "invalid or expired token");
     }
@@ -293,6 +352,7 @@ const server = createServer(async (req, res) => {
   const me = user(req);
   if (!me) return send(res, 401, { detail: "Invalid or expired token" });
 
+  if (path === "/models") return send(res, 200, modelsList());
   if (path === "/auth/me") return send(res, 200, { id: Number(me.sub), username: me.username, role: me.role });
   if (path === "/kpi") {
     const since = Date.now() - Math.min(60, Number(url.searchParams.get("minutes") ?? 15)) * 60_000;

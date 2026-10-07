@@ -1,5 +1,5 @@
 // REST calls to the backend API (api/app/routes on the backend branch). Spec: contracts/API_SPEC.md there.
-import type { AlertRow, EnrichedEvent, FreshnessReport, JobWire, KpiAlertWire, OpsAlertWire, KpiReport, LoginResponse, ServerHealth } from "./types";
+import type { AlertRow, EnrichedEvent, FreshnessReport, JobWire, KpiAlertWire, ModelWire, OpsAlertWire, KpiReport, LoginResponse, ServerHealth } from "./types";
 
 export class ApiError extends Error {
   /** HTTP status, or 0 when the server could not be reached at all. */
@@ -46,6 +46,8 @@ export function createApi(base: string) {
     /** The ops service's jobs and firing alerts (contracts/LIVE_API.md 4.4, 4.5). 404 on an API without them. */
     jobs: (token: string) => call<JobWire[]>(base, "/jobs", {}, token),
     opsAlerts: (token: string) => call<OpsAlertWire[]>(base, "/ops/alerts?state=firing", {}, token),
+    /** Which models are running (contracts/LIVE_API.md 4.6). 404 on an API without them. */
+    models: (token: string) => call<ModelWire[]>(base, "/models", {}, token),
     config: (token: string) => call<Record<string, unknown>>(base, "/config", {}, token),
     /** Admin only: 403 for an analyst, 422 for a value the API refuses. */
     putConfig: (token: string, key: string, value: unknown) =>

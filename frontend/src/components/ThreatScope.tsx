@@ -29,6 +29,7 @@ const SHORT: Record<AttackType, string> = {
   data_exfiltration: "EX",
   admin_abuse: "AA",
   http_flood: "HF",
+  unusual_activity: "AI",
 };
 
 const polar = (r: number, deg: number) => ({

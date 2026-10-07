@@ -34,7 +34,9 @@ export function DashboardTiles({ incident }: { incident?: Incident }) {
   const windowStart = perMin.length ? Date.parse(perMin[0].t) : Infinity;
   const started = incident ? minuteStart(Date.parse(incident.createdAt)) : null;
   const attackStart = started !== null && started >= windowStart ? started : null;
-  const problem = health ? health.feed !== "live" || health.alerts.length > 0 : false;
+  const problem = health
+    ? health.feed !== "live" || health.alerts.length > 0 || health.models.some((m) => m.status === "offline" || m.status === "failed")
+    : false;
 
   return (
     <div className={styles.tiles}>

@@ -133,12 +133,115 @@ test("the placeholder scorer is never shown as AI; a real model is", () => {
   hit(c, null, { user: "admin2", risk_score: 0.9 }, T0 + 1000, { model: "DummyScorer" });
   let inc = [...live.values()][0];
   assert.equal(inc.detectedBy, "rule");
-  hit(c, null, { user: "admin2", risk_score: 0.81 }, T0 + 2000, { model: "atde-xgb-1" });
+  // The event's risk_score (0.9) is the placeholder's: only the model's own score is shown.
+  hit(c, null, { user: "admin2", risk_score: 0.9 }, T0 + 2000, { model: "atde-1.0.0", class: "anomaly", risk_score: 0.81 });
   inc = [...live.values()][0];
   assert.equal(inc.detectedBy, "both");
   assert.equal(inc.signals[1].ruleId, "ATDE");
-  assert.equal(inc.signals[1].sentence, "AI engine (atde-xgb-1): this activity is unusual (score 0.81)");
+  assert.equal(inc.signals[1].sentence, "AI engine: unusual for this address, score 0.81");
   assert.equal(inc.severity, 5);
+});
+
+// ---------------------------------------------------------------- the AI engine (ATDE, model 1)
+
+/** A model alert as ml-scorer sends it (contracts/LIVE_API.md 5.1): it carries its own source. */
+function modelAlert(over: Partial<AlertRow>, at = T0): AlertRow {
+  return alert(null, { event_id: `f${++n}`, event_ts: new Date(at).toISOString() }, at, {
+    model: "atde-1.0.0",
+    severity: "low",
+    class: "anomaly",
+    probability: null,
+    anomaly_score: 0.74,
+    risk_score: 0.74,
+    reasons: [
+      { feature: "nports_60s", value: 9, contribution: -0.3, sentence: "nports 60s = 9" },
+      { feature: "cnt_60s", value: 42, contribution: -0.2, sentence: "cnt 60s = 42" },
+      { feature: "bytes_per_packet", value: 40.5, contribution: -0.1, sentence: "bytes per packet = 40.5" },
+    ],
+    rule_flagged: false,
+    ip: "10.0.4.17",
+    user: "-",
+    host: "10.0.9.2",
+    ...over,
+  });
+}
+
+test("a model alert on an event a rule flagged gives that incident the model's score and reasons", () => {
+  const { c, live } = setup();
+  const ev = hit(c, "web_scan", { ip: "203.0.113.50", event_type: "http_request", path: "/.env" });
+  c.addAlert(modelAlert({ event_ids: [ev.event_id], ip: "203.0.113.50", host: "web-01", rule_flagged: true, risk_score: 0.81 }), T0 + 500);
+  assert.equal(live.size, 1);
+  const inc = [...live.values()][0];
+  assert.equal(inc.detectedBy, "both");
+  assert.deepEqual(inc.signals.map((s) => s.ruleId), ["SCAN", "ATDE"]);
+  assert.equal(
+    inc.signals[1].sentence,
+    "AI engine: unusual for this address, score 0.81. Most unusual: 9 ports tried in 60 s, 42 connections in 60 s, 40.5 bytes per packet",
+  );
+});
+
+test("a flagged event whose rule incident is gone adds nothing", () => {
+  const { c, live } = setup();
+  c.addAlert(modelAlert({ rule_flagged: true }), T0);
+  assert.equal(live.size, 0);
+});
+
+test("a model alert with no rule hit opens an AI-only incident, without waiting for an event", () => {
+  const { c, live } = setup();
+  c.addAlert(modelAlert({}), T0);
+  assert.equal(live.size, 1);
+  const inc = [...live.values()][0];
+  assert.equal(inc.attackType, "unusual_activity");
+  assert.equal(inc.name, "Unusual activity");
+  assert.equal(inc.detectedBy, "ai");
+  assert.equal(inc.mitre.id, ""); // the model named no technique, so none is shown
+  assert.deepEqual(inc.fallback?.mitigations, []);
+  assert.equal(inc.severity, 2); // "low": a model alone never raises critical
+  assert.equal(inc.attentionScore, 20);
+  assert.deepEqual(inc.entities, { users: [], ips: ["10.0.4.17"], hosts: ["10.0.9.2"] });
+
+  // The same address again joins it.
+  c.addAlert(modelAlert({ risk_score: 0.9 }, T0 + 60_000), T0 + 60_000);
+  assert.equal(live.size, 1);
+  const again = [...live.values()][0];
+  assert.match(again.signals[0].sentence, /^AI engine: unusual for this address, score 0\.90\. .* \(2 times\)$/);
+  assert.equal(again.attentionScore, 22);
+});
+
+test("a model alert that names a known attack opens that attack; other classes stay unusual activity", () => {
+  const { c, live } = setup();
+  c.addAlert(modelAlert({ class: "Credential Attack / Brute Force", probability: 0.93, severity: "high", reasons: [] }), T0);
+  const brute = [...live.values()][0];
+  assert.equal(brute.attackType, "brute_force");
+  assert.equal(brute.name, "Brute force");
+  assert.equal(brute.signals[0].sentence, "AI engine: looks like Credential Attack / Brute Force (probability 0.93), score 0.74");
+
+  c.addAlert(modelAlert({ class: "DoS / Flooding", probability: 0.95, ip: "10.0.4.99", reasons: [] }), T0);
+  const dos = [...live.values()].find((i) => i.entities.ips.includes("10.0.4.99"));
+  assert.equal(dos?.attackType, "unusual_activity");
+  assert.equal(dos?.signals[0].sentence, "AI engine: looks like DoS / Flooding (probability 0.95), score 0.74");
+});
+
+test("a model alert from an address with an open rule incident joins it", () => {
+  const { c, live } = setup();
+  hit(c, "web_scan", { ip: "10.0.4.17", event_type: "http_request", path: "/admin" });
+  c.addAlert(modelAlert({}), T0 + 1000);
+  assert.equal(live.size, 1);
+  assert.equal([...live.values()][0].detectedBy, "both");
+});
+
+test("the placeholder scorer never opens an AI-only incident", () => {
+  const { c, live } = setup();
+  c.addAlert(modelAlert({ model: "DummyScorer" }), T0);
+  assert.equal(live.size, 0);
+});
+
+test("a rule alert whose event never came is grouped by the source the alert carries", () => {
+  const { c, live } = setup();
+  const ev = event({ ip: "192.0.2.77" }); // never sent
+  c.addAlert(alert("web_scan", ev, T0, { ip: "192.0.2.77", host: "web-02" }), T0);
+  c.tick(T0 + 3000);
+  assert.deepEqual([...live.values()][0].entities.ips, ["192.0.2.77"]);
 });
 
 test("an alert that arrives before its event waits for it", () => {
