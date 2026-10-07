@@ -63,9 +63,13 @@ CREATE TABLE IF NOT EXISTS netra.events
     INDEX idx_event_id event_id TYPE bloom_filter(0.01) GRANULARITY 4,
     INDEX idx_user     user     TYPE bloom_filter(0.01) GRANULARITY 4
 )
-ENGINE = MergeTree
+-- Retry-safe (Concurrency/Netra_Concurrency_Fix_Plan.md, step 4): the processor is at-least-once,
+-- so a replayed event arrives again with the same event_id. ReplacingMergeTree keeps one row per
+-- event_id (the latest stored_ts) once parts merge; until then, exact counts need
+-- count(DISTINCT event_id) or FINAL. Duplicates are only merged within one day's partition.
+ENGINE = ReplacingMergeTree(stored_ts)
 PARTITION BY toDate(stored_ts)
-ORDER BY (toStartOfMinute(event_ts), ip, event_ts)
+ORDER BY (event_id)
 TTL toDateTime(stored_ts) + INTERVAL 2 DAY;
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS netra.events_mv TO netra.events AS

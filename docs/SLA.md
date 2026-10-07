@@ -54,3 +54,18 @@ Each step runs 3 minutes. Pass = time to screen p95 at most 5 s.
 | 10× | 100 | 1 | | | | | | |
 | 10× | 100 | 25 | | | | | | |
 | 10× | 100 | 100 | | | | | | |
+
+## Concurrency check (Concurrency/Netra_Concurrency_Fix_Plan.md, step 5)
+Real HTTP traffic only: `make lab`, wait for the lab to settle, note the counts below, run `make attack SCENARIO=http_flood`, wait 30 s after it ends, and note them again. The difference at each hop should be the same N, give or take the benign user's background requests, which you can see by taking the counts twice without an attack.
+
+| hop | command (repo root, with the stack running) |
+|---|---|
+| nginx log lines | `docker compose --profile lab exec nginx sh -c 'wc -l < /var/log/nginx/netra.json'` |
+| `events.lab`, `events.raw`, `events.enriched` | `docker compose exec redpanda rpk topic describe events.lab -p` (and the same for `events.raw`, `events.enriched`): add up the high watermarks of the 3 partitions |
+| rows and unique events in ClickHouse | `docker compose exec clickhouse clickhouse-client -u netra --password netra -q "SELECT count(), uniqExact(event_id) FROM netra.events WHERE source = 'juice-shop'"` |
+
+Pass: unique event_ids in ClickHouse ≈ N, with no unexpected loss between hops. `count()` can briefly exceed `uniqExact(event_id)` after a processor restart: that is a replayed event, which `ReplacingMergeTree` merges away later.
+
+| run | requests N (nginx lines added) | events.lab | events.raw | events.enriched | ClickHouse unique event_ids | ClickHouse rows | lost | pass |
+|---|---|---|---|---|---|---|---|---|
+| http_flood, 1 processor | | | | | | | | |

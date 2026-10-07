@@ -36,6 +36,7 @@ sinks:
       codec: json
     batch:
       timeout_secs: 0.1                    # ~100ms linger to protect freshness
-    buffer:
-      type: memory
-      max_events: 500
+    buffer:                                # disk, not memory: a restart or a slow Redpanda must not drop lines
+      type: disk                           # (Concurrency/Netra_Concurrency_Fix_Plan.md, step 3)
+      max_size: 536870912                  # 512 MiB; Vector's minimum for a disk buffer is 268435488 bytes
+      when_full: block

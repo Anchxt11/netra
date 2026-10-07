@@ -281,6 +281,7 @@ services:
     volumes:
       - ./lab/vector.yaml:/etc/vector/vector.yaml:ro
       - nginx-logs:/logs/nginx:ro
+      - vector-data:/var/lib/vector        # the disk buffer (lab/vector.yaml), kept across restarts
     networks: [default]
 
   # ─── Lab Profile: Normalizer (events.lab → events.raw) ──────────────────────
@@ -303,6 +304,7 @@ volumes:
   clickhouse-data:
   pgdata:
   nginx-logs:
+  vector-data:
 
 networks:
   lab-net:
