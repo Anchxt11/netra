@@ -1,0 +1,18 @@
+# Images built from the repo root (api, processor, ops, ml-scorer) copy only what their Dockerfile
+# names. Keep the rest out of the build context, so builds do not upload the frontend or the data.
+.git
+frontend
+data
+docs
+notebooks
+reports
+models
+Concurrency
+lab
+simulator
+generator
+model_2_temp/out
+model_2_temp/*.ipynb
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
