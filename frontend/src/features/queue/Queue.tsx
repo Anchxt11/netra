@@ -14,6 +14,8 @@ const LAYOUT = { layout: { duration: 0.22, ease: "easeOut" as const } };
 // A new row's one-time flash (rust, fading out).
 const FLASH_ON = "rgba(227, 90, 54, 0.28)";
 const FLASH_OFF = "rgba(227, 90, 54, 0)";
+// How long "+N alerts" stays on a row after a repeated attack joins it.
+const BUMP_MS = 8_000;
 
 
 export function Queue() {
@@ -38,6 +40,30 @@ export function Queue() {
     if (seen.current === null) seen.current = new Set();
     for (const i of ranked) seen.current.add(i.id);
   }, [ranked]);
+
+  // A repeated attack joins its open incident (same attack, same source) instead of adding a row.
+  // Say so on the row: "+N alerts" for a few seconds whenever the incident's alert count grows.
+  const counts = useRef(new Map<string, number>());
+  const [bumps, setBumps] = useState<Map<string, { n: number; until: number }>>(new Map());
+  useEffect(() => {
+    const now = Date.now();
+    let next: Map<string, { n: number; until: number }> | null = null;
+    for (const i of ranked) {
+      if (i.alerts === undefined) continue;
+      const prev = counts.current.get(i.id);
+      counts.current.set(i.id, i.alerts);
+      if (prev === undefined || i.alerts <= prev) continue;
+      next ??= new Map(bumps);
+      const live = next.get(i.id);
+      next.set(i.id, { n: (live && live.until > now ? live.n : 0) + i.alerts - prev, until: now + BUMP_MS });
+    }
+    if (next) setBumps(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- bumps is read only to extend a live count
+  }, [ranked]);
+  const bumpOf = (id: string) => {
+    const b = bumps.get(id);
+    return b && b.until > Date.now() ? b.n : undefined;
+  };
 
   // The top-bar chips link here with #expired or #judged-normal.
   useEffect(() => {
@@ -100,6 +126,7 @@ export function Queue() {
                   timeLeftMs={i.rank.timeLeftMs}
                   selected={isSelected({ kind: "incident", id: i.id })}
                   dimmed={tier === "WATCH"}
+                  bump={bumpOf(i.id)}
                   onSelect={() => select({ kind: "incident", id: i.id })}
                 />
               </motion.div>
