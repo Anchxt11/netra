@@ -4,6 +4,8 @@ import json
 import os
 import subprocess
 import sys
+import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta
@@ -123,8 +125,19 @@ def health_watch(store) -> Outcome:
 
 # ------------------------------------------------------------------ SLA check (every 30 s)
 
+# The API needs a moment after the stack starts; until then /freshness answers 503 or refuses the
+# connection. That is the stack starting, not the SLA failing: skip, and fail only after this grace.
+STARTUP_GRACE_S = 120
+_STARTED = time.monotonic()
+
+
 def sla_check(store) -> Outcome:
-    f = get_json(f"{API_URL}/freshness")
+    try:
+        f = get_json(f"{API_URL}/freshness")
+    except (urllib.error.HTTPError, urllib.error.URLError, ConnectionError, TimeoutError) as e:
+        if time.monotonic() - _STARTED < STARTUP_GRACE_S:
+            raise Skip(f"The API is still starting ({e}).")
+        raise
     breach = f.get("status") in ("breach", "stalled")
     sla = f.get("sla_p95_seconds")
     msg = (f"Pipeline freshness p95 is {f.get('p95_seconds')} s, over the {sla} s SLA."

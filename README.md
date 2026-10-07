@@ -63,6 +63,12 @@ make down
 make clean
 ```
 
+### Troubleshooting: builds fail with "network is unreachable" (IPv6)
+If `make up`, `make lab` or `make replay` stops at `load metadata for docker.io/library/python:3.12-slim` with `dial tcp [2600:...]:443: connect: network is unreachable`, the network resolves Docker Hub over IPv6 but has no IPv6 route. Containers already running are not affected (the build fails before anything restarts). In order of preference:
+1. Use another network (a phone hotspot usually works) and run the command again.
+2. On Linux, prefer IPv4 for name lookups: add the line `precedence ::ffff:0:0/96  100` to `/etc/gai.conf` (`sudo nano /etc/gai.conf`), then `sudo systemctl restart docker` and run the command again.
+3. To restart one service without building (its image must already exist): `docker compose --profile lab up -d <service>`.
+
 ### 3. Triggering Manual Attacks (Live Lab)
 
 While the `make lab` command automatically runs a background orchestrator that fires cyberattacks at random intervals, you can also force specific attacks to happen immediately on-demand.

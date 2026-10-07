@@ -73,13 +73,14 @@ One day, about 8 hours, 6 people. Everything goes to `main`; no other branches. 
 ## 2. Bugs (tick when fixed, add new ones here)
 | # | bug | owner |
 |---|---|---|
-| B1 | `bi_decisions` is always empty: the R3 decision line ends with "(recommended by …)", which the view's pattern (ops/bi.py) rejects | Claude (lead) |
-| B2 | `sla_check` job fails with HTTP 503 right after start-up (the API isn't ready yet): retry, or skip the first minute | Anchit |
-| B3 | `make replay` and every `--build` fail when Docker Hub resolves over IPv6 (goes away on the VM; for laptops, a note in the README) | Anchit |
+| B1 ✓ | `bi_decisions` is always empty: the R3 decision line ends with "(recommended by …)", which the view's pattern (ops/bi.py) rejects | Claude (lead) |
+| B2 ✓ | `sla_check` job fails with HTTP 503 right after start-up (the API isn't ready yet): retry, or skip the first minute | Anchit |
+| B3 ✓ | `make replay` and every `--build` fail when Docker Hub resolves over IPv6 (goes away on the VM; for laptops, a note in the README) | Anchit |
 | B4 | Same attack type from the same address joins the open incident (by design), so a repeated demo attack seems to do nothing: show "+N new alerts" on the row | Claude (lead) |
 | B5 | The dashboard has never been checked against the real CRIE engine (only the stand-in) | Anchit (on the VM) |
 | B6 | The attacker's "Artificial Risk Score" must never reach the screen or the pitch | everyone |
 | B7 | `bi_kpi_alerts` exported empty: confirm KPI alerts are written to Postgres when a KPI crosses its line | Claude (lead) |
+| B8 | The "Add model 1 and model 2 files" push added `netra` as a link to a nested copy of the repo (a gitlink, mode 160000) and a folder named `model 2` with a space; remove the gitlink (`git rm --cached netra`) and rename the folder | ML duo |
 | … | add yours | |
 
 ## 3. Power BI, remote

@@ -134,3 +134,22 @@ def test_schedules():
     assert Daily(time(10, 0)).next_after(t) == datetime(2026, 10, 7, 10, 0, tzinfo=timezone.utc)
     assert Daily(time(9, 0)).next_after(t) == datetime(2026, 10, 8, 9, 0, tzinfo=timezone.utc)
     assert webhook_payload("hi") == {"text": "hi", "content": "hi"}
+
+
+def test_sla_check_skips_while_the_api_starts_then_fails(monkeypatch):
+    """B2: a 503 in the first minutes after start is the API starting, not an SLA failure."""
+    import urllib.error
+    import pytest
+    from ops import jobs
+    from ops.core import Skip
+
+    def down(url, timeout=4):
+        raise urllib.error.HTTPError(url, 503, "Service Unavailable", None, None)
+
+    monkeypatch.setattr(jobs, "get_json", down)
+    monkeypatch.setattr(jobs, "_STARTED", jobs.time.monotonic())
+    with pytest.raises(Skip):
+        jobs.sla_check(None)
+    monkeypatch.setattr(jobs, "_STARTED", jobs.time.monotonic() - jobs.STARTUP_GRACE_S - 1)
+    with pytest.raises(urllib.error.HTTPError):
+        jobs.sla_check(None)
