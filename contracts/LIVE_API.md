@@ -180,7 +180,7 @@ Gains the alert fields in section 5.
 `title` is always `null` today: the processor does not send the rule's title (each rule's YAML in `rules/sigma/` has one). Gains the alert fields in section 5.
 
 ### 3.7 `GET /incidents/{id}`
-The incident row plus `payload`: the original alert exactly as it arrived on Kafka. 404 if there is no such incident.
+The incident row plus `payload`: the original alert exactly as it arrived on Redpanda. 404 if there is no such incident.
 
 ### 3.8 `PATCH /incidents/{id}`
 Body: any of `status` (`open`, `acknowledged`, `resolved`; not `null`), `notes` (text), `assigned_to` (a user id). An empty body is a 400. Returns the updated incident row and broadcasts it to every client as `incident_update`, including the client that changed it. The dashboard records an approved fix this way: the decision log goes in `notes`, with status `acknowledged`.
@@ -207,7 +207,7 @@ Body: any of `status` (`open`, `acknowledged`, `resolved`; not `null`), `notes` 
 ```json
 {"status": "ok", "postgres": true, "consumers": {"events": true, "alerts": true}, "ws_clients": 3}
 ```
-`status` is `degraded` when Postgres or either Kafka consumer is down. The dashboard polls it every 10 s.
+`status` is `degraded` when Postgres or either Redpanda consumer is down. The dashboard polls it every 10 s.
 
 ### 3.11 `GET /config`, `PUT /config/{key}` (PUT: admin)
 `GET` returns every key: `{"freshness_sla_p95_seconds": 5, "freshness_window_minutes": 5, "rules_enabled": {}}`. `PUT /config/{key}` with body `{"value": <any JSON>}` creates or replaces one key and returns `{"key": "...", "value": ...}`.
@@ -382,7 +382,7 @@ All the traffic, normal included, for the live monitor: a stacked per-second cha
 }
 ```
 Rules:
-- `t` is the start of the second in which **the API received** the events from Kafka (server clock), not `event_ts`.
+- `t` is the start of the second in which **the API received** the events from Redpanda (server clock), not `event_ts`.
 - The API holds each second for `traffic.settle_seconds` (default 2) after it ends, then sends it. A model's verdict on those events can then still land in the same second (B2 scores in 1 s micro-batches). It sends every second, even when all counts are 0.
 - Each event counts once: `rule` if it has any rule hit; otherwise `ai` if a real model's alert named it before the second was sent; otherwise `normal`. So `total` = `normal` + `rule` + `ai`, and the same holds inside each `by_event_type` entry.
 - `ai_late` counts model alerts that arrived for events in a second already sent. Those events stay counted as `normal` there; nothing is corrected afterwards.
@@ -421,7 +421,7 @@ The `ops` service writes a row to a new Postgres table `ops_alerts` when somethi
 | `job_failed` | any job | the job's name | a run ends `failed` | the next run of that job ends `ok` |
 | `sla_breach` | `sla_check` | `sla_check` | p95 freshness above the SLA in 2 checks in a row (60 s) | 2 checks in a row within the SLA |
 
-- `level`: `crit` when something is down or failed; `warn` when it is degraded (for example, Kafka lag above its warning line).
+- `level`: `crit` when something is down or failed; `warn` when it is degraded (for example, Redpanda consumer lag above its warning line).
 - `message` is one plain sentence. The same text goes to the webhook, so it must read well on its own.
 - `detail` is free-form, for the SYSTEM panel's expanded view.
 - `job_run_id` is the run that opened or last changed it, or `null`.
@@ -453,10 +453,11 @@ Every run of a scheduled job is a row in a new Postgres table `job_runs`. When a
 
 | job | when | does | `result` when `ok` |
 |---|---|---|---|
-| `health_watch` | every 10 s | checks the API, Postgres, ClickHouse, Kafka consumer lag, the processor and `ml-scorer`; `failed` if any check fails | `{"checks": {"postgres": true, "clickhouse": true, "kafka_lag": 12, "processor": true, "ml_scorer": true, "api": true}}` |
+| `health_watch` | every 10 s | checks the API, Postgres, ClickHouse, Redpanda consumer lag, the processor and `ml-scorer`; `failed` if any check fails | `{"checks": {"postgres": true, "clickhouse": true, "kafka_lag": 12, "processor": true, "ml_scorer": true, "api": true}}` |
 | `sla_check` | every 30 s | freshness p95 against the SLA. A breach is still an `ok` run: it means the check worked | `{"p95_seconds": 1.8, "sla_p95_seconds": 5, "breach": false}` |
 | `daily_report` | daily 06:00 | yesterday's SLA and incident summary into a new table `daily_reports` | `{"report_id": 12, "date": "2026-10-06"}` |
 | `model_retrain` | daily 02:00 | runs `ml/train.py`; `skipped` while it does not exist | `{"version": "1.1.0", "promoted": false, "pr_auc": 0.88}` |
+| `bi_rollup` | every 60 s | copies the last finished minutes from ClickHouse into Postgres `bi_traffic_minute` for Power BI (docs/POWER_BI.md); sets up the `bi` views and the read-only `netra_bi` user on its first run | `{"minutes": 10}` |
 | `data_retention` | daily 03:00 | deletes data older than its retention | `{"deleted": {"job_runs": 8640}}` |
 
 `health_watch` finishes every 10 s, so the dashboard keeps only the latest run per job, plus failures. Daily times are in the `ops` service's `TZ` (default UTC). Times on the wire are always UTC.
@@ -531,7 +532,7 @@ Which models are running, from what `ml-scorer` reports and from each bundle's o
 
 ## 5. Alerts and incidents: the fields ATDE adds
 
-### 5.1 The alert on Kafka topic `alerts` (processor and `ml-scorer` to the API)
+### 5.1 The alert on Redpanda topic `alerts` (processor and `ml-scorer` to the API)
 | field | type | rule alert | model alert | status |
 |---|---|---|---|---|
 | `alert_id` | string | uuid | uuid | exists |
@@ -569,7 +570,7 @@ Which models are running, from what `ml-scorer` reports and from each bundle's o
   A model alone never raises `critical`. That level stays with the rules, which a person can read.
 - `ml-scorer` never sends `DummyScorer` output as a model alert.
 
-A model alert on Kafka (B2):
+A model alert on Redpanda (B2):
 ```json
 {
   "alert_id": "5f2c8e1a-0b7d-4c3e-9a64-d81f2e7b0c95",
@@ -664,7 +665,7 @@ An invalid or expired token: the server accepts, then closes with code **4401** 
 {"type": "events", "data": ["...enriched events, as in 3.4"], "server_ts": "2026-10-07T09:15:02.650113+00:00", "dropped": 0}
 ```
 - At most 200 events per message. `dropped` counts the events skipped under heavy load (the oldest in the batch).
-- Here `rule_hits` is an array, `features` is an object, and there is no `stored_ts` (these events come straight from Kafka, before ClickHouse).
+- Here `rule_hits` is an array, `features` is an object, and there is no `stored_ts` (these events come straight from Redpanda, before ClickHouse).
 - The consumer starts at the latest offset, so events from before the API started are not replayed.
 
 ### `alert`: a new alert was stored
@@ -696,7 +697,7 @@ An invalid or expired token: the server accepts, then closes with code **4401** 
 These do not change what the dashboard sees. They are a default, so the two halves of track 1 fit together.
 - **Postgres tables:** `kpi_alerts` exists (A1). New: `job_runs`, `ops_alerts`, `daily_reports` (A3). A table added after the first release goes in `api/app/schema.py`, because `api/db/init.sql` only runs on an empty volume. New columns on `incidents` for section 5's fields (B2, ask 2).
 - **New ClickHouse table:** `ml_scores` (B2). The BI views are A5's.
-- **`ops` service to API (built, A3):** the `ops` service (`ops/`) writes its rows to Postgres and sends each one with `pg_notify('ops_events', '{"kind": "job_run" | "ops_alert", "row": {...}}')`. The API LISTENs (`api/app/ops.py`) and broadcasts `job_runs` or `ops_alert`. No Kafka topic needed. The ops service creates its tables itself (`ops/store.py`): `job_runs`, `ops_alerts`, `daily_reports`, and `ops_jobs` (each job's schedule and next run, for `GET /jobs`); until it has started once, the three routes answer with empty lists. `ml_scorer` is not checked by the health watch yet (B2).
+- **`ops` service to API (built, A3):** the `ops` service (`ops/`) writes its rows to Postgres and sends each one with `pg_notify('ops_events', '{"kind": "job_run" | "ops_alert", "row": {...}}')`. The API LISTENs (`api/app/ops.py`) and broadcasts `job_runs` or `ops_alert`. No new Redpanda topic needed. The ops service creates its tables itself (`ops/store.py`): `job_runs`, `ops_alerts`, `daily_reports`, and `ops_jobs` (each job's schedule and next run, for `GET /jobs`); until it has started once, the three routes answer with empty lists. `ml_scorer` is not checked by the health watch yet (B2).
 - **`ml-scorer` to API:** model alerts on `alerts` (as today). A heartbeat every 5 s on a topic `models.heartbeat`, as `{"model_id", "version", "status", "scored_per_sec", "ts"}`. The API reads `trained_at` and `metrics` from the bundle folder of the version in the heartbeat.
 - **The KPI loop** runs inside the API (exists, A1). The `traffic` counter should too. The counter needs the `alerts` consumer to mark which events a model flagged.
 

@@ -1,6 +1,6 @@
 # NETRA freshness SLA
 
-Written 2026-10-07 (build plan A2). The numbers in "Results" come only from the A4 load test (`docs/LOAD_TEST.md`); until then the table is empty.
+Written 2026-10-07 (build plan A2). The numbers in "Results" come only from the load test, which the backend team owns (their concurrency docs, build plan A4); until they fill it the table is empty.
 
 ## Definition
 **Time to screen**: from the moment an event happens (`event_ts`, set where the event is created: the simulator or the Juice Shop capture) to the moment the analyst's browser receives it over the WebSocket. Rendering adds under one frame on top.
@@ -15,12 +15,12 @@ The screen path, in order. The budget adds up to 5 s with room left over; a hop 
 
 | hop | from → to | budget | measured by |
 |---|---|---|---|
-| 1. Source | event happens → on Kafka `events.raw` | 0.3 s | (in hop 2: `event_ts` is set at the source) |
-| 2. Kafka + processor | `events.raw` → enriched on `events.enriched` | 0.7 s | `processed_ts - event_ts` |
+| 1. Source | event happens → on Redpanda `events.raw` | 0.3 s | (in hop 2: `event_ts` is set at the source) |
+| 2. Redpanda + processor | `events.raw` → enriched on `events.enriched` | 0.7 s | `processed_ts - event_ts` |
 | 3. API | `events.enriched` → pushed on the WebSocket (batched every 250 ms) | 1.0 s | `server_ts - processed_ts` |
 | 4. Network + browser | pushed → received by the browser | 0.5 s | browser receive time (corrected) `- server_ts` |
 | **Time to screen** | | **2.5 s, target 5 s** | browser receive time (corrected) `- event_ts` |
-| ClickHouse (side path) | `events.enriched` → stored | 1.5 s | `stored_ts - processed_ts` (Kafka engine flushes every 500 ms) |
+| ClickHouse (side path) | `events.enriched` → stored | 1.5 s | `stored_ts - processed_ts` (ClickHouse's Kafka engine, reading Redpanda, flushes every 500 ms) |
 
 ## How each time is taken
 | time | set by | where |
@@ -38,9 +38,9 @@ The screen path, in order. The budget adds up to 5 s with room left over; a hop 
 ## On a breach
 - **On screen (A2, built):** a minute with time to screen p95 over 5 s turns the SYSTEM row red with OVER and raises a `kpi_alert` of kind `sla` (origin `browser`, see `contracts/LIVE_API.md` 4.2): a toast says so. The next minute within 5 s clears it. This is per browser: a slow laptop shows its own breach.
 - **On the server (A3, to build):** the `ops` service's `sla_check` every 30 s compares `/freshness` p95 with the SLA; 2 checks in a row over it raise an `ops_alert` of kind `sla_breach`, posted to `ALERT_WEBHOOK_URL`.
-- **What an operator does:** look at the per-hop table above for the hop over its budget (processor lag, events the API drops (the `dropped` count on `events` messages), ClickHouse inserts, Kafka consumer lag), fix or scale that hop, and record the breach in the results below if it happened during a test.
+- **What an operator does:** look at the per-hop table above for the hop over its budget (processor lag, events the API drops (the `dropped` count on `events` messages), ClickHouse inserts, Redpanda consumer lag), fix or scale that hop, and record the breach in the results below if it happened during a test.
 
-## Results (filled by A4)
+## Results (filled by the backend team's load test)
 Each step runs 3 minutes. Pass = time to screen p95 at most 5 s.
 
 | load | events/s | dashboards | time to screen p50 | p95 | pipeline freshness p95 | WebSocket lag p95 | dropped | pass |

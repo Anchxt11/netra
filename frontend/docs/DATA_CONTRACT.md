@@ -5,12 +5,12 @@ Status: updated with the backend's decisions (event schema, detection rules, att
 The frontend talks to exactly one interface, `DataSource`. Two implementations: `mockEngine` (default) and `wsSource` (real backend). Swapping them must need no UI changes.
 
 ## What the backend has decided
-- **Raw events**: flat JSON, one per Kafka message on topic `events.raw`, produced by `web_traffic_sim.py`. 16 fields. No labels.
+- **Raw events**: flat JSON, one per Redpanda message on topic `events.raw`, produced by `web_traffic_sim.py`. 16 fields. No labels.
 - **Detection pipeline**: feature extraction over short rolling windows, then deterministic rules that emit small **signals** (rule IDs like `BF-4`), then a correlation engine that outputs an **attack type** and an **Attention Score**.
 - **7 attack scenarios** and **2 benign anomalies** (a flash crowd and a nightly backup) that must not raise attack alerts.
 
 ## Still open (confirm)
-1. How the browser receives data: WebSocket URL and message types. A browser cannot read Kafka directly, so the backend needs a small WebSocket endpoint (FastAPI) that forwards incidents.
+1. How the browser receives data: WebSocket URL and message types. A browser cannot read Redpanda directly, so the backend needs a small WebSocket endpoint (FastAPI) that forwards incidents.
 2. Attention Score points for every rule. The rules document only gives 5 example values. Also: is the score capped at 100?
 3. Who computes the time-aware ranking (stale-by deadline, rank climbing while an incident waits). The mock computes it in the frontend for now.
 4. Stale-by window per attack type.

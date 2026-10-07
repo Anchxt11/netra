@@ -52,7 +52,7 @@ npm run preview:live        # http://localhost:4174
 ```
 Sign in with the backend's development accounts (`api/app/settings.py`). Change them, and `jwt_secret`, before anything public.
 
-**Without Docker (frontend testing):** a stand-in for the API that runs the backend team's real simulator and rule engine in Python (no Kafka, no databases):
+**Without Docker (frontend testing):** a stand-in for the API that runs the backend team's real simulator and rule engine in Python (no Redpanda, no databases):
 ```
 npm run live-backend -- --backend <path to a checkout of the backend branch> --rate 12 --warmup 15 --attack-every 45
 npm run dev:live
