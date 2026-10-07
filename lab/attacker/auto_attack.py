@@ -3,7 +3,17 @@ import time
 import random
 import subprocess
 import logging
+import os
 import sys
+
+# Background pace and mix, so a demo attack from the other attacker always stands out (docs/FINAL_PLAN.md, demo plan 1):
+#   AUTO_MIN_S / AUTO_MAX_S   seconds between attacks (default 60 to 180: a server under pressure, not a storm)
+#   AUTO_EXCLUDE              scenarios left out (default: the two NETRA groups across addresses, so they
+#                             would swallow a demo attack: credential_stuffing joins one campaign, http_flood
+#                             is one attack on the whole site)
+MIN_S = int(os.getenv("AUTO_MIN_S", "60"))
+MAX_S = max(MIN_S, int(os.getenv("AUTO_MAX_S", "180")))
+EXCLUDE = {x.strip() for x in os.getenv("AUTO_EXCLUDE", "credential_stuffing,http_flood").split(",") if x.strip()}
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s', stream=sys.stdout)
 
@@ -30,22 +40,22 @@ ATTACKS = [
 ]
 
 def select_attack():
-    total = sum(a['weight'] for a in ATTACKS)
+    pool = [a for a in ATTACKS if a["name"] not in EXCLUDE] or ATTACKS
+    total = sum(a['weight'] for a in pool)
     r = random.uniform(0, total)
     upto = 0
-    for a in ATTACKS:
+    for a in pool:
         if upto + a['weight'] >= r:
             return a
         upto += a['weight']
-    return ATTACKS[0]
+    return pool[0]
 
 def main():
     logging.info("Live Attack Orchestrator Started.")
-    logging.info("Simulating random severity-based cyberattacks in the background...")
+    logging.info(f"Background attacks every {MIN_S} to {MAX_S} s; left out: {', '.join(sorted(EXCLUDE)) or 'none'}")
     
     while True:
-        # Random delay between 5 and 10 seconds (aggressive attack feed)
-        delay = random.randint(5, 10)
+        delay = random.randint(MIN_S, MAX_S)
         logging.info(f"Idling... Next cyberattack will launch in {delay} seconds.")
         time.sleep(delay)
         

@@ -17,7 +17,9 @@ make lab
 make replay
 ```
 - `make up`: Redpanda, processor, ClickHouse, Postgres, the API, ml-scorer (model 1), the ops service.
-- `make lab`: Juice Shop with nginx, Vector, the normaliser, a benign user, and the two attacker containers. The attackers stay **idle** until you run `make attack`, so every attack you launch shows as its own incident. (Background attacks every 5 to 10 s, for a soak test: `ATTACKER_COMMAND=auto_attack make lab`. Not during the demo: they keep every incident type open, so a new attack joins an old row instead of appearing.)
+- `make lab`: Juice Shop with nginx, Vector, the normaliser, a benign user, and two attackers:
+  - **attacker2** (172.30.0.11) runs **background attacks**, one every 1 to 3 minutes, so the dashboard always looks like a real server under pressure. It leaves out credential stuffing and HTTP floods, the two attacks NETRA groups across addresses. `make auto-off` pauses it; `make auto-on` resumes it. Change the pace with `AUTO_MIN_S=30 AUTO_MAX_S=90 make auto-on`.
+  - **attacker** (172.30.0.10) stays **idle** for the demo attack (`make attack SCENARIO=...`). It has its own address, so its attack always opens its own row, next to the background ones.
 - `make replay`: the held-out flow logs, which model 1 scores (the AI engine's incidents).
 
 Check: `make status` shows every container as `running` or `healthy`, and `make api-health` answers ok. If a container keeps restarting: `docker compose logs <name> --tail 50`.
@@ -48,11 +50,11 @@ Check, top bar: LIVE is ticking, Freshness reads under 5 s. Dashboard: the live 
 |---|---|---|
 | 1 | Home page: "Decisions while the data is still warm." Scroll once: the globe becomes the NETRA eye. | Scroll slowly to the dashboard. |
 | 2 | "Live security events, ranked by danger **and** by time left to act." Point at the KPI strip and the freshness meter (the SLA: 5 s p95). | Nothing. |
-| 3 | Launch a credential attack. Within seconds a login-failures KPI crosses its line and an incident appears. | Anchit: `make attack SCENARIO=credential_stuffing` |
+| 3 | "The background attacks are what a real server sees all day. Now a new attacker." Within seconds a new row appears beside them, and the login-failures KPI crosses its line. | Anchit: `make attack SCENARIO=brute_force` |
 | 4 | Open the incident: the countdown ring, how it escalated (each rule, with points), severity × attention × urgency. | Click it in "Needs attention". |
 | 5 | "Rules and AI side by side": an AI-engine line or an "Unusual activity" incident from model 1, with its reasons. | Click an incident marked AI. |
 | 6 | Fix: CRIE's top 3 fixes, each with D3FEND and why. "Nothing runs on its own: a person approves." | Click **Fix**, then **Approve fix** on #1. |
-| 7 | Data exfiltration or a flood: the queue re-ranks live. | `make attack SCENARIO=data_exfiltration` |
+| 7 | Data exfiltration: the queue re-ranks live. If the same attack repeats, its row shows "+N alerts" instead of a duplicate. | `make attack SCENARIO=data_exfiltration` |
 | 8 | Enterprise: System tile (freshness, jobs, models), Thresholds page, the load-test numbers in docs/SLA.md. | Click **System**; open **Thresholds**. |
 | 9 | Power BI: the same pipeline as an ops report, refreshing on its own. | Switch to Power BI. |
 
@@ -63,7 +65,7 @@ Check, top bar: LIVE is ticking, Freshness reads under 5 s. Dashboard: the live 
 
 Only the 7 core attacks fire rules: `brute_force`, `credential_stuffing`, `account_takeover`, `web_scan`, `sqli`, `http_flood`, `data_exfiltration`. The 8 `evasion_*` attacks are built to slip past the rules, and model 1 reads network flows, not web logs, so they show in the live feed only. Say so if asked: it's why NETRA pairs rules with ML.
 
-Other attacks, if you have time: `web_scan`, `sqli`, `http_flood`, `account_takeover`, and the ML-test ones `evasion_low_slow_brute`, `evasion_slow_exfil`. To run all of them: `make attack-full`.
+Other attacks, if you have time: `web_scan`, `sqli`, `account_takeover`. With the background on, run `credential_stuffing` and `http_flood` only after `make auto-off` (they group across addresses by design), and the ML-test ones `evasion_low_slow_brute`, `evasion_slow_exfil`. To run all of them: `make attack-full`.
 
 ## 7. If something breaks
 | problem | do |

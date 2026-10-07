@@ -223,7 +223,8 @@ export class Correlator {
     let type = rule.attackType;
     let key: string;
     const ip = ev?.ip ?? "unknown";
-    const user = known(ev?.user) ?? "unknown";
+    const account = known(ev?.user);
+    const user = account ?? "unknown";
     const guessing = this.open.get(`brute_force:${ip}`) ?? this.findCampaign(ip);
 
     if (row.rule_id === "suspicious_login" && guessing) {
@@ -250,12 +251,15 @@ export class Correlator {
         type = "brute_force";
         key = `brute_force:${ip}`;
       }
-    } else if (type === "data_exfiltration" && this.open.has(`admin_abuse:${user}`)) {
+    } else if (type === "data_exfiltration" && account && this.open.has(`admin_abuse:${account}`)) {
       // An admin who ran suspicious commands and then moved data out: one story, not two.
       type = "admin_abuse";
       key = `admin_abuse:${user}`;
     } else {
-      key = `${type}:${rule.key === "ip" ? ip : rule.key === "user" ? user : "site"}`;
+      // Grouped by account; with no known account (e.g. lab downloads without a login), by address,
+      // so attacks from different sources never merge under "unknown".
+      const by = rule.key === "user" ? (account ?? `ip ${ip}`) : rule.key === "ip" ? ip : "site";
+      key = `${type}:${by}`;
     }
 
     const draft = this.open.get(key) ?? this.create(type, key, ts);

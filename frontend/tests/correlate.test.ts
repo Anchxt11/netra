@@ -298,3 +298,12 @@ test("a failed admin login during a password attack belongs to that attack", () 
   assert.equal(live.size, 1);
   assert.deepEqual([...live.values()][0].signals.map((s) => s.ruleId), ["BF", "ADM"]);
 });
+
+test("a user-grouped attack with no known account is grouped by address, not merged under 'unknown'", () => {
+  const { c, live } = setup();
+  hit(c, "data_exfiltration", { ip: "172.30.0.11", user: "-", event_type: "data_transfer", bytes_out: 60_000_000 });
+  hit(c, "data_exfiltration", { ip: "172.30.0.10", user: "-", event_type: "data_transfer", bytes_out: 60_000_000 });
+  assert.equal(live.size, 2);
+  hit(c, "data_exfiltration", { ip: "172.30.0.10", user: "-", event_type: "data_transfer", bytes_out: 60_000_000 });
+  assert.equal(live.size, 2); // the same address again joins its own incident
+});

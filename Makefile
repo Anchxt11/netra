@@ -122,7 +122,7 @@ lab-status: ## Show lab container status
 attack: ## Run an attack scenario: make attack SCENARIO=brute_force (or evasion_low_slow_brute, etc.)
 	docker compose exec attacker attack-runner $(SCENARIO)
 
-auto-on: ## Background attacks ON (attacker2, 172.30.0.11, a random attack every 5 to 10 s)
+auto-on: ## Background attacks ON (attacker2, 172.30.0.11, one every 1 to 3 min; AUTO_MIN_S, AUTO_MAX_S, AUTO_EXCLUDE)
 	$(COMPOSE) $(LAB) up -d attacker2
 
 auto-off: ## Background attacks OFF, e.g. before a judge runs their own attack

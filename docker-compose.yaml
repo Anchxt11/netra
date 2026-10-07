@@ -279,7 +279,14 @@ services:
     build: ./lab/attacker
     profiles: ["lab"]
     depends_on: [nginx]
-    command: ${ATTACKER2_COMMAND:-auto_attack}  # background attacks by default; make auto-off / auto-on
+    command: ${ATTACKER2_COMMAND:-python3 /usr/local/bin/auto_attack}  # background attacks by default; make auto-off / auto-on
+    # The script is mounted, so pace changes need only `make auto-on`, not an image rebuild.
+    volumes:
+      - ./lab/attacker/auto_attack.py:/usr/local/bin/auto_attack:ro
+    environment:
+      - AUTO_MIN_S=${AUTO_MIN_S:-60}
+      - AUTO_MAX_S=${AUTO_MAX_S:-180}
+      - AUTO_EXCLUDE=${AUTO_EXCLUDE-credential_stuffing,http_flood}
     networks:
       lab-net: { ipv4_address: 172.30.0.11 }  # second IP for distributed credential stuffing
 
