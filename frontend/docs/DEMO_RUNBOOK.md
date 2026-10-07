@@ -17,7 +17,7 @@ make lab
 make replay
 ```
 - `make up`: Redpanda, processor, ClickHouse, Postgres, the API, ml-scorer (model 1), the ops service.
-- `make lab`: Juice Shop with nginx, Vector, the normaliser, a benign user, and the attacker container.
+- `make lab`: Juice Shop with nginx, Vector, the normaliser, a benign user, and the two attacker containers. The attackers stay **idle** until you run `make attack`, so every attack you launch shows as its own incident. (Background attacks every 5 to 10 s, for a soak test: `ATTACKER_COMMAND=auto_attack make lab`. Not during the demo: they keep every incident type open, so a new attack joins an old row instead of appearing.)
 - `make replay`: the held-out flow logs, which model 1 scores (the AI engine's incidents).
 
 Check: `make status` shows every container as `running` or `healthy`, and `make api-health` answers ok. If a container keeps restarting: `docker compose logs <name> --tail 50`.
@@ -56,12 +56,20 @@ Check, top bar: LIVE is ticking, Freshness reads under 5 s. Dashboard: the live 
 | 8 | Enterprise: System tile (freshness, jobs, models), Thresholds page, the load-test numbers in docs/SLA.md. | Click **System**; open **Thresholds**. |
 | 9 | Power BI: the same pipeline as an ops report, refreshing on its own. | Switch to Power BI. |
 
+**A judge attacks it themselves** (on Anchit's laptop):
+1. Open **http://localhost:8888** (Juice Shop, behind our nginx sensor). Account, then Login.
+2. Email `admin@juice-sh.op`, any wrong password. The first failure opens **Admin abuse** (a failed login on an admin account). Five failures within a minute open **Brute force** from the judge's own address, a new row, within seconds.
+3. Then log in with the right admin password (Anchit has it): the incident becomes **account taken over**, severity 5, and jumps to Act now.
+
+Only the 7 core attacks fire rules: `brute_force`, `credential_stuffing`, `account_takeover`, `web_scan`, `sqli`, `http_flood`, `data_exfiltration`. The 8 `evasion_*` attacks are built to slip past the rules, and model 1 reads network flows, not web logs, so they show in the live feed only. Say so if asked: it's why NETRA pairs rules with ML.
+
 Other attacks, if you have time: `web_scan`, `sqli`, `http_flood`, `account_takeover`, and the ML-test ones `evasion_low_slow_brute`, `evasion_slow_exfil`. To run all of them: `make attack-full`.
 
 ## 7. If something breaks
 | problem | do |
 |---|---|
 | Dashboard says RECONNECTING | Wait 10 s. If it stays: `docker compose restart api`. |
+| An attack only adds to an existing row | Same attack type from the same address within its window (3 to 15 min) is one incident, on purpose. Run a different type, or wait for the old one to expire. |
 | An attack shows nothing | `make lab-status`; run it again; or switch to the backup tab. |
 | System shows a model `offline` | `docker compose restart ml-scorer` |
 | Signed out | Sign in again (sessions last 60 minutes: sign in fresh just before the pitch). |

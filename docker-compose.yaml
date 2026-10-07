@@ -269,6 +269,9 @@ services:
     build: ./lab/attacker
     profiles: ["lab"]
     depends_on: [nginx]
+    # Idle by default, so each `make attack SCENARIO=...` shows as its own incident in the demo.
+    # Background attacks every 5 to 10 s: ATTACKER_COMMAND=auto_attack make lab
+    command: ${ATTACKER_COMMAND:-sleep infinity}
     networks:
       lab-net: { ipv4_address: 172.30.0.10 }  # known IP for suspicious_ip IoC list
 
@@ -276,6 +279,7 @@ services:
     build: ./lab/attacker
     profiles: ["lab"]
     depends_on: [nginx]
+    command: ${ATTACKER_COMMAND:-sleep infinity}  # idle by default, like attacker
     networks:
       lab-net: { ipv4_address: 172.30.0.11 }  # second IP for distributed credential stuffing
 
