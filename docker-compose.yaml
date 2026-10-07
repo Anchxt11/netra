@@ -148,6 +148,9 @@ services:
       POSTGRES_USER: soc
       POSTGRES_PASSWORD: soc
       POSTGRES_DB: soc
+    # Published for Power BI Desktop (docs/POWER_BI.md): on this laptop and, through the firewall rule
+    # in that doc, from another one on the same network. Power BI signs in as the read-only BI user.
+    ports: ["5432:5432"]
     volumes:
       - ./api/db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
       - pgdata:/var/lib/postgresql/data
@@ -191,10 +194,11 @@ services:
       dockerfile: ops/Dockerfile
     depends_on:
       postgres: { condition: service_healthy }
-      topic-init: { condition: service_completed_successfully }
+      api: { condition: service_healthy }   # the BI views read the API's kpi_alerts table
     environment:
       DATABASE_URL: postgresql://soc:soc@postgres:5432/soc
       API_URL: http://api:8000
+      BI_PASSWORD: ${BI_PASSWORD:-netra_bi_read}  # the read-only Power BI user netra_bi; change it before anything public
       CLICKHOUSE_URL: http://clickhouse:8123
       CLICKHOUSE_USER: ${CLICKHOUSE_USER:-netra}
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-netra}

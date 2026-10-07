@@ -23,6 +23,7 @@ def schedule():
     return {
         "health_watch": (Every(10), jobs.health_watch),
         "sla_check": (Every(30), jobs.sla_check),
+        "bi_rollup": (Every(60), jobs.bi_rollup),
         "daily_report": (Daily(time(6, 0), tz), jobs.daily_report),
         "model_retrain": (Daily(time(2, 0), tz), jobs.model_retrain),
         "data_retention": (Daily(time(3, 0), tz), jobs.data_retention),

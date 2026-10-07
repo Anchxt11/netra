@@ -53,7 +53,8 @@ CREATE TABLE IF NOT EXISTS daily_reports (
 );
 """
 
-JSON_COLS = {"result", "detail", "webhook", "report"}
+RUN_JSON = {"result"}  # job_runs.detail is plain text
+ALERT_JSON = {"detail", "webhook"}
 CHANNEL = "ops_events"  # the API LISTENs here (api/app/ops.py)
 
 
@@ -61,8 +62,8 @@ def _default(o):
     return o.isoformat() if isinstance(o, (datetime, date)) else str(o)
 
 
-def _adapt(fields: dict) -> dict:
-    return {k: Jsonb(v, dumps=lambda x: json.dumps(x, default=_default)) if k in JSON_COLS and v is not None else v
+def _adapt(fields: dict, json_cols: set) -> dict:
+    return {k: Jsonb(v, dumps=lambda x: json.dumps(x, default=_default)) if k in json_cols and v is not None else v
             for k, v in fields.items()}
 
 
@@ -76,7 +77,7 @@ class PgStore:
         return cur.fetchall() if cur.description else []
 
     def insert_run(self, run: dict) -> dict:
-        r = _adapt(run)
+        r = _adapt(run, RUN_JSON)
         cols = ", ".join(r)
         return self.q(f"INSERT INTO job_runs ({cols}) VALUES ({', '.join(['%s'] * len(r))}) RETURNING *", tuple(r.values()))[0]
 
@@ -84,11 +85,11 @@ class PgStore:
         return self.q("SELECT * FROM ops_alerts WHERE state = 'firing'")
 
     def open_alert(self, alert: dict) -> dict:
-        a = _adapt(alert)
+        a = _adapt(alert, ALERT_JSON)
         return self.q(f"INSERT INTO ops_alerts ({', '.join(a)}) VALUES ({', '.join(['%s'] * len(a))}) RETURNING *", tuple(a.values()))[0]
 
     def update_alert(self, alert_id: int, fields: dict) -> dict:
-        f = _adapt(fields)
+        f = _adapt(fields, ALERT_JSON)
         sets = ", ".join(f"{k} = %s" for k in f)  # keys come from ops/core.py, never from input
         return self.q(f"UPDATE ops_alerts SET {sets} WHERE id = %s RETURNING *", (*f.values(), alert_id))[0]
 

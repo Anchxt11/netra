@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+from . import bi
 from .core import Check, Outcome, Skip
 
 API_URL = os.getenv("API_URL", "http://api:8000")
@@ -84,7 +85,7 @@ def _kafka() -> list[Check]:
     return [
         Check("processor", alive, f"The processor is not consuming {RAW_TOPIC} (no members in group {PROCESSOR_GROUP}).",
               detail={"state": str(group.state)}),
-        Check("kafka_lag", lag < LAG_WARN, f"The processor is {lag} events behind on {RAW_TOPIC}.", level=level,
+        Check("kafka_lag", lag < LAG_WARN, f"Redpanda consumer lag: the processor is {lag} events behind on {RAW_TOPIC}.", level=level,
               detail={"lag": lag}),
     ]
 
@@ -98,7 +99,7 @@ def health_watch(store) -> Outcome:
     try:
         checks += _kafka()
     except Exception as e:
-        checks.append(Check("kafka_lag", False, "Kafka cannot be reached to measure the processor's lag.",
+        checks.append(Check("kafka_lag", False, "Redpanda cannot be reached to measure the processor's consumer lag.",
                             detail={"error": f"{type(e).__name__}: {e}"[:300]}))
     failed = [c.source for c in checks if not c.ok]
     result = {"checks": {c.source: c.ok for c in checks}}
@@ -170,11 +171,27 @@ def model_retrain(store) -> Outcome:
     return Outcome("ok", "ml/train.py finished.", result)
 
 
+# ------------------------------------------------------------------ Power BI rollup (every 60 s)
+
+_bi_ready = False
+
+
+def bi_rollup(store) -> Outcome:
+    """The last finished minutes of traffic and freshness, from ClickHouse into Postgres (docs/POWER_BI.md)."""
+    global _bi_ready
+    if not _bi_ready:
+        bi.setup(store)  # needs the API's kpi_alerts table, so it waits for the API's first start
+        _bi_ready = True
+    n = bi.write_rollup(store, clickhouse(bi.rollup_sql(CH_TABLE)))
+    return Outcome("ok", f"{n} minutes written to bi_traffic_minute.", {"minutes": n})
+
+
 # ------------------------------------------------------------------ data retention (03:00)
 
 def data_retention(store) -> Outcome:
     deleted = {}
     for table, sql in (
+        ("bi_traffic_minute", f"DELETE FROM bi_traffic_minute WHERE minute < now() - interval '{KEEP_ALERTS_DAYS} days'"),
         ("job_runs", f"DELETE FROM job_runs WHERE started_at < now() - interval '{KEEP_JOB_RUNS_DAYS} days'"),
         ("ops_alerts", f"DELETE FROM ops_alerts WHERE state = 'cleared' AND cleared_at < now() - interval '{KEEP_ALERTS_DAYS} days'"),
         ("kpi_alerts", f"DELETE FROM kpi_alerts WHERE state = 'cleared' AND cleared_at < now() - interval '{KEEP_ALERTS_DAYS} days'"),
