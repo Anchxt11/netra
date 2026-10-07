@@ -132,10 +132,8 @@ function ThresholdRow({
 
   const field = (level: Level) => (
     <label className={styles.field}>
-      <span className="visually-hidden">
-        {kpiLabel(name)}, {level === "warn" ? "warning" : "critical"} line, in {unit}
-      </span>
       <input
+        aria-label={`${kpiLabel(name)}, ${level === "warn" ? "warning" : "critical"} line, in ${unit}`}
         className={styles.input}
         inputMode="decimal"
         value={text[level]}

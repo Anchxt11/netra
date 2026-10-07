@@ -2,7 +2,7 @@
 
 The contract between the backend (track 1: `api/`, `processor/`, the `ops` service, `ml-scorer`) and the dashboard (track 2: `frontend/`). Both tracks code against this file. To change a shape, change this file first, then the code on both sides.
 
-Written 2026-10-07 on branch `integration`, from `api/app` (routes, `ws.py`, `consumers.py`, `repo.py`), `api/db/init.sql`, `processor/alerts.py`, `frontend/src/data/source.ts`, `frontend/src/data/backend/` and `frontend/docs/BUILD_PLAN.md`. It covers everything in `contracts/API_SPEC.md` (the backend team's spec of what exists) plus what the build plan adds.
+Written 2026-10-07 on branch `integration` (updated the same day after A1), from `api/app` (routes, `ws.py`, `consumers.py`, `repo.py`), `api/db/init.sql`, `processor/alerts.py`, `frontend/src/data/source.ts`, `frontend/src/data/backend/` and `frontend/docs/BUILD_PLAN.md`. It covers everything in `contracts/API_SPEC.md` (the backend team's spec of what exists) plus what the build plan adds.
 
 **Status words**
 - **exists**: in the code today. The example is what the code sends.
@@ -28,11 +28,11 @@ Numbers in the examples are made up to show the shape. They are not results.
 | PATCH | `/incidents/{id}` | any user | exists | |
 | GET | `/freshness` | none | exists | |
 | GET | `/health` | none | exists | |
-| GET | `/config` | any user | exists (new keys `kpi.*`, `traffic.*`) | A1 |
-| PUT | `/config/{key}` | admin | exists (new keys `kpi.*`, `traffic.*`) | A1 |
-| GET | `/kpi` | any user | **new** | A1 |
-| GET | `/kpi/alerts` | any user | **new** | A1 |
-| GET | `/traffic/recent` | any user | **new** | A1 (see 4.3) |
+| GET | `/config` | any user | exists (keys `kpi.*` exist since A1; `traffic.*` is new) | A1 |
+| PUT | `/config/{key}` | admin | exists (checks `kpi.*` values since A1; `traffic.*` is new) | A1 |
+| GET | `/kpi` | any user | exists | A1 |
+| GET | `/kpi/alerts` | any user | exists | A1 |
+| GET | `/traffic/recent` | any user | **new** | not assigned (see 4.3) |
 | GET | `/models` | any user | **new** | B2 |
 | GET | `/jobs` | any user | **new** | A3 |
 | GET | `/jobs/runs` | any user | **new** | A3 |
@@ -48,16 +48,16 @@ Numbers in the examples are made up to show the shape. They are not results.
 | `alert` | a new alert was stored | exists, changed (alert fields) | B2, ask 2 |
 | `incident_update` | someone changed an incident | exists, changed (alert fields) | B2, ask 2 |
 | `pong` | reply to `ping` | exists | |
-| `kpi` | every 5 s | **new** | A1 |
-| `kpi_alert` | a KPI alert opens, changes level or clears | **new** | A1 |
-| `traffic` | every 1 s | **new** | A1 (see 4.3) |
+| `kpi` | every 5 s | exists | A1 |
+| `kpi_alert` | a KPI alert opens, changes level or clears | exists | A1 |
+| `traffic` | every 1 s | **new** | not assigned (see 4.3) |
 | `ops_alert` | an ops alert opens, changes level or clears | **new** | A3 |
 | `job_runs` | a scheduled job finished a run | **new** | A3 |
 | `models` | a model's status, version or metrics changed | **new** | B2 |
 
 The browser sends only the text `ping`. Everything else it does (decisions, thresholds) goes through REST.
 
-No prompt in the build plan builds the server's `traffic` message yet. Suggestion: build it in A1 next to the KPI loop, with `ai` at 0 until B2 lands. Until the API sends it, the dashboard keeps building the same `data` from the `events` stream (`TrafficMeter` in `frontend/src/data/backend/traffic.ts`).
+No prompt in the build plan builds the server's `traffic` message yet (A1 built the KPIs only). Suggestion: build it next to the KPI loop in `api/app/kpi.py`'s style, with `ai` at 0 until B2 lands. Until the API sends it, the dashboard keeps building the same `data` from the `events` stream (`TrafficMeter` in `frontend/src/data/backend/traffic.ts`).
 
 ---
 
@@ -212,7 +212,7 @@ Body: any of `status` (`open`, `acknowledged`, `resolved`; not `null`), `notes` 
 ### 3.11 `GET /config`, `PUT /config/{key}` (PUT: admin)
 `GET` returns every key: `{"freshness_sla_p95_seconds": 5, "freshness_window_minutes": 5, "rules_enabled": {}}`. `PUT /config/{key}` with body `{"value": <any JSON>}` creates or replaces one key and returns `{"key": "...", "value": ...}`.
 
-**New keys** (A1), seeded by `api/db/init.sql`:
+**Keys added by A1.** The API seeds the `kpi.*` keys at startup (`api/app/schema.py`, only where a key is missing, so an admin's value stays). `PUT /config` refuses a `kpi.*` key that is not `kpi.<name>.warn` or `kpi.<name>.crit` with a known name, or a value that is not a number of 0 or more or `null`: 422 with the reason in `detail`. A `null` value is stored as JSON null (no line). `traffic.settle_seconds` is still new (4.3).
 | key | value | meaning |
 |---|---|---|
 | `kpi.<name>.warn` | number or `null` | the warning line for that KPI (names in 4.1). `null` = no line |
@@ -234,7 +234,7 @@ A threshold change shows up in the next `kpi` message (it carries `warn` and `cr
 
 ## 4. New routes and messages
 
-### 4.1 `kpi` (WebSocket, every 5 s) and `GET /kpi` (A1)
+### 4.1 `kpi` (WebSocket, every 5 s) and `GET /kpi` (exists since A1)
 The API computes five KPIs from ClickHouse every 5 s, over the last 1 minute and the last 5 minutes, by `stored_ts`:
 
 | name | value | unit | `null` when |
@@ -273,6 +273,7 @@ Message:
 - `level` is this reading's own level: `crit` if `crit` is set and `value_1m` ≥ `crit`; otherwise `warn` if `warn` is set and `value_1m` ≥ `warn`; otherwise `ok`; `no_data` when `value_1m` is `null`. All five alert when the value rises. A feed that goes quiet is caught by `/freshness` (`stalled`) and the ops health watch, not by `events_per_sec`.
 - `alert_id` is the id of this KPI's firing `kpi_alert`, or `null`. `level` can be `crit` with no alert yet: one breach does not open an alert (4.2).
 - If ClickHouse cannot be read, no `kpi` message is sent that tick. A missing tick is the signal; the ops health watch raises it.
+- Built in `api/app/kpi.py` (the loop and the ClickHouse query) and `api/app/kpi_rules.py` (values, levels and the crossing rules, tested in `tests/test_kpi.py`). The interval is `KPI_INTERVAL_SECONDS` (default 5).
 
 `GET /kpi?minutes=15` (`minutes` 1 to 60) fills the strip and its small trend after a reload:
 ```json
@@ -287,8 +288,8 @@ Message:
 ```
 `history` holds one entry per 5 s tick, oldest first, with each KPI's `value_1m`. `latest` is `null` before the first tick.
 
-### 4.2 `kpi_alert` (WebSocket) and `GET /kpi/alerts` (A1)
-One row per alert, in a new Postgres table `kpi_alerts`. The whole row is sent every time it changes.
+### 4.2 `kpi_alert` (WebSocket) and `GET /kpi/alerts` (exists since A1)
+One row per alert, in the Postgres table `kpi_alerts` (created by the API at startup). The whole row is sent every time it changes. The alert state lives in the API's memory and is restored from the firing rows at startup, so one API instance is assumed.
 
 Firing:
 ```json
@@ -682,8 +683,8 @@ An invalid or expired token: the server accepts, then closes with code **4401** 
 ## 7. Connecting and reconnecting (what the dashboard does)
 1. Open the WebSocket and wait for `hello`. Retry a closed socket after 1 s, 2 s, 4 s and so on, up to 10 s. Code 4401 means sign in again.
 2. Fill the screen over REST, in parallel:
-   - exists: `GET /events/recent?limit=1000`, `GET /alerts/recent?limit=500`
-   - new: `GET /traffic/recent?seconds=300`, `GET /kpi?minutes=15`, `GET /kpi/alerts?state=firing`, `GET /models`, `GET /jobs`, `GET /ops/alerts?state=firing`
+   - exists: `GET /events/recent?limit=1000`, `GET /alerts/recent?limit=500`, `GET /kpi?minutes=15`, `GET /kpi/alerts?state=firing`
+   - new: `GET /traffic/recent?seconds=300`, `GET /models`, `GET /jobs`, `GET /ops/alerts?state=firing`
 
    A 404 on a new route means that part is PENDING.
 3. Apply live messages as they come. A row (alert, KPI alert, ops alert) that arrives both by REST and by WebSocket is the same row: match on `alert_id` or `id`.
@@ -693,11 +694,11 @@ An invalid or expired token: the server accepts, then closes with code **4401** 
 
 ## 8. Inside the backend (not part of the API; suggestions for A1, A3 and B2)
 These do not change what the dashboard sees. They are a default, so the two halves of track 1 fit together.
-- **New Postgres tables:** `kpi_alerts` (A1); `job_runs`, `ops_alerts`, `daily_reports` (A3). New columns on `incidents` for section 5's fields (B2, ask 2).
+- **Postgres tables:** `kpi_alerts` exists (A1). New: `job_runs`, `ops_alerts`, `daily_reports` (A3). A table added after the first release goes in `api/app/schema.py`, because `api/db/init.sql` only runs on an empty volume. New columns on `incidents` for section 5's fields (B2, ask 2).
 - **New ClickHouse table:** `ml_scores` (B2). The BI views are A5's.
 - **`ops` service to API:** the `ops` service writes its rows to Postgres and publishes each one to a Kafka topic `ops.events` as `{"kind": "job_run" | "ops_alert", "row": {...}}`. The API consumes it and broadcasts `job_runs` or `ops_alert`, the same way it handles `alerts` today.
 - **`ml-scorer` to API:** model alerts on `alerts` (as today). A heartbeat every 5 s on a topic `models.heartbeat`, as `{"model_id", "version", "status", "scored_per_sec", "ts"}`. The API reads `trained_at` and `metrics` from the bundle folder of the version in the heartbeat.
-- **The KPI loop** and the `traffic` counter run inside the API (A1). The counter needs the `alerts` consumer to mark which events a model flagged.
+- **The KPI loop** runs inside the API (exists, A1). The `traffic` counter should too. The counter needs the `alerts` consumer to mark which events a model flagged.
 
 ---
 
