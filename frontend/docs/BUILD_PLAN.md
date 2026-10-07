@@ -23,7 +23,7 @@ Rule of thumb: anything with `make`, `docker` or a database runs on **Anchit's**
 | Juice Shop lab (nginx, Vector, normaliser to `events.raw`, attack bots, benign users; `make lab`) | `feat/event-gen` | built, **not on `integration`** |
 | Concurrency | `concurrency` | **a plan only** (`Concurrency/Netra_Concurrency_Fix_Plan.md`); the code changes it lists are not made yet |
 | Model 1 (ATDE 1.0.0: Isolation Forest per log type, then XGBoost) | `origin/main` (`ml/model1/`) | first version pushed; the **updated version is still coming** |
-| CRIE (model 2) | | not started; fixes fall back to MITRE's mitigations |
+| CRIE (model 2, recommends fixes) | ML team (Aliya) | being packaged; ready before the event. Until it is plugged in, fixes fall back to MITRE's mitigations |
 
 ## What changed since the first plan
 - **Juice Shop replaces the simulator** as the live source (`make lab`). The simulator stays only as an option (`make sim`); never run both.
@@ -43,13 +43,17 @@ Model 1 was trained on **network-flow records** (packets, bytes, ports, protocol
 | B1 | load model 1, prove it scores like training, list the field gap | Track 1 | updated model pushed |
 | B2 | the scoring service: model 1 on all traffic, push | Track 1, then Anchit runs it | B1, field gap settled |
 | B3 | model 1 on the screen | Track 1 (touches `frontend/`) | B2 |
+| R1 | load CRIE and prove it matches the notebook | Track 1 | CRIE handed over |
+| R2 | the fix endpoint `POST /crie/recommend`, push | Track 1, then Anchit runs it | R1 |
+| R3 | CRIE's fixes on the screen | Track 1 (touches `frontend/`) | R2 |
 | C2 | end-to-end run on the Juice Shop lab | Anchit runs it, you relay to Track 1 | M1, B2 |
 | P1 | Power BI practice (CSV) | Anchit exports, you build | Anchit's CSV export |
 | P2 | Power BI live report | you + Anchit, same room | at the venue |
 | E1 | runbook and rehearsal | everyone | everything |
 | F1 | frontend refinements and redeploy | Track 2 | last |
 
-**If time runs out, keep:** M1, B1, B2, C2, P2, E1. **Then:** M2, B3, F1. **Later:** B4, B5, CRIE.
+**If time runs out, keep:** M1, B1, B2, C2, P2, E1. **Then:** R1, R2, R3, M2, B3, F1. **Later:** B4, B5.
+R and B don't depend on each other: start whichever model arrives first.
 
 ---
 
@@ -99,6 +103,31 @@ How it fits now: the rules flag known attacks; **model 1 scores every event**. F
 
 ---
 
+## R. CRIE (model 2): recommended fixes
+How it fits: CRIE is called **per incident, by the API**, not by model 1. Many incidents come only from the rules (model 1 can't read Juice Shop's web events), so CRIE must work with or without model 1's output. The dashboard asks for fixes when an incident opens or changes, and shows the top 3; if CRIE can't recommend, it shows MITRE's mitigations. A person always approves.
+
+**R0 What was agreed with the ML team** (sent 2026-10-07)
+- One function to import: `crie_engine.recommend(incident) -> dict`, loads its files once.
+- Input: `incident_id`, `attack_type` (our rule types), `mitre_technique`, `severity` (1 to 5), `detected_by`, `rules`, `model` (model 1's `attack_family`, `confidence`, `is_unknown`, `if_score`, `top3`, or `null`), `context` (lists of `src_ips`, `usernames`, `hosts`; `dst_ip` and `domain` usually `null`).
+- Output: `version`, and either the top 3 fixes (`action_id`, `name`, `d3fend` id and name, `confidence`, `rank`, `reasons` with feature, value and contribution, `provenance`) or `fallback` (MITRE `technique` and `mitigations`).
+- Handover: `VERSION`, `model_card.md`, `metrics.json`, `samples.jsonl` (20 to 50 incidents with the notebook's exact output), and the exact package versions the files were saved with.
+- Still to come from her: which CRIE family each of our 8 attack types maps to, and the names of model 1's classes 0 to 7.
+
+**R1 Load CRIE and prove it matches the notebook** (Track 1, when the files are handed over)
+> The ML team handed over CRIE (model 2) in ml/crie/ (crie_engine.py, its saved files, VERSION, model_card.md, metrics.json, samples.jsonl). Read model_card.md and frontend/docs/BUILD_PLAN.md section R0 first. Check that the package versions it needs work on Python 3.12 (the API's Docker image is python:3.12-slim); add them, pinned, to api/requirements.txt. Write a test that runs every row of samples.jsonl through `recommend()` and gets exactly the expected output, including an incident with `model: null` and one that returns the MITRE fallback. If any row differs, stop and tell me which; don't change the engine. Measure how long one call takes. Commit only your own paths.
+
+**R2 The fix endpoint** (Track 1)
+> Add `POST /crie/recommend` to the API (api/app/routes/crie.py), signed-in users only. It takes one incident in the R0 input shape and returns CRIE's answer unchanged, plus `version`. Load the engine once at start-up; if it fails to load, the API still starts, the endpoint answers 503, and `GET /models` lists CRIE as `failed` with the reason (contracts/LIVE_API.md 4.x models; `ready` with its version, trained date and metrics from the bundle when it loads). Cache answers per incident and input for 60 s. Add the endpoint to contracts/LIVE_API.md. Tests for: a rule-only incident, an incident with model 1 output, the fallback, and the engine missing. You cannot run Docker here; say what only a run on the stack can prove. Ask me before pushing.
+
+**Anchit's steps after R2**
+> 1. `git pull` on `integration`, then `make up` (it rebuilds the API), then `make lab`
+> 2. After 5 minutes send me: `docker compose ps`, the last 50 lines of `docker compose logs api`, and the output of `curl -s http://localhost:8000/models` (if it asks for sign-in, say so).
+
+**R3 CRIE's fixes on the screen** (Track 1, in frontend/)
+> In frontend/src/data/backend: when an incident is created, or its signals, severity or model output change, call `POST /crie/recommend` with the R0 input built from the incident (debounced 2 s, one call in flight per incident). Map the answer to the dashboard's `Fix` type (frontend/src/data/types.ts): `d3fend`, `confidence`, `rank`, and each reason as a plain sentence. A `fallback` answer fills `incident.fallback` as today. If the call fails, keep MITRE's mitigations and show nothing invented. CRIE shows ready with its version from `models` (add `offline` to `ModelStatus`). Approving a CRIE fix writes the action id and CRIE's version into the decision log. Update the tests, `npm test`, `npm run build`. Ask me before pushing.
+
+---
+
 ## C. Juice Shop end to end
 
 **C2 One full run** (Anchit runs it; you carry the results to Track 1)
@@ -131,7 +160,7 @@ The data side is done (`docs/POWER_BI.md`). Power BI Desktop runs on your Window
 
 **E1 Runbook and dry run** (everyone)
 Track 1 writes the runbook on your laptop; the dry run happens on Anchit's laptop (or at the venue, together).
-> Write docs/DEMO_RUNBOOK.md for a teammate who has no Claude Code: start order and checks (`make up`, `make lab`, the dashboard with `npm run build:live` and `npm run preview:live`, sign in), the scripted attacks, what to show in Power BI, and the fallback if anything fails (the simulated site, `/live?demo=1`, which runs on any laptop with no backend). Every command copy-pasteable, with what the screen should show after it. Ask me before pushing.
+> Write docs/DEMO_RUNBOOK.md for a teammate who has no Claude Code: start order and checks (`make up`, `make lab`, the dashboard with `npm run build:live` and `npm run preview:live`, sign in), the scripted attacks, the fix to approve for each (CRIE's top fix), what to show in Power BI, and the fallback if anything fails (the simulated site, `/live?demo=1`, which runs on any laptop with no backend). Every command copy-pasteable, with what the screen should show after it. Ask me before pushing.
 
 Then Anchit follows the runbook start to finish and sends you screenshots of anything that differs; paste them into Track 1 to fix. Update the deck's slides 5, 7, 8 and 9 with real numbers only.
 
