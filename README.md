@@ -72,6 +72,7 @@ While the `make lab` command automatically runs a background orchestrator that f
 make attack SCENARIO=brute_force
 
 # Available scenarios to pass to SCENARIO=:
+#   --- Core Scenarios ---
 #   web_scan              (Path and param fuzzing)
 #   brute_force           (Password guessing)
 #   credential_stuffing   (Distributed login spray)
@@ -79,9 +80,22 @@ make attack SCENARIO=brute_force
 #   sqli                  (SQL injection)
 #   data_exfiltration     (Huge file downloads)
 #   account_takeover      (Successful login from high-risk IP)
+#
+#   --- Evasion Scenarios (ML Test Set) ---
+#   evasion_low_slow_brute    (≤4 failed logins / 60s)
+#   evasion_distributed_cred  (1 attempt per IP to dodge grouping)
+#   evasion_obfuscated_sqli   (Encoded / benchmark SQLi)
+#   evasion_xss_traversal     (Encoded XSS / path traversal)
+#   evasion_slowloris         (Slow DoS connection exhaustion)
+#   evasion_idor_enum         (Sequential resource ID fuzzing)
+#   evasion_slow_exfil        (Chunked data exfil <50MB each)
+#   evasion_account_enum      (Probing password reset endpoints)
 
-# Trigger ALL attack scenarios sequentially
+# Trigger ALL core attack scenarios sequentially
 make attack-full
+
+# Trigger ALL evasion (ML test) scenarios sequentially
+make attack-evasion
 ```
 
 After starting the stack, open:
@@ -226,6 +240,20 @@ These are launched via real HTTP requests (using `ffuf`, `ab`, `sqlmap`, etc.) f
 | `sqli`                | `sqlmap`   | Automated SQL injection against the product search |
 | `data_exfiltration`   | `curl`     | Rapid download of huge backup files from `/ftp`    |
 | `account_takeover`    | `curl`     | Successful login from a high-risk geo IP (RU/CN)   |
+
+### Live Lab Evasion Scenarios (ML Test Set)
+These 8 scenarios are designed specifically to **bypass the Sigma rules**. They act as a held-out test set to evaluate if the ML models (IsolationForest / XGBoost) can detect anomalous behavior that stays under static thresholds or uses novel vectors. These are also randomly orchestrated by `auto_attack.py` alongside the standard attacks above.
+
+| Scenario                    | Evades Rule             | Description                                                                 |
+|-----------------------------|-------------------------|-----------------------------------------------------------------------------|
+| `evasion_low_slow_brute`    | `brute_force`           | Sends ≤4 failed logins per 60s, staying under the 5-count threshold.        |
+| `evasion_distributed_cred`  | `credential_stuffing`   | Sends 1 attempt per IP against the same user to defeat per-IP aggregation.  |
+| `evasion_obfuscated_sqli`   | `web_scan`              | Uses URL encoding and `BENCHMARK()` to bypass the static WAF-style regex.   |
+| `evasion_xss_traversal`     | None (no rule)          | `<img onerror>` and `%c0%af` traversal payloads that dodge simple signatures. |
+| `evasion_slowloris`         | `http_flood`            | Slow-rate DoS via `slowhttptest`; exhausts connections with low request count.|
+| `evasion_idor_enum`         | `web_scan`              | Sequential ID enumeration on API resources (all return HTTP 200).           |
+| `evasion_slow_exfil`        | `data_exfiltration`     | Chunked file downloads via HTTP `Range` headers, keeping each under 50MB.   |
+| `evasion_account_enum`      | `suspicious_login`      | Email enumeration via password reset/security question endpoints.           |
 
 ### Synthetic Generator Scenarios
 The simulator (`make sim`) generates fake telemetry and injects these mathematical patterns without doing any real HTTP networking:

@@ -10,13 +10,22 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(me
 # Define the attacks, their severity, and their probability weight.
 # Higher weight = happens more frequently.
 ATTACKS = [
-    {"name": "web_scan",            "severity": "low",      "weight": 40},
-    {"name": "brute_force",         "severity": "medium",   "weight": 20},
-    {"name": "credential_stuffing", "severity": "medium",   "weight": 15},
-    {"name": "http_flood",          "severity": "medium",   "weight": 15},
-    {"name": "sqli",                "severity": "high",     "weight": 5},
-    {"name": "data_exfiltration",   "severity": "high",     "weight": 3},
-    {"name": "account_takeover",    "severity": "critical", "weight": 2}
+    {"name": "web_scan",                 "severity": "low",      "weight": 20},
+    {"name": "brute_force",              "severity": "medium",   "weight": 10},
+    {"name": "credential_stuffing",      "severity": "medium",   "weight": 10},
+    {"name": "http_flood",               "severity": "medium",   "weight": 10},
+    {"name": "sqli",                     "severity": "high",     "weight": 5},
+    {"name": "data_exfiltration",        "severity": "high",     "weight": 3},
+    {"name": "account_takeover",         "severity": "critical", "weight": 2},
+    # --- Evasion Scenarios (ML Test Set) ---
+    {"name": "evasion_low_slow_brute",   "severity": "evasion",  "weight": 5},
+    {"name": "evasion_distributed_cred", "severity": "evasion",  "weight": 5},
+    {"name": "evasion_obfuscated_sqli",  "severity": "evasion",  "weight": 5},
+    {"name": "evasion_xss_traversal",    "severity": "evasion",  "weight": 5},
+    {"name": "evasion_slowloris",        "severity": "evasion",  "weight": 5},
+    {"name": "evasion_idor_enum",        "severity": "evasion",  "weight": 5},
+    {"name": "evasion_slow_exfil",       "severity": "evasion",  "weight": 5},
+    {"name": "evasion_account_enum",     "severity": "evasion",  "weight": 5}
 ]
 
 def select_attack():
