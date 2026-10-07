@@ -102,7 +102,7 @@ def extract_user_from_body(body: str | None) -> str:
     return "-"
 
 
-def derive_event_type(method: str, uri: str, status: int) -> tuple[str, str]:
+def derive_event_type(method: str, uri: str, status: int, bytes_out: int) -> tuple[str, str]:
     """Derive (event_type, severity) from the HTTP request attributes.
 
     Returns values matching the frozen raw_event.schema.json enum.
@@ -117,8 +117,8 @@ def derive_event_type(method: str, uri: str, status: int) -> tuple[str, str]:
         else:
             return "login", "low"       # login_failed — severity stays low; rules decide
 
-    # FTP file downloads (data exfiltration vector)
-    if path_lower.startswith("/ftp/") and status == 200:
+    # Data Exfiltration (downloads > 50 MB)
+    if bytes_out > 50_000_000:
         return "data_transfer", "low"
 
     # Everything else is a generic HTTP request
@@ -138,8 +138,9 @@ def normalize_web(raw_line: str) -> dict | None:
     uri    = ng.get("uri", "/")
     status = int(ng.get("status", 0))
     ip     = ng.get("ip", "0.0.0.0")
+    bytes_out = int(ng.get("bytes", 0))
 
-    event_type, severity = derive_event_type(method, uri, status)
+    event_type, severity = derive_event_type(method, uri, status, bytes_out)
 
     # Extract user from login body if applicable
     user = "-"
@@ -162,7 +163,7 @@ def normalize_web(raw_line: str) -> dict | None:
         "severity":    severity,
         "status":      "success" if status < 400 else "failure",
         "host":        "juice-shop",
-        "bytes_out":   int(ng.get("bytes", 0)),
+        "bytes_out":   bytes_out,
         "process":     "",
         "method":      method,
         "path":        uri,
@@ -170,11 +171,6 @@ def normalize_web(raw_line: str) -> dict | None:
         "user_agent":  ng.get("ua", ""),
         "response_ms": response_ms,
     }
-
-    # Add fake geo_country for known attacker IPs (extra field, non-breaking)
-    geo = GEO_LOOKUP.get(ip)
-    if geo:
-        raw_event["geo_country"] = geo
 
     return raw_event
 
