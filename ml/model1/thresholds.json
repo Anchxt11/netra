@@ -1,0 +1,17 @@
+{
+  "version": "1.0.0",
+  "isolation_forest": {
+    "score": "anomaly_score = -score_samples(X float32); anomalous if decision_function < 0",
+    "aws_vpc_flow_log": {
+      "anomaly_cutoff": 0.5,
+      "offset_": -0.5
+    },
+    "cisco_asa": {
+      "anomaly_cutoff": 0.5,
+      "offset_": -0.5
+    }
+  },
+  "xgboost": {
+    "unknown_confidence_below": 0.9
+  }
+}

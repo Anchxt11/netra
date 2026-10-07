@@ -1,0 +1,61 @@
+{
+  "actions": {
+    "enable_mfa": "Enable MFA",
+    "reset_credentials": "Reset Credentials",
+    "revoke_sessions": "Revoke Sessions",
+    "disable_account": "Disable Compromised Account",
+    "block_source_ip": "Block Source IP",
+    "rate_limit_traffic": "Rate Limit Traffic",
+    "block_domain_port": "Block Malicious Domain/Port",
+    "network_segmentation": "Network Segmentation",
+    "isolate_host": "Isolate Host",
+    "kill_process": "Kill Process",
+    "quarantine_file": "Quarantine File",
+    "block_execution": "Block Execution / Allowlisting",
+    "block_malicious_request": "Block Malicious Request",
+    "add_waf_rule": "Add WAF Rule",
+    "patch_software": "Patch / Update Software",
+    "harden_configuration": "Harden Configuration",
+    "disable_service": "Disable Unnecessary Service",
+    "restrict_data_transfer": "Restrict / Block Data Transfer",
+    "restore_from_backup": "Restore from Backup",
+    "increase_monitoring": "Increase Logging / Monitoring"
+  },
+  "requires": {
+    "block_source_ip": [
+      "src_ip"
+    ],
+    "disable_account": [
+      "username"
+    ],
+    "revoke_sessions": [
+      "username"
+    ],
+    "reset_credentials": [
+      "username"
+    ],
+    "isolate_host": [
+      "host"
+    ],
+    "kill_process": [
+      "host"
+    ],
+    "quarantine_file": [
+      "host"
+    ],
+    "block_domain_port": [
+      "dst_ip|domain"
+    ],
+    "restrict_data_transfer": [
+      "dst_ip|domain"
+    ]
+  },
+  "disruptive_min_severity": {
+    "isolate_host": "high",
+    "disable_account": "high",
+    "kill_process": "medium",
+    "restore_from_backup": "critical",
+    "network_segmentation": "medium",
+    "block_source_ip": "medium"
+  }
+}

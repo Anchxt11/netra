@@ -1,0 +1,273 @@
+d3fend_id,technique,tactic,parent,resolved_how,crie_actions
+D3-CHN,Connected Honeynet,Deceive,Decoy Environment,inherited,
+D3-IHN,Integrated Honeynet,Deceive,Decoy Environment,inherited,
+D3-SHN,Standalone Honeynet,Deceive,Decoy Environment,inherited,
+D3-DF,Decoy File,Deceive,Decoy Object,inherited,
+D3-DNR,Decoy Network Resource,Deceive,Decoy Object,inherited,
+D3-DP,Decoy Persona,Deceive,Decoy Object,inherited,
+D3-DPR,Decoy Public Release,Deceive,Decoy Object,inherited,
+D3-DST,Decoy Session Token,Deceive,Decoy Object,inherited,
+D3-DUC,Decoy User Credential,Deceive,Decoy Object,inherited,
+D3-DE,Decoy Environment,Deceive,Defensive Technique,direct,
+D3-DO,Decoy Object,Deceive,Defensive Technique,direct,
+D3-AEM,Application Exception Monitoring,Detect,Application Performance Monitoring,tactic-default,Increase Logging / Monitoring
+D3-RFUM,Remote Firmware Update Monitoring,Detect,Application Protocol Command Analysis,tactic-default,Increase Logging / Monitoring
+D3-ACA,Active Certificate Analysis,Detect,Certificate Analysis,tactic-default,Increase Logging / Monitoring
+D3-PCA,Passive Certificate Analysis,Detect,Certificate Analysis,tactic-default,Increase Logging / Monitoring
+D3-FA,File Analysis,Detect,Defensive Technique,tactic-default,Increase Logging / Monitoring
+D3-ID,Identifier Analysis,Detect,Defensive Technique,tactic-default,Increase Logging / Monitoring
+D3-MA,Message Analysis,Detect,Defensive Technique,tactic-default,Increase Logging / Monitoring
+D3-NTA,Network Traffic Analysis,Detect,Defensive Technique,tactic-default,Increase Logging / Monitoring
+D3-PHAM,Physical Access Monitoring,Detect,Defensive Technique,direct,
+D3-PM,Platform Monitoring,Detect,Defensive Technique,tactic-default,Increase Logging / Monitoring
+D3-PA,Process Analysis,Detect,Defensive Technique,tactic-default,Increase Logging / Monitoring
+D3-UBA,User Behavior Analysis,Detect,Defensive Technique,tactic-default,Increase Logging / Monitoring
+D3-DA,Dynamic Analysis,Detect,File Analysis,tactic-default,Increase Logging / Monitoring
+D3-EFA,Emulated File Analysis,Detect,File Analysis,tactic-default,Increase Logging / Monitoring
+D3-FCOA,File Content Analysis,Detect,File Analysis,tactic-default,Increase Logging / Monitoring
+D3-FH,File Hashing,Detect,File Analysis,tactic-default,Increase Logging / Monitoring
+D3-FCR,File Content Rules,Detect,File Content Analysis,tactic-default,Increase Logging / Monitoring
+D3-PFV,Peripheral Firmware Verification,Detect,Firmware Verification,tactic-default,Increase Logging / Monitoring
+D3-SFV,System Firmware Verification,Detect,Firmware Verification,tactic-default,Increase Logging / Monitoring
+D3-HD,Homoglyph Detection,Detect,Identifier Analysis,tactic-default,Increase Logging / Monitoring
+D3-IAA,Identifier Activity Analysis,Detect,Identifier Analysis,tactic-default,Increase Logging / Monitoring
+D3-IRA,Identifier Reputation Analysis,Detect,Identifier Analysis,tactic-default,Increase Logging / Monitoring
+D3-UA,URL Analysis,Detect,Identifier Analysis,tactic-default,Increase Logging / Monitoring
+D3-DNRA,Domain Name Reputation Analysis,Detect,Identifier Reputation Analysis,tactic-default,Increase Logging / Monitoring
+D3-FHRA,File Hash Reputation Analysis,Detect,Identifier Reputation Analysis,tactic-default,Increase Logging / Monitoring
+D3-IPRA,IP Reputation Analysis,Detect,Identifier Reputation Analysis,tactic-default,Increase Logging / Monitoring
+D3-URA,URL Reputation Analysis,Detect,Identifier Reputation Analysis,tactic-default,Increase Logging / Monitoring
+D3-SMRA,Sender MTA Reputation Analysis,Detect,Message Analysis,tactic-default,Increase Logging / Monitoring
+D3-SRA,Sender Reputation Analysis,Detect,Message Analysis,tactic-default,Increase Logging / Monitoring
+D3-ANAA,Administrative Network Activity Analysis,Detect,Network Traffic Analysis,tactic-default,Increase Logging / Monitoring
+D3-APCA,Application Protocol Command Analysis,Detect,Network Traffic Analysis,tactic-default,Increase Logging / Monitoring
+D3-BSE,Byte Sequence Emulation,Detect,Network Traffic Analysis,tactic-default,Increase Logging / Monitoring
+D3-CA,Certificate Analysis,Detect,Network Traffic Analysis,tactic-default,Increase Logging / Monitoring
+D3-CSPP,Client-server Payload Profiling,Detect,Network Traffic Analysis,tactic-default,Increase Logging / Monitoring
+D3-CAA,Connection Attempt Analysis,Detect,Network Traffic Analysis,tactic-default,Increase Logging / Monitoring
+D3-DNSTA,DNS Traffic Analysis,Detect,Network Traffic Analysis,tactic-default,Increase Logging / Monitoring
+D3-FC,File Carving,Detect,Network Traffic Analysis,tactic-default,Increase Logging / Monitoring
+D3-IPCTA,IPC Traffic Analysis,Detect,Network Traffic Analysis,tactic-default,Increase Logging / Monitoring
+D3-ISVA,Inbound Session Volume Analysis,Detect,Network Traffic Analysis,tactic-default,Increase Logging / Monitoring
+D3-NTCD,Network Traffic Community Deviation,Detect,Network Traffic Analysis,tactic-default,Increase Logging / Monitoring
+D3-NTSA,Network Traffic Signature Analysis,Detect,Network Traffic Analysis,tactic-default,Increase Logging / Monitoring
+D3-PHDURA,Per Host Download-Upload Ratio Analysis,Detect,Network Traffic Analysis,tactic-default,Increase Logging / Monitoring
+D3-PMAD,Protocol Metadata Anomaly Detection,Detect,Network Traffic Analysis,tactic-default,Increase Logging / Monitoring
+D3-RTA,RPC Traffic Analysis,Detect,Network Traffic Analysis,tactic-default,Increase Logging / Monitoring
+D3-RPA,Relay Pattern Analysis,Detect,Network Traffic Analysis,tactic-default,Increase Logging / Monitoring
+D3-RTSD,Remote Terminal Session Detection,Detect,Network Traffic Analysis,tactic-default,Increase Logging / Monitoring
+D3-EHB,Endpoint Health Beacon,Detect,Operating System Monitoring,tactic-default,Increase Logging / Monitoring
+D3-IDA,Input Device Analysis,Detect,Operating System Monitoring,tactic-default,Increase Logging / Monitoring
+D3-MBT,Memory Boundary Tracking,Detect,Operating System Monitoring,tactic-default,Increase Logging / Monitoring
+D3-SJA,Scheduled Job Analysis,Detect,Operating System Monitoring,tactic-default,Increase Logging / Monitoring
+D3-SDM,System Daemon Monitoring,Detect,Operating System Monitoring,tactic-default,Increase Logging / Monitoring
+D3-SFA,System File Analysis,Detect,Operating System Monitoring,tactic-default,Increase Logging / Monitoring
+D3-SICA,System Init Config Analysis,Detect,Operating System Monitoring,tactic-default,Increase Logging / Monitoring
+D3-USICA,User Session Init Config Analysis,Detect,Operating System Monitoring,tactic-default,Increase Logging / Monitoring
+D3-ELM,Electronic Lock Monitoring,Detect,Physical Access Monitoring,inherited,
+D3-MSM,Motion Sensor Monitoring,Detect,Physical Access Monitoring,inherited,
+D3-PSM,Proximity Sensor Monitoring,Detect,Physical Access Monitoring,inherited,
+D3-VS,Video Surveillance,Detect,Physical Access Monitoring,inherited,
+D3-APM,Application Performance Monitoring,Detect,Platform Monitoring,tactic-default,Increase Logging / Monitoring
+D3-FIM,File Integrity Monitoring,Detect,Platform Monitoring,tactic-default,Increase Logging / Monitoring
+D3-FBA,Firmware Behavior Analysis,Detect,Platform Monitoring,tactic-default,Increase Logging / Monitoring
+D3-FEMC,Firmware Embedded Monitoring Code,Detect,Platform Monitoring,tactic-default,Increase Logging / Monitoring
+D3-FV,Firmware Verification,Detect,Platform Monitoring,tactic-default,Increase Logging / Monitoring
+D3-OMM,Operating Mode Monitoring,Detect,Platform Monitoring,tactic-default,Increase Logging / Monitoring
+D3-OSM,Operating System Monitoring,Detect,Platform Monitoring,tactic-default,Increase Logging / Monitoring
+D3-OPM,Operational Process Monitoring,Detect,Platform Monitoring,tactic-default,Increase Logging / Monitoring
+D3-PUM,Platform Uptime Monitoring,Detect,Platform Monitoring,tactic-default,Increase Logging / Monitoring
+D3-DQSA,Database Query String Analysis,Detect,Process Analysis,tactic-default,Increase Logging / Monitoring
+D3-FAPA,File Access Pattern Analysis,Detect,Process Analysis,tactic-default,Increase Logging / Monitoring
+D3-IBCA,Indirect Branch Call Analysis,Detect,Process Analysis,tactic-default,Increase Logging / Monitoring
+D3-PCSV,Process Code Segment Verification,Detect,Process Analysis,tactic-default,Increase Logging / Monitoring
+D3-PSMD,Process Self-Modification Detection,Detect,Process Analysis,tactic-default,Increase Logging / Monitoring
+D3-PSA,Process Spawn Analysis,Detect,Process Analysis,tactic-default,Increase Logging / Monitoring
+D3-SEA,Script Execution Analysis,Detect,Process Analysis,tactic-default,Increase Logging / Monitoring
+D3-SSC,Shadow Stack Comparisons,Detect,Process Analysis,tactic-default,Increase Logging / Monitoring
+D3-SCA,System Call Analysis,Detect,Process Analysis,tactic-default,Increase Logging / Monitoring
+D3-PLA,Process Lineage Analysis,Detect,Process Spawn Analysis,tactic-default,Increase Logging / Monitoring
+D3-FCA,File Creation Analysis,Detect,System Call Analysis,tactic-default,Increase Logging / Monitoring
+D3-SBV,Service Binary Verification,Detect,System File Analysis,tactic-default,Increase Logging / Monitoring
+D3-ANET,Authentication Event Thresholding,Detect,User Behavior Analysis,tactic-default,Increase Logging / Monitoring
+D3-AZET,Authorization Event Thresholding,Detect,User Behavior Analysis,tactic-default,Increase Logging / Monitoring
+D3-CCSA,Credential Compromise Scope Analysis,Detect,User Behavior Analysis,tactic-default,Increase Logging / Monitoring
+D3-DAM,Domain Account Monitoring,Detect,User Behavior Analysis,tactic-default,Increase Logging / Monitoring
+D3-JFAPA,Job Function Access Pattern Analysis,Detect,User Behavior Analysis,tactic-default,Increase Logging / Monitoring
+D3-LAM,Local Account Monitoring,Detect,User Behavior Analysis,tactic-default,Increase Logging / Monitoring
+D3-RAPA,Resource Access Pattern Analysis,Detect,User Behavior Analysis,tactic-default,Increase Logging / Monitoring
+D3-SDA,Session Duration Analysis,Detect,User Behavior Analysis,tactic-default,Increase Logging / Monitoring
+D3-UDTA,User Data Transfer Analysis,Detect,User Behavior Analysis,tactic-default,Increase Logging / Monitoring
+D3-UGLPA,User Geolocation Logon Pattern Analysis,Detect,User Behavior Analysis,tactic-default,Increase Logging / Monitoring
+D3-WSAA,Web Session Activity Analysis,Detect,User Behavior Analysis,tactic-default,Increase Logging / Monitoring
+D3-AL,Account Locking,Evict,Credential Eviction,direct,Disable Compromised Account
+D3-ANCI,Authentication Cache Invalidation,Evict,Credential Eviction,direct,Revoke Sessions
+D3-CR,Credential Revocation,Evict,Credential Eviction,direct,Reset Credentials; Revoke Sessions
+D3-CE,Credential Eviction,Evict,Defensive Technique,direct,Reset Credentials
+D3-OE,Object Eviction,Evict,Defensive Technique,direct,
+D3-PE,Process Eviction,Evict,Defensive Technique,direct,Kill Process
+D3-DKE,Disk Erasure,Evict,Disk Formatting,inherited,
+D3-DKP,Disk Partitioning,Evict,Disk Formatting,inherited,
+D3-ER,Email Removal,Evict,File Eviction,inherited,Quarantine File
+D3-HR,Host Reboot,Evict,Host Shutdown,direct,
+D3-DNSCE,DNS Cache Eviction,Evict,Object Eviction,inherited,
+D3-DKF,Disk Formatting,Evict,Object Eviction,direct,
+D3-DRT,Domain Registration Takedown,Evict,Object Eviction,direct,Block Malicious Domain/Port
+D3-FEV,File Eviction,Evict,Object Eviction,direct,Quarantine File
+D3-RKD,Registry Key Deletion,Evict,Object Eviction,inherited,
+D3-HS,Host Shutdown,Evict,Process Eviction,direct,Isolate Host
+D3-PS,Process Suspension,Evict,Process Eviction,inherited,Kill Process
+D3-PT,Process Termination,Evict,Process Eviction,inherited,Kill Process
+D3-ST,Session Termination,Evict,Process Eviction,direct,Revoke Sessions
+D3-BAN,Biometric Authentication,Harden,Agent Authentication,inherited,Enable MFA
+D3-CBAN,Certificate-based Authentication,Harden,Agent Authentication,inherited,Enable MFA
+D3-MFA,Multi-factor Authentication,Harden,Agent Authentication,inherited,Enable MFA
+D3-PWA,Password Authentication,Harden,Agent Authentication,direct,Harden Configuration
+D3-TBA,Token-based Authentication,Harden,Agent Authentication,inherited,Enable MFA
+D3-DRA,Disable Remote Access,Harden,Application Configuration Hardening,direct,Disable Unnecessary Service
+D3-ACH,Application Configuration Hardening,Harden,Application Hardening,direct,Harden Configuration
+D3-CFI,Control Flow Integrity,Harden,Application Hardening,inherited,Harden Configuration
+D3-DCE,Dead Code Elimination,Harden,Application Hardening,inherited,Harden Configuration
+D3-EHPV,Exception Handler Pointer Validation,Harden,Application Hardening,inherited,Harden Configuration
+D3-PAN,Pointer Authentication,Harden,Application Hardening,inherited,Harden Configuration
+D3-PSEP,Process Segment Execution Prevention,Harden,Application Hardening,direct,Block Execution / Allowlisting
+D3-SAOR,Segment Address Offset Randomization,Harden,Application Hardening,inherited,Harden Configuration
+D3-SFCV,Stack Frame Canary Validation,Harden,Application Hardening,inherited,Harden Configuration
+D3-CP,Certificate Pinning,Harden,Credential Hardening,inherited,Harden Configuration
+D3-CRO,Credential Rotation,Harden,Credential Hardening,direct,Reset Credentials
+D3-SPP,Strong Password Policy,Harden,Credential Hardening,direct,Reset Credentials; Harden Configuration
+D3-TB,Token Binding,Harden,Credential Hardening,inherited,Harden Configuration
+D3-CERO,Certificate Rotation,Harden,Credential Rotation,inherited,Reset Credentials
+D3-PR,Password Rotation,Harden,Credential Rotation,inherited,Reset Credentials
+D3-AA,Agent Authentication,Harden,Defensive Technique,direct,Enable MFA
+D3-AH,Application Hardening,Harden,Defensive Technique,direct,Harden Configuration
+D3-CH,Credential Hardening,Harden,Defensive Technique,direct,Harden Configuration
+D3-MH,Message Hardening,Harden,Defensive Technique,direct,Harden Configuration
+D3-PH,Platform Hardening,Harden,Defensive Technique,direct,Harden Configuration
+D3-SCH,Source Code Hardening,Harden,Defensive Technique,direct,
+D3-OLV,Operational Logic Validation,Harden,Domain Logic Validation,inherited,
+D3-RFS,RF Shielding,Harden,Electromagnetic Radiation Hardening,inherited,
+D3-BMA,Bus Message Authentication,Harden,Message Authentication,inherited,Harden Configuration
+D3-MAN,Message Authentication,Harden,Message Hardening,direct,Harden Configuration
+D3-MENCR,Message Encryption,Harden,Message Hardening,inherited,Harden Configuration
+D3-TAAN,Transfer Agent Authentication,Harden,Message Hardening,inherited,Harden Configuration
+D3-OTP,One-time Password,Harden,Password Rotation,inherited,Reset Credentials
+D3-BA,Bootloader Authentication,Harden,Platform Hardening,inherited,Harden Configuration
+D3-DENCR,Disk Encryption,Harden,Platform Hardening,inherited,Harden Configuration
+D3-DLIC,Driver Load Integrity Checking,Harden,Platform Hardening,inherited,Harden Configuration
+D3-FE,File Encryption,Harden,Platform Hardening,inherited,Harden Configuration
+D3-HBWP,Hardware-based Write Protection,Harden,Platform Hardening,inherited,Harden Configuration
+D3-PEH,Physical Enclosure Hardening,Harden,Platform Hardening,inherited,Harden Configuration
+D3-RH,Radiation Hardening,Harden,Platform Hardening,direct,
+D3-SU,Software Update,Harden,Platform Hardening,direct,Patch / Update Software
+D3-SCP,System Configuration Permissions,Harden,Platform Hardening,inherited,Harden Configuration
+D3-TBI,TPM Boot Integrity,Harden,Platform Hardening,inherited,Harden Configuration
+D3-MBSV,Memory Block Start Validation,Harden,Pointer Validation,inherited,
+D3-NPC,Null Pointer Checking,Harden,Pointer Validation,inherited,
+D3-EMH,Electromagnetic Radiation Hardening,Harden,Radiation Hardening,direct,
+,Particle Radiation Hardening,Harden,Radiation Hardening,inherited,
+D3-CS,Credential Scrubbing,Harden,Source Code Hardening,direct,
+D3-DLV,Domain Logic Validation,Harden,Source Code Hardening,direct,
+D3-IRV,Integer Range Validation,Harden,Source Code Hardening,inherited,
+D3-PV,Pointer Validation,Harden,Source Code Hardening,direct,
+D3-RN,Reference Nullification,Harden,Source Code Hardening,inherited,
+D3-TL,Trusted Library,Harden,Source Code Hardening,inherited,
+D3-VI,Variable Initialization,Harden,Source Code Hardening,inherited,
+D3-VTV,Variable Type Validation,Harden,Source Code Hardening,inherited,
+D3-CDP,Change Default Password,Harden,Strong Password Policy,inherited,Reset Credentials; Harden Configuration
+D3-CTS,Credential Transmission Scoping,Isolate,Access Mediation,inherited,Harden Configuration
+D3-IOPR,IO Port Restriction,Isolate,Access Mediation,inherited,Harden Configuration
+D3-NAM,Network Access Mediation,Isolate,Access Mediation,direct,Network Segmentation
+D3-NRAM,Network Resource Access Mediation,Isolate,Access Mediation,direct,Network Segmentation
+D3-OVAR,OT Variable Access Restriction,Isolate,Access Mediation,inherited,Harden Configuration
+D3-OPR,Operating Mode Restriction,Isolate,Access Mediation,inherited,Harden Configuration
+D3-PAM,Physical Access Mediation,Isolate,Access Mediation,direct,
+D3-SCF,System Call Filtering,Isolate,Access Mediation,direct,Harden Configuration
+D3-DTP,Domain Trust Policy,Isolate,Access Policy Administration,inherited,Harden Configuration
+D3-LFP,Local File Permissions,Isolate,Access Policy Administration,inherited,Harden Configuration
+D3-UAP,User Account Permissions,Isolate,Access Policy Administration,inherited,Harden Configuration
+D3-UGPH,User Group Permissions,Isolate,Access Policy Administration,inherited,Harden Configuration
+D3-CM,Content Modification,Isolate,Content Filtering,direct,Quarantine File
+D3-CQ,Content Quarantine,Isolate,Content Filtering,inherited,Quarantine File
+D3-CV,Content Validation,Isolate,Content Filtering,inherited,Quarantine File
+D3-CNE,Content Excision,Isolate,Content Modification,inherited,Quarantine File
+D3-CFC,Content Format Conversion,Isolate,Content Modification,inherited,Quarantine File
+D3-CNR,Content Rebuild,Isolate,Content Modification,inherited,Quarantine File
+D3-CNS,Content Substitution,Isolate,Content Modification,inherited,Quarantine File
+D3-FFV,File Format Verification,Isolate,Content Validation,direct,
+D3-FRDDL,Forward Resolution Domain Denylisting,Isolate,DNS Denylisting,direct,Block Malicious Domain/Port
+D3-FRIDL,Forward Resolution IP Denylisting,Isolate,DNS Denylisting,direct,Block Malicious Domain/Port; Block Source IP
+D3-RRID,Reverse Resolution IP Denylisting,Isolate,DNS Denylisting,direct,Block Source IP
+D3-AMED,Access Mediation,Isolate,Defensive Technique,direct,Harden Configuration
+D3-APA,Access Policy Administration,Isolate,Defensive Technique,direct,Harden Configuration
+D3-CF,Content Filtering,Isolate,Defensive Technique,direct,Quarantine File
+D3-EI,Execution Isolation,Isolate,Defensive Technique,direct,Harden Configuration
+D3-NI,Network Isolation,Isolate,Defensive Technique,direct,Network Segmentation
+D3-ABPI,Application-based Process Isolation,Isolate,Execution Isolation,inherited,Harden Configuration
+D3-EAL,Executable Allowlisting,Isolate,Execution Isolation,direct,Block Execution / Allowlisting
+D3-EDL,Executable Denylisting,Isolate,Execution Isolation,direct,Block Execution / Allowlisting
+D3-HBPI,Hardware-based Process Isolation,Isolate,Execution Isolation,inherited,Harden Configuration
+D3-KBPI,Kernel-based Process Isolation,Isolate,Execution Isolation,inherited,Harden Configuration
+D3-FCDC,File Content Decompression Checking,Isolate,File Format Verification,inherited,
+D3-FISV,File Internal Structure Verification,Isolate,File Format Verification,inherited,
+D3-FMCV,File Metadata Consistency Validation,Isolate,File Format Verification,inherited,
+D3-FMVV,File Metadata Value Verification,Isolate,File Format Verification,direct,
+D3-FMBV,File Magic Byte Verification,Isolate,File Metadata Value Verification,inherited,
+D3-HDDL,Hierarchical Domain Denylisting,Isolate,Forward Resolution Domain Denylisting,inherited,Block Malicious Domain/Port
+D3-HDL,Homoglyph Denylisting,Isolate,Forward Resolution Domain Denylisting,inherited,Block Malicious Domain/Port
+D3-EF,Email Filtering,Isolate,Inbound Traffic Filtering,direct,Block Malicious Request
+D3-LAMED,LAN Access Mediation,Isolate,Network Access Mediation,inherited,Network Segmentation
+D3-RAM,Routing Access Mediation,Isolate,Network Access Mediation,inherited,Network Segmentation
+D3-BDI,Broadcast Domain Isolation,Isolate,Network Isolation,inherited,Network Segmentation
+D3-DNSAL,DNS Allowlisting,Isolate,Network Isolation,direct,Block Malicious Domain/Port
+D3-DNSDL,DNS Denylisting,Isolate,Network Isolation,direct,Block Malicious Domain/Port
+D3-DNL,Directional Network Link,Isolate,Network Isolation,inherited,Network Segmentation
+D3-ET,Encrypted Tunnels,Isolate,Network Isolation,direct,Harden Configuration
+D3-NTF,Network Traffic Filtering,Isolate,Network Isolation,direct,Block Source IP; Block Malicious Domain/Port
+D3-RFAM,Remote File Access Mediation,Isolate,Network Resource Access Mediation,inherited,Network Segmentation
+D3-WSAM,Web Session Access Mediation,Isolate,Network Resource Access Mediation,direct,Block Malicious Request; Add WAF Rule
+D3-ITF,Inbound Traffic Filtering,Isolate,Network Traffic Filtering,direct,Block Source IP; Rate Limit Traffic; Block Malicious Request
+D3-OTF,Outbound Traffic Filtering,Isolate,Network Traffic Filtering,direct,Restrict / Block Data Transfer; Block Malicious Domain/Port
+D3-EPL,Physical Locking,Isolate,Physical Access Mediation,inherited,
+D3-LFAM,Local File Access Mediation,Isolate,System Call Filtering,inherited,Harden Configuration
+D3-EBWSAM,Endpoint-based Web Server Access Mediation,Isolate,Web Session Access Mediation,inherited,Block Malicious Request; Add WAF Rule
+D3-PBWSAM,Proxy-based Web Server Access Mediation,Isolate,Web Session Access Mediation,inherited,Block Malicious Request; Add WAF Rule
+D3-AVE,Asset Vulnerability Enumeration,Model,Asset Inventory,direct,Patch / Update Software
+D3-CI,Configuration Inventory,Model,Asset Inventory,tactic-default,
+D3-DI,Data Inventory,Model,Asset Inventory,tactic-default,
+D3-HCI,Hardware Component Inventory,Model,Asset Inventory,tactic-default,
+D3-NNI,Network Node Inventory,Model,Asset Inventory,tactic-default,
+D3-SWI,Software Inventory,Model,Asset Inventory,tactic-default,
+D3-CIA,Container Image Analysis,Model,Asset Vulnerability Enumeration,inherited,Patch / Update Software
+D3-AI,Asset Inventory,Model,Defensive Technique,tactic-default,
+D3-NM,Network Mapping,Model,Defensive Technique,tactic-default,
+D3-OAM,Operational Activity Mapping,Model,Defensive Technique,tactic-default,
+D3-SYSM,System Mapping,Model,Defensive Technique,tactic-default,
+D3-ALLM,Active Logical Link Mapping,Model,Logical Link Mapping,tactic-default,
+D3-PLLM,Passive Logical Link Mapping,Model,Logical Link Mapping,tactic-default,
+D3-LLM,Logical Link Mapping,Model,Network Mapping,tactic-default,
+D3-NTPM,Network Traffic Policy Mapping,Model,Network Mapping,tactic-default,
+D3-NVA,Network Vulnerability Assessment,Model,Network Mapping,direct,Patch / Update Software
+D3-PLM,Physical Link Mapping,Model,Network Mapping,tactic-default,
+D3-AM,Access Modeling,Model,Operational Activity Mapping,tactic-default,
+D3-ODM,Operational Dependency Mapping,Model,Operational Activity Mapping,tactic-default,
+D3-ORA,Operational Risk Assessment,Model,Operational Activity Mapping,tactic-default,
+D3-OM,Organization Mapping,Model,Operational Activity Mapping,tactic-default,
+D3-APLM,Active Physical Link Mapping,Model,Physical Link Mapping,tactic-default,
+D3-DPLM,Direct Physical Link Mapping,Model,Physical Link Mapping,tactic-default,
+D3-DEM,Data Exchange Mapping,Model,System Mapping,tactic-default,
+D3-SVCDM,Service Dependency Mapping,Model,System Mapping,tactic-default,
+D3-SYSDM,System Dependency Mapping,Model,System Mapping,tactic-default,
+D3-SYSVA,System Vulnerability Assessment,Model,System Mapping,direct,Patch / Update Software
+D3-RA,Restore Access,Restore,Defensive Technique,direct,
+D3-RO,Restore Object,Restore,Defensive Technique,direct,Restore from Backup
+D3-RIC,Reissue Credential,Restore,Restore Access,direct,Reset Credentials
+D3-RNA,Restore Network Access,Restore,Restore Access,inherited,
+D3-RUAA,Restore User Account Access,Restore,Restore Access,direct,
+D3-RE,Restore Email,Restore,Restore File,inherited,Restore from Backup
+D3-RC,Restore Configuration,Restore,Restore Object,inherited,Restore from Backup
+D3-RD,Restore Database,Restore,Restore Object,inherited,Restore from Backup
+D3-RDI,Restore Disk Image,Restore,Restore Object,inherited,Restore from Backup
+D3-RF,Restore File,Restore,Restore Object,direct,Restore from Backup
+D3-RS,Restore Software,Restore,Restore Object,inherited,Restore from Backup
+D3-ULA,Unlock Account,Restore,Restore User Account Access,inherited,

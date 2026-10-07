@@ -1,0 +1,2450 @@
+[
+ {
+  "id": "D3-CHN",
+  "label": "Connected Honeynet",
+  "tactics": [
+   "Deceive"
+  ],
+  "parent": "Decoy Environment",
+  "leaf": true
+ },
+ {
+  "id": "D3-IHN",
+  "label": "Integrated Honeynet",
+  "tactics": [
+   "Deceive"
+  ],
+  "parent": "Decoy Environment",
+  "leaf": true
+ },
+ {
+  "id": "D3-SHN",
+  "label": "Standalone Honeynet",
+  "tactics": [
+   "Deceive"
+  ],
+  "parent": "Decoy Environment",
+  "leaf": true
+ },
+ {
+  "id": "D3-DF",
+  "label": "Decoy File",
+  "tactics": [
+   "Deceive"
+  ],
+  "parent": "Decoy Object",
+  "leaf": true
+ },
+ {
+  "id": "D3-DNR",
+  "label": "Decoy Network Resource",
+  "tactics": [
+   "Deceive"
+  ],
+  "parent": "Decoy Object",
+  "leaf": true
+ },
+ {
+  "id": "D3-DP",
+  "label": "Decoy Persona",
+  "tactics": [
+   "Deceive"
+  ],
+  "parent": "Decoy Object",
+  "leaf": true
+ },
+ {
+  "id": "D3-DPR",
+  "label": "Decoy Public Release",
+  "tactics": [
+   "Deceive"
+  ],
+  "parent": "Decoy Object",
+  "leaf": true
+ },
+ {
+  "id": "D3-DST",
+  "label": "Decoy Session Token",
+  "tactics": [
+   "Deceive"
+  ],
+  "parent": "Decoy Object",
+  "leaf": true
+ },
+ {
+  "id": "D3-DUC",
+  "label": "Decoy User Credential",
+  "tactics": [
+   "Deceive"
+  ],
+  "parent": "Decoy Object",
+  "leaf": true
+ },
+ {
+  "id": "D3-DE",
+  "label": "Decoy Environment",
+  "tactics": [
+   "Deceive"
+  ],
+  "parent": "Defensive Technique",
+  "leaf": false
+ },
+ {
+  "id": "D3-DO",
+  "label": "Decoy Object",
+  "tactics": [
+   "Deceive"
+  ],
+  "parent": "Defensive Technique",
+  "leaf": false
+ },
+ {
+  "id": "D3-AEM",
+  "label": "Application Exception Monitoring",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Application Performance Monitoring",
+  "leaf": true
+ },
+ {
+  "id": "D3-RFUM",
+  "label": "Remote Firmware Update Monitoring",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Application Protocol Command Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-ACA",
+  "label": "Active Certificate Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Certificate Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-PCA",
+  "label": "Passive Certificate Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Certificate Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-FA",
+  "label": "File Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Defensive Technique",
+  "leaf": false
+ },
+ {
+  "id": "D3-ID",
+  "label": "Identifier Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Defensive Technique",
+  "leaf": false
+ },
+ {
+  "id": "D3-MA",
+  "label": "Message Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Defensive Technique",
+  "leaf": false
+ },
+ {
+  "id": "D3-NTA",
+  "label": "Network Traffic Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Defensive Technique",
+  "leaf": false
+ },
+ {
+  "id": "D3-PHAM",
+  "label": "Physical Access Monitoring",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Defensive Technique",
+  "leaf": false
+ },
+ {
+  "id": "D3-PM",
+  "label": "Platform Monitoring",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Defensive Technique",
+  "leaf": false
+ },
+ {
+  "id": "D3-PA",
+  "label": "Process Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Defensive Technique",
+  "leaf": false
+ },
+ {
+  "id": "D3-UBA",
+  "label": "User Behavior Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Defensive Technique",
+  "leaf": false
+ },
+ {
+  "id": "D3-DA",
+  "label": "Dynamic Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "File Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-EFA",
+  "label": "Emulated File Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "File Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-FCOA",
+  "label": "File Content Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "File Analysis",
+  "leaf": false
+ },
+ {
+  "id": "D3-FH",
+  "label": "File Hashing",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "File Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-FCR",
+  "label": "File Content Rules",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "File Content Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-PFV",
+  "label": "Peripheral Firmware Verification",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Firmware Verification",
+  "leaf": true
+ },
+ {
+  "id": "D3-SFV",
+  "label": "System Firmware Verification",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Firmware Verification",
+  "leaf": true
+ },
+ {
+  "id": "D3-HD",
+  "label": "Homoglyph Detection",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Identifier Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-IAA",
+  "label": "Identifier Activity Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Identifier Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-IRA",
+  "label": "Identifier Reputation Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Identifier Analysis",
+  "leaf": false
+ },
+ {
+  "id": "D3-UA",
+  "label": "URL Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Identifier Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-DNRA",
+  "label": "Domain Name Reputation Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Identifier Reputation Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-FHRA",
+  "label": "File Hash Reputation Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Identifier Reputation Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-IPRA",
+  "label": "IP Reputation Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Identifier Reputation Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-URA",
+  "label": "URL Reputation Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Identifier Reputation Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-SMRA",
+  "label": "Sender MTA Reputation Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Message Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-SRA",
+  "label": "Sender Reputation Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Message Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-ANAA",
+  "label": "Administrative Network Activity Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Network Traffic Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-APCA",
+  "label": "Application Protocol Command Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Network Traffic Analysis",
+  "leaf": false
+ },
+ {
+  "id": "D3-BSE",
+  "label": "Byte Sequence Emulation",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Network Traffic Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-CA",
+  "label": "Certificate Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Network Traffic Analysis",
+  "leaf": false
+ },
+ {
+  "id": "D3-CSPP",
+  "label": "Client-server Payload Profiling",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Network Traffic Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-CAA",
+  "label": "Connection Attempt Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Network Traffic Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-DNSTA",
+  "label": "DNS Traffic Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Network Traffic Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-FC",
+  "label": "File Carving",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Network Traffic Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-IPCTA",
+  "label": "IPC Traffic Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Network Traffic Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-ISVA",
+  "label": "Inbound Session Volume Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Network Traffic Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-NTCD",
+  "label": "Network Traffic Community Deviation",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Network Traffic Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-NTSA",
+  "label": "Network Traffic Signature Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Network Traffic Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-PHDURA",
+  "label": "Per Host Download-Upload Ratio Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Network Traffic Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-PMAD",
+  "label": "Protocol Metadata Anomaly Detection",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Network Traffic Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-RTA",
+  "label": "RPC Traffic Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Network Traffic Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-RPA",
+  "label": "Relay Pattern Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Network Traffic Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-RTSD",
+  "label": "Remote Terminal Session Detection",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Network Traffic Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-EHB",
+  "label": "Endpoint Health Beacon",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Operating System Monitoring",
+  "leaf": true
+ },
+ {
+  "id": "D3-IDA",
+  "label": "Input Device Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Operating System Monitoring",
+  "leaf": true
+ },
+ {
+  "id": "D3-MBT",
+  "label": "Memory Boundary Tracking",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Operating System Monitoring",
+  "leaf": true
+ },
+ {
+  "id": "D3-SJA",
+  "label": "Scheduled Job Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Operating System Monitoring",
+  "leaf": true
+ },
+ {
+  "id": "D3-SDM",
+  "label": "System Daemon Monitoring",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Operating System Monitoring",
+  "leaf": true
+ },
+ {
+  "id": "D3-SFA",
+  "label": "System File Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Operating System Monitoring",
+  "leaf": false
+ },
+ {
+  "id": "D3-SICA",
+  "label": "System Init Config Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Operating System Monitoring",
+  "leaf": true
+ },
+ {
+  "id": "D3-USICA",
+  "label": "User Session Init Config Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Operating System Monitoring",
+  "leaf": true
+ },
+ {
+  "id": "D3-ELM",
+  "label": "Electronic Lock Monitoring",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Physical Access Monitoring",
+  "leaf": true
+ },
+ {
+  "id": "D3-MSM",
+  "label": "Motion Sensor Monitoring",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Physical Access Monitoring",
+  "leaf": true
+ },
+ {
+  "id": "D3-PSM",
+  "label": "Proximity Sensor Monitoring",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Physical Access Monitoring",
+  "leaf": true
+ },
+ {
+  "id": "D3-VS",
+  "label": "Video Surveillance",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Physical Access Monitoring",
+  "leaf": true
+ },
+ {
+  "id": "D3-APM",
+  "label": "Application Performance Monitoring",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Platform Monitoring",
+  "leaf": false
+ },
+ {
+  "id": "D3-FIM",
+  "label": "File Integrity Monitoring",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Platform Monitoring",
+  "leaf": true
+ },
+ {
+  "id": "D3-FBA",
+  "label": "Firmware Behavior Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Platform Monitoring",
+  "leaf": true
+ },
+ {
+  "id": "D3-FEMC",
+  "label": "Firmware Embedded Monitoring Code",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Platform Monitoring",
+  "leaf": true
+ },
+ {
+  "id": "D3-FV",
+  "label": "Firmware Verification",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Platform Monitoring",
+  "leaf": false
+ },
+ {
+  "id": "D3-OMM",
+  "label": "Operating Mode Monitoring",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Platform Monitoring",
+  "leaf": true
+ },
+ {
+  "id": "D3-OSM",
+  "label": "Operating System Monitoring",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Platform Monitoring",
+  "leaf": false
+ },
+ {
+  "id": "D3-OPM",
+  "label": "Operational Process Monitoring",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Platform Monitoring",
+  "leaf": true
+ },
+ {
+  "id": "D3-PUM",
+  "label": "Platform Uptime Monitoring",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Platform Monitoring",
+  "leaf": true
+ },
+ {
+  "id": "D3-DQSA",
+  "label": "Database Query String Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Process Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-FAPA",
+  "label": "File Access Pattern Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Process Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-IBCA",
+  "label": "Indirect Branch Call Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Process Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-PCSV",
+  "label": "Process Code Segment Verification",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Process Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-PSMD",
+  "label": "Process Self-Modification Detection",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Process Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-PSA",
+  "label": "Process Spawn Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Process Analysis",
+  "leaf": false
+ },
+ {
+  "id": "D3-SEA",
+  "label": "Script Execution Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Process Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-SSC",
+  "label": "Shadow Stack Comparisons",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Process Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-SCA",
+  "label": "System Call Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Process Analysis",
+  "leaf": false
+ },
+ {
+  "id": "D3-PLA",
+  "label": "Process Lineage Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "Process Spawn Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-FCA",
+  "label": "File Creation Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "System Call Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-SBV",
+  "label": "Service Binary Verification",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "System File Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-ANET",
+  "label": "Authentication Event Thresholding",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "User Behavior Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-AZET",
+  "label": "Authorization Event Thresholding",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "User Behavior Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-CCSA",
+  "label": "Credential Compromise Scope Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "User Behavior Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-DAM",
+  "label": "Domain Account Monitoring",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "User Behavior Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-JFAPA",
+  "label": "Job Function Access Pattern Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "User Behavior Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-LAM",
+  "label": "Local Account Monitoring",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "User Behavior Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-RAPA",
+  "label": "Resource Access Pattern Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "User Behavior Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-SDA",
+  "label": "Session Duration Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "User Behavior Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-UDTA",
+  "label": "User Data Transfer Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "User Behavior Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-UGLPA",
+  "label": "User Geolocation Logon Pattern Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "User Behavior Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-WSAA",
+  "label": "Web Session Activity Analysis",
+  "tactics": [
+   "Detect"
+  ],
+  "parent": "User Behavior Analysis",
+  "leaf": true
+ },
+ {
+  "id": "D3-AL",
+  "label": "Account Locking",
+  "tactics": [
+   "Evict"
+  ],
+  "parent": "Credential Eviction",
+  "leaf": true
+ },
+ {
+  "id": "D3-ANCI",
+  "label": "Authentication Cache Invalidation",
+  "tactics": [
+   "Evict"
+  ],
+  "parent": "Credential Eviction",
+  "leaf": true
+ },
+ {
+  "id": "D3-CR",
+  "label": "Credential Revocation",
+  "tactics": [
+   "Evict"
+  ],
+  "parent": "Credential Eviction",
+  "leaf": true
+ },
+ {
+  "id": "D3-CE",
+  "label": "Credential Eviction",
+  "tactics": [
+   "Evict"
+  ],
+  "parent": "Defensive Technique",
+  "leaf": false
+ },
+ {
+  "id": "D3-OE",
+  "label": "Object Eviction",
+  "tactics": [
+   "Evict"
+  ],
+  "parent": "Defensive Technique",
+  "leaf": false
+ },
+ {
+  "id": "D3-PE",
+  "label": "Process Eviction",
+  "tactics": [
+   "Evict"
+  ],
+  "parent": "Defensive Technique",
+  "leaf": false
+ },
+ {
+  "id": "D3-DKE",
+  "label": "Disk Erasure",
+  "tactics": [
+   "Evict"
+  ],
+  "parent": "Disk Formatting",
+  "leaf": true
+ },
+ {
+  "id": "D3-DKP",
+  "label": "Disk Partitioning",
+  "tactics": [
+   "Evict"
+  ],
+  "parent": "Disk Formatting",
+  "leaf": true
+ },
+ {
+  "id": "D3-ER",
+  "label": "Email Removal",
+  "tactics": [
+   "Evict"
+  ],
+  "parent": "File Eviction",
+  "leaf": true
+ },
+ {
+  "id": "D3-HR",
+  "label": "Host Reboot",
+  "tactics": [
+   "Evict"
+  ],
+  "parent": "Host Shutdown",
+  "leaf": true
+ },
+ {
+  "id": "D3-DNSCE",
+  "label": "DNS Cache Eviction",
+  "tactics": [
+   "Evict"
+  ],
+  "parent": "Object Eviction",
+  "leaf": true
+ },
+ {
+  "id": "D3-DKF",
+  "label": "Disk Formatting",
+  "tactics": [
+   "Evict"
+  ],
+  "parent": "Object Eviction",
+  "leaf": false
+ },
+ {
+  "id": "D3-DRT",
+  "label": "Domain Registration Takedown",
+  "tactics": [
+   "Evict"
+  ],
+  "parent": "Object Eviction",
+  "leaf": true
+ },
+ {
+  "id": "D3-FEV",
+  "label": "File Eviction",
+  "tactics": [
+   "Evict"
+  ],
+  "parent": "Object Eviction",
+  "leaf": false
+ },
+ {
+  "id": "D3-RKD",
+  "label": "Registry Key Deletion",
+  "tactics": [
+   "Evict"
+  ],
+  "parent": "Object Eviction",
+  "leaf": true
+ },
+ {
+  "id": "D3-HS",
+  "label": "Host Shutdown",
+  "tactics": [
+   "Evict"
+  ],
+  "parent": "Process Eviction",
+  "leaf": false
+ },
+ {
+  "id": "D3-PS",
+  "label": "Process Suspension",
+  "tactics": [
+   "Evict"
+  ],
+  "parent": "Process Eviction",
+  "leaf": true
+ },
+ {
+  "id": "D3-PT",
+  "label": "Process Termination",
+  "tactics": [
+   "Evict"
+  ],
+  "parent": "Process Eviction",
+  "leaf": true
+ },
+ {
+  "id": "D3-ST",
+  "label": "Session Termination",
+  "tactics": [
+   "Evict"
+  ],
+  "parent": "Process Eviction",
+  "leaf": true
+ },
+ {
+  "id": "D3-BAN",
+  "label": "Biometric Authentication",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Agent Authentication",
+  "leaf": true
+ },
+ {
+  "id": "D3-CBAN",
+  "label": "Certificate-based Authentication",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Agent Authentication",
+  "leaf": true
+ },
+ {
+  "id": "D3-MFA",
+  "label": "Multi-factor Authentication",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Agent Authentication",
+  "leaf": true
+ },
+ {
+  "id": "D3-PWA",
+  "label": "Password Authentication",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Agent Authentication",
+  "leaf": true
+ },
+ {
+  "id": "D3-TBA",
+  "label": "Token-based Authentication",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Agent Authentication",
+  "leaf": true
+ },
+ {
+  "id": "D3-DRA",
+  "label": "Disable Remote Access",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Application Configuration Hardening",
+  "leaf": true
+ },
+ {
+  "id": "D3-ACH",
+  "label": "Application Configuration Hardening",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Application Hardening",
+  "leaf": false
+ },
+ {
+  "id": "D3-CFI",
+  "label": "Control Flow Integrity",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Application Hardening",
+  "leaf": true
+ },
+ {
+  "id": "D3-DCE",
+  "label": "Dead Code Elimination",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Application Hardening",
+  "leaf": true
+ },
+ {
+  "id": "D3-EHPV",
+  "label": "Exception Handler Pointer Validation",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Application Hardening",
+  "leaf": true
+ },
+ {
+  "id": "D3-PAN",
+  "label": "Pointer Authentication",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Application Hardening",
+  "leaf": true
+ },
+ {
+  "id": "D3-PSEP",
+  "label": "Process Segment Execution Prevention",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Application Hardening",
+  "leaf": true
+ },
+ {
+  "id": "D3-SAOR",
+  "label": "Segment Address Offset Randomization",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Application Hardening",
+  "leaf": true
+ },
+ {
+  "id": "D3-SFCV",
+  "label": "Stack Frame Canary Validation",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Application Hardening",
+  "leaf": true
+ },
+ {
+  "id": "D3-CP",
+  "label": "Certificate Pinning",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Credential Hardening",
+  "leaf": true
+ },
+ {
+  "id": "D3-CRO",
+  "label": "Credential Rotation",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Credential Hardening",
+  "leaf": false
+ },
+ {
+  "id": "D3-SPP",
+  "label": "Strong Password Policy",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Credential Hardening",
+  "leaf": false
+ },
+ {
+  "id": "D3-TB",
+  "label": "Token Binding",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Credential Hardening",
+  "leaf": true
+ },
+ {
+  "id": "D3-CERO",
+  "label": "Certificate Rotation",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Credential Rotation",
+  "leaf": true
+ },
+ {
+  "id": "D3-PR",
+  "label": "Password Rotation",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Credential Rotation",
+  "leaf": false
+ },
+ {
+  "id": "D3-AA",
+  "label": "Agent Authentication",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Defensive Technique",
+  "leaf": false
+ },
+ {
+  "id": "D3-AH",
+  "label": "Application Hardening",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Defensive Technique",
+  "leaf": false
+ },
+ {
+  "id": "D3-CH",
+  "label": "Credential Hardening",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Defensive Technique",
+  "leaf": false
+ },
+ {
+  "id": "D3-MH",
+  "label": "Message Hardening",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Defensive Technique",
+  "leaf": false
+ },
+ {
+  "id": "D3-PH",
+  "label": "Platform Hardening",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Defensive Technique",
+  "leaf": false
+ },
+ {
+  "id": "D3-SCH",
+  "label": "Source Code Hardening",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Defensive Technique",
+  "leaf": false
+ },
+ {
+  "id": "D3-OLV",
+  "label": "Operational Logic Validation",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Domain Logic Validation",
+  "leaf": true
+ },
+ {
+  "id": "D3-RFS",
+  "label": "RF Shielding",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Electromagnetic Radiation Hardening",
+  "leaf": true
+ },
+ {
+  "id": "D3-BMA",
+  "label": "Bus Message Authentication",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Message Authentication",
+  "leaf": true
+ },
+ {
+  "id": "D3-MAN",
+  "label": "Message Authentication",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Message Hardening",
+  "leaf": false
+ },
+ {
+  "id": "D3-MENCR",
+  "label": "Message Encryption",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Message Hardening",
+  "leaf": true
+ },
+ {
+  "id": "D3-TAAN",
+  "label": "Transfer Agent Authentication",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Message Hardening",
+  "leaf": true
+ },
+ {
+  "id": "D3-OTP",
+  "label": "One-time Password",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Password Rotation",
+  "leaf": true
+ },
+ {
+  "id": "D3-BA",
+  "label": "Bootloader Authentication",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Platform Hardening",
+  "leaf": true
+ },
+ {
+  "id": "D3-DENCR",
+  "label": "Disk Encryption",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Platform Hardening",
+  "leaf": true
+ },
+ {
+  "id": "D3-DLIC",
+  "label": "Driver Load Integrity Checking",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Platform Hardening",
+  "leaf": true
+ },
+ {
+  "id": "D3-FE",
+  "label": "File Encryption",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Platform Hardening",
+  "leaf": true
+ },
+ {
+  "id": "D3-HBWP",
+  "label": "Hardware-based Write Protection",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Platform Hardening",
+  "leaf": true
+ },
+ {
+  "id": "D3-PEH",
+  "label": "Physical Enclosure Hardening",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Platform Hardening",
+  "leaf": true
+ },
+ {
+  "id": "D3-RH",
+  "label": "Radiation Hardening",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Platform Hardening",
+  "leaf": false
+ },
+ {
+  "id": "D3-SU",
+  "label": "Software Update",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Platform Hardening",
+  "leaf": true
+ },
+ {
+  "id": "D3-SCP",
+  "label": "System Configuration Permissions",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Platform Hardening",
+  "leaf": true
+ },
+ {
+  "id": "D3-TBI",
+  "label": "TPM Boot Integrity",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Platform Hardening",
+  "leaf": true
+ },
+ {
+  "id": "D3-MBSV",
+  "label": "Memory Block Start Validation",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Pointer Validation",
+  "leaf": true
+ },
+ {
+  "id": "D3-NPC",
+  "label": "Null Pointer Checking",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Pointer Validation",
+  "leaf": true
+ },
+ {
+  "id": "D3-EMH",
+  "label": "Electromagnetic Radiation Hardening",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Radiation Hardening",
+  "leaf": false
+ },
+ {
+  "id": "",
+  "label": "Particle Radiation Hardening",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Radiation Hardening",
+  "leaf": true
+ },
+ {
+  "id": "D3-CS",
+  "label": "Credential Scrubbing",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Source Code Hardening",
+  "leaf": true
+ },
+ {
+  "id": "D3-DLV",
+  "label": "Domain Logic Validation",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Source Code Hardening",
+  "leaf": false
+ },
+ {
+  "id": "D3-IRV",
+  "label": "Integer Range Validation",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Source Code Hardening",
+  "leaf": true
+ },
+ {
+  "id": "D3-PV",
+  "label": "Pointer Validation",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Source Code Hardening",
+  "leaf": false
+ },
+ {
+  "id": "D3-RN",
+  "label": "Reference Nullification",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Source Code Hardening",
+  "leaf": true
+ },
+ {
+  "id": "D3-TL",
+  "label": "Trusted Library",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Source Code Hardening",
+  "leaf": true
+ },
+ {
+  "id": "D3-VI",
+  "label": "Variable Initialization",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Source Code Hardening",
+  "leaf": true
+ },
+ {
+  "id": "D3-VTV",
+  "label": "Variable Type Validation",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Source Code Hardening",
+  "leaf": true
+ },
+ {
+  "id": "D3-CDP",
+  "label": "Change Default Password",
+  "tactics": [
+   "Harden"
+  ],
+  "parent": "Strong Password Policy",
+  "leaf": true
+ },
+ {
+  "id": "D3-CTS",
+  "label": "Credential Transmission Scoping",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Access Mediation",
+  "leaf": true
+ },
+ {
+  "id": "D3-IOPR",
+  "label": "IO Port Restriction",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Access Mediation",
+  "leaf": true
+ },
+ {
+  "id": "D3-NAM",
+  "label": "Network Access Mediation",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Access Mediation",
+  "leaf": false
+ },
+ {
+  "id": "D3-NRAM",
+  "label": "Network Resource Access Mediation",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Access Mediation",
+  "leaf": false
+ },
+ {
+  "id": "D3-OVAR",
+  "label": "OT Variable Access Restriction",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Access Mediation",
+  "leaf": true
+ },
+ {
+  "id": "D3-OPR",
+  "label": "Operating Mode Restriction",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Access Mediation",
+  "leaf": true
+ },
+ {
+  "id": "D3-PAM",
+  "label": "Physical Access Mediation",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Access Mediation",
+  "leaf": false
+ },
+ {
+  "id": "D3-SCF",
+  "label": "System Call Filtering",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Access Mediation",
+  "leaf": false
+ },
+ {
+  "id": "D3-DTP",
+  "label": "Domain Trust Policy",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Access Policy Administration",
+  "leaf": true
+ },
+ {
+  "id": "D3-LFP",
+  "label": "Local File Permissions",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Access Policy Administration",
+  "leaf": true
+ },
+ {
+  "id": "D3-UAP",
+  "label": "User Account Permissions",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Access Policy Administration",
+  "leaf": true
+ },
+ {
+  "id": "D3-UGPH",
+  "label": "User Group Permissions",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Access Policy Administration",
+  "leaf": true
+ },
+ {
+  "id": "D3-CM",
+  "label": "Content Modification",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Content Filtering",
+  "leaf": false
+ },
+ {
+  "id": "D3-CQ",
+  "label": "Content Quarantine",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Content Filtering",
+  "leaf": true
+ },
+ {
+  "id": "D3-CV",
+  "label": "Content Validation",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Content Filtering",
+  "leaf": false
+ },
+ {
+  "id": "D3-CNE",
+  "label": "Content Excision",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Content Modification",
+  "leaf": true
+ },
+ {
+  "id": "D3-CFC",
+  "label": "Content Format Conversion",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Content Modification",
+  "leaf": true
+ },
+ {
+  "id": "D3-CNR",
+  "label": "Content Rebuild",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Content Modification",
+  "leaf": true
+ },
+ {
+  "id": "D3-CNS",
+  "label": "Content Substitution",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Content Modification",
+  "leaf": true
+ },
+ {
+  "id": "D3-FFV",
+  "label": "File Format Verification",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Content Validation",
+  "leaf": false
+ },
+ {
+  "id": "D3-FRDDL",
+  "label": "Forward Resolution Domain Denylisting",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "DNS Denylisting",
+  "leaf": false
+ },
+ {
+  "id": "D3-FRIDL",
+  "label": "Forward Resolution IP Denylisting",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "DNS Denylisting",
+  "leaf": true
+ },
+ {
+  "id": "D3-RRID",
+  "label": "Reverse Resolution IP Denylisting",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "DNS Denylisting",
+  "leaf": true
+ },
+ {
+  "id": "D3-AMED",
+  "label": "Access Mediation",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Defensive Technique",
+  "leaf": false
+ },
+ {
+  "id": "D3-APA",
+  "label": "Access Policy Administration",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Defensive Technique",
+  "leaf": false
+ },
+ {
+  "id": "D3-CF",
+  "label": "Content Filtering",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Defensive Technique",
+  "leaf": false
+ },
+ {
+  "id": "D3-EI",
+  "label": "Execution Isolation",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Defensive Technique",
+  "leaf": false
+ },
+ {
+  "id": "D3-NI",
+  "label": "Network Isolation",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Defensive Technique",
+  "leaf": false
+ },
+ {
+  "id": "D3-ABPI",
+  "label": "Application-based Process Isolation",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Execution Isolation",
+  "leaf": true
+ },
+ {
+  "id": "D3-EAL",
+  "label": "Executable Allowlisting",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Execution Isolation",
+  "leaf": true
+ },
+ {
+  "id": "D3-EDL",
+  "label": "Executable Denylisting",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Execution Isolation",
+  "leaf": true
+ },
+ {
+  "id": "D3-HBPI",
+  "label": "Hardware-based Process Isolation",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Execution Isolation",
+  "leaf": true
+ },
+ {
+  "id": "D3-KBPI",
+  "label": "Kernel-based Process Isolation",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Execution Isolation",
+  "leaf": true
+ },
+ {
+  "id": "D3-FCDC",
+  "label": "File Content Decompression Checking",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "File Format Verification",
+  "leaf": true
+ },
+ {
+  "id": "D3-FISV",
+  "label": "File Internal Structure Verification",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "File Format Verification",
+  "leaf": true
+ },
+ {
+  "id": "D3-FMCV",
+  "label": "File Metadata Consistency Validation",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "File Format Verification",
+  "leaf": true
+ },
+ {
+  "id": "D3-FMVV",
+  "label": "File Metadata Value Verification",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "File Format Verification",
+  "leaf": false
+ },
+ {
+  "id": "D3-FMBV",
+  "label": "File Magic Byte Verification",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "File Metadata Value Verification",
+  "leaf": true
+ },
+ {
+  "id": "D3-HDDL",
+  "label": "Hierarchical Domain Denylisting",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Forward Resolution Domain Denylisting",
+  "leaf": true
+ },
+ {
+  "id": "D3-HDL",
+  "label": "Homoglyph Denylisting",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Forward Resolution Domain Denylisting",
+  "leaf": true
+ },
+ {
+  "id": "D3-EF",
+  "label": "Email Filtering",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Inbound Traffic Filtering",
+  "leaf": true
+ },
+ {
+  "id": "D3-LAMED",
+  "label": "LAN Access Mediation",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Network Access Mediation",
+  "leaf": true
+ },
+ {
+  "id": "D3-RAM",
+  "label": "Routing Access Mediation",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Network Access Mediation",
+  "leaf": true
+ },
+ {
+  "id": "D3-BDI",
+  "label": "Broadcast Domain Isolation",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Network Isolation",
+  "leaf": true
+ },
+ {
+  "id": "D3-DNSAL",
+  "label": "DNS Allowlisting",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Network Isolation",
+  "leaf": true
+ },
+ {
+  "id": "D3-DNSDL",
+  "label": "DNS Denylisting",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Network Isolation",
+  "leaf": false
+ },
+ {
+  "id": "D3-DNL",
+  "label": "Directional Network Link",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Network Isolation",
+  "leaf": true
+ },
+ {
+  "id": "D3-ET",
+  "label": "Encrypted Tunnels",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Network Isolation",
+  "leaf": true
+ },
+ {
+  "id": "D3-NTF",
+  "label": "Network Traffic Filtering",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Network Isolation",
+  "leaf": false
+ },
+ {
+  "id": "D3-RFAM",
+  "label": "Remote File Access Mediation",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Network Resource Access Mediation",
+  "leaf": true
+ },
+ {
+  "id": "D3-WSAM",
+  "label": "Web Session Access Mediation",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Network Resource Access Mediation",
+  "leaf": false
+ },
+ {
+  "id": "D3-ITF",
+  "label": "Inbound Traffic Filtering",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Network Traffic Filtering",
+  "leaf": false
+ },
+ {
+  "id": "D3-OTF",
+  "label": "Outbound Traffic Filtering",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Network Traffic Filtering",
+  "leaf": true
+ },
+ {
+  "id": "D3-EPL",
+  "label": "Physical Locking",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Physical Access Mediation",
+  "leaf": true
+ },
+ {
+  "id": "D3-LFAM",
+  "label": "Local File Access Mediation",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "System Call Filtering",
+  "leaf": true
+ },
+ {
+  "id": "D3-EBWSAM",
+  "label": "Endpoint-based Web Server Access Mediation",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Web Session Access Mediation",
+  "leaf": true
+ },
+ {
+  "id": "D3-PBWSAM",
+  "label": "Proxy-based Web Server Access Mediation",
+  "tactics": [
+   "Isolate"
+  ],
+  "parent": "Web Session Access Mediation",
+  "leaf": true
+ },
+ {
+  "id": "D3-AVE",
+  "label": "Asset Vulnerability Enumeration",
+  "tactics": [
+   "Model"
+  ],
+  "parent": "Asset Inventory",
+  "leaf": false
+ },
+ {
+  "id": "D3-CI",
+  "label": "Configuration Inventory",
+  "tactics": [
+   "Model"
+  ],
+  "parent": "Asset Inventory",
+  "leaf": true
+ },
+ {
+  "id": "D3-DI",
+  "label": "Data Inventory",
+  "tactics": [
+   "Model"
+  ],
+  "parent": "Asset Inventory",
+  "leaf": true
+ },
+ {
+  "id": "D3-HCI",
+  "label": "Hardware Component Inventory",
+  "tactics": [
+   "Model"
+  ],
+  "parent": "Asset Inventory",
+  "leaf": true
+ },
+ {
+  "id": "D3-NNI",
+  "label": "Network Node Inventory",
+  "tactics": [
+   "Model"
+  ],
+  "parent": "Asset Inventory",
+  "leaf": true
+ },
+ {
+  "id": "D3-SWI",
+  "label": "Software Inventory",
+  "tactics": [
+   "Model"
+  ],
+  "parent": "Asset Inventory",
+  "leaf": true
+ },
+ {
+  "id": "D3-CIA",
+  "label": "Container Image Analysis",
+  "tactics": [
+   "Model"
+  ],
+  "parent": "Asset Vulnerability Enumeration",
+  "leaf": true
+ },
+ {
+  "id": "D3-AI",
+  "label": "Asset Inventory",
+  "tactics": [
+   "Model"
+  ],
+  "parent": "Defensive Technique",
+  "leaf": false
+ },
+ {
+  "id": "D3-NM",
+  "label": "Network Mapping",
+  "tactics": [
+   "Model"
+  ],
+  "parent": "Defensive Technique",
+  "leaf": false
+ },
+ {
+  "id": "D3-OAM",
+  "label": "Operational Activity Mapping",
+  "tactics": [
+   "Model"
+  ],
+  "parent": "Defensive Technique",
+  "leaf": false
+ },
+ {
+  "id": "D3-SYSM",
+  "label": "System Mapping",
+  "tactics": [
+   "Model"
+  ],
+  "parent": "Defensive Technique",
+  "leaf": false
+ },
+ {
+  "id": "D3-ALLM",
+  "label": "Active Logical Link Mapping",
+  "tactics": [
+   "Model"
+  ],
+  "parent": "Logical Link Mapping",
+  "leaf": true
+ },
+ {
+  "id": "D3-PLLM",
+  "label": "Passive Logical Link Mapping",
+  "tactics": [
+   "Model"
+  ],
+  "parent": "Logical Link Mapping",
+  "leaf": true
+ },
+ {
+  "id": "D3-LLM",
+  "label": "Logical Link Mapping",
+  "tactics": [
+   "Model"
+  ],
+  "parent": "Network Mapping",
+  "leaf": false
+ },
+ {
+  "id": "D3-NTPM",
+  "label": "Network Traffic Policy Mapping",
+  "tactics": [
+   "Model"
+  ],
+  "parent": "Network Mapping",
+  "leaf": true
+ },
+ {
+  "id": "D3-NVA",
+  "label": "Network Vulnerability Assessment",
+  "tactics": [
+   "Model"
+  ],
+  "parent": "Network Mapping",
+  "leaf": true
+ },
+ {
+  "id": "D3-PLM",
+  "label": "Physical Link Mapping",
+  "tactics": [
+   "Model"
+  ],
+  "parent": "Network Mapping",
+  "leaf": false
+ },
+ {
+  "id": "D3-AM",
+  "label": "Access Modeling",
+  "tactics": [
+   "Model"
+  ],
+  "parent": "Operational Activity Mapping",
+  "leaf": true
+ },
+ {
+  "id": "D3-ODM",
+  "label": "Operational Dependency Mapping",
+  "tactics": [
+   "Model"
+  ],
+  "parent": "Operational Activity Mapping",
+  "leaf": true
+ },
+ {
+  "id": "D3-ORA",
+  "label": "Operational Risk Assessment",
+  "tactics": [
+   "Model"
+  ],
+  "parent": "Operational Activity Mapping",
+  "leaf": true
+ },
+ {
+  "id": "D3-OM",
+  "label": "Organization Mapping",
+  "tactics": [
+   "Model"
+  ],
+  "parent": "Operational Activity Mapping",
+  "leaf": true
+ },
+ {
+  "id": "D3-APLM",
+  "label": "Active Physical Link Mapping",
+  "tactics": [
+   "Model"
+  ],
+  "parent": "Physical Link Mapping",
+  "leaf": true
+ },
+ {
+  "id": "D3-DPLM",
+  "label": "Direct Physical Link Mapping",
+  "tactics": [
+   "Model"
+  ],
+  "parent": "Physical Link Mapping",
+  "leaf": true
+ },
+ {
+  "id": "D3-DEM",
+  "label": "Data Exchange Mapping",
+  "tactics": [
+   "Model"
+  ],
+  "parent": "System Mapping",
+  "leaf": true
+ },
+ {
+  "id": "D3-SVCDM",
+  "label": "Service Dependency Mapping",
+  "tactics": [
+   "Model"
+  ],
+  "parent": "System Mapping",
+  "leaf": true
+ },
+ {
+  "id": "D3-SYSDM",
+  "label": "System Dependency Mapping",
+  "tactics": [
+   "Model"
+  ],
+  "parent": "System Mapping",
+  "leaf": true
+ },
+ {
+  "id": "D3-SYSVA",
+  "label": "System Vulnerability Assessment",
+  "tactics": [
+   "Model"
+  ],
+  "parent": "System Mapping",
+  "leaf": true
+ },
+ {
+  "id": "D3-RA",
+  "label": "Restore Access",
+  "tactics": [
+   "Restore"
+  ],
+  "parent": "Defensive Technique",
+  "leaf": false
+ },
+ {
+  "id": "D3-RO",
+  "label": "Restore Object",
+  "tactics": [
+   "Restore"
+  ],
+  "parent": "Defensive Technique",
+  "leaf": false
+ },
+ {
+  "id": "D3-RIC",
+  "label": "Reissue Credential",
+  "tactics": [
+   "Restore"
+  ],
+  "parent": "Restore Access",
+  "leaf": true
+ },
+ {
+  "id": "D3-RNA",
+  "label": "Restore Network Access",
+  "tactics": [
+   "Restore"
+  ],
+  "parent": "Restore Access",
+  "leaf": true
+ },
+ {
+  "id": "D3-RUAA",
+  "label": "Restore User Account Access",
+  "tactics": [
+   "Restore"
+  ],
+  "parent": "Restore Access",
+  "leaf": false
+ },
+ {
+  "id": "D3-RE",
+  "label": "Restore Email",
+  "tactics": [
+   "Restore"
+  ],
+  "parent": "Restore File",
+  "leaf": true
+ },
+ {
+  "id": "D3-RC",
+  "label": "Restore Configuration",
+  "tactics": [
+   "Restore"
+  ],
+  "parent": "Restore Object",
+  "leaf": true
+ },
+ {
+  "id": "D3-RD",
+  "label": "Restore Database",
+  "tactics": [
+   "Restore"
+  ],
+  "parent": "Restore Object",
+  "leaf": true
+ },
+ {
+  "id": "D3-RDI",
+  "label": "Restore Disk Image",
+  "tactics": [
+   "Restore"
+  ],
+  "parent": "Restore Object",
+  "leaf": true
+ },
+ {
+  "id": "D3-RF",
+  "label": "Restore File",
+  "tactics": [
+   "Restore"
+  ],
+  "parent": "Restore Object",
+  "leaf": false
+ },
+ {
+  "id": "D3-RS",
+  "label": "Restore Software",
+  "tactics": [
+   "Restore"
+  ],
+  "parent": "Restore Object",
+  "leaf": true
+ },
+ {
+  "id": "D3-ULA",
+  "label": "Unlock Account",
+  "tactics": [
+   "Restore"
+  ],
+  "parent": "Restore User Account Access",
+  "leaf": true
+ }
+]

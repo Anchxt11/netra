@@ -4,6 +4,7 @@ __pycache__/
 *.egg-info/
 .eggs/
 
+<<<<<<< HEAD
 # Virtual environments
 .venv/
 venv/
@@ -33,3 +34,10 @@ Thumbs.db
 
 # Docker
 *.log
+=======
+data/
+
+.ipynb_checkpoints/
+__pycache__/
+Untitled*.ipynb
+>>>>>>> 18a90a7 (Add Model 1 ATDE pipeline v1.0.0)

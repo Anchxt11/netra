@@ -1,0 +1,239 @@
+{
+  "version": "1.0.0",
+  "input_row": [
+    "stream_name",
+    "timestamp",
+    "event_id",
+    "message_sanitized"
+  ],
+  "ordering": "rows sorted by (timestamp, event_id); window features use past rows only",
+  "windows_seconds": {
+    "aws_vpc_flow_log": [
+      60,
+      600
+    ],
+    "cisco_asa": [
+      60,
+      600,
+      3600
+    ]
+  },
+  "missing_value_fill": -1,
+  "dtype_at_scoring": "float32",
+  "streams": {
+    "aws_vpc_flow_log": [
+      {
+        "name": "packets",
+        "source": "AWS flow-log field 'packets' parsed from message_sanitized",
+        "type": "float",
+        "fill": -1
+      },
+      {
+        "name": "bytes",
+        "source": "AWS flow-log field 'bytes' parsed from message_sanitized",
+        "type": "float",
+        "fill": -1
+      },
+      {
+        "name": "duration",
+        "source": "AWS flow-log end - start, seconds",
+        "type": "float",
+        "fill": -1
+      },
+      {
+        "name": "bytes_per_packet",
+        "source": "bytes / max(packets, 1)",
+        "type": "float",
+        "fill": -1
+      },
+      {
+        "name": "dst_port_wellknown",
+        "source": "1 if destination port < 1024 else 0",
+        "type": "int8",
+        "fill": -1
+      },
+      {
+        "name": "cnt_60s",
+        "source": "count of earlier events from the same source IP in the past 60s (timestamp >= t - w; earlier in (timestamp, event_id) order)",
+        "type": "int32",
+        "fill": 0
+      },
+      {
+        "name": "nports_60s",
+        "source": "distinct destination ports among those events, per source IP, past 60s",
+        "type": "int32",
+        "fill": 0
+      },
+      {
+        "name": "ndst_60s",
+        "source": "distinct destination IPs among those events, per source IP, past 60s",
+        "type": "int32",
+        "fill": 0
+      },
+      {
+        "name": "cnt_600s",
+        "source": "count of earlier events from the same source IP in the past 600s (timestamp >= t - w; earlier in (timestamp, event_id) order)",
+        "type": "int32",
+        "fill": 0
+      },
+      {
+        "name": "nports_600s",
+        "source": "distinct destination ports among those events, per source IP, past 600s",
+        "type": "int32",
+        "fill": 0
+      },
+      {
+        "name": "ndst_600s",
+        "source": "distinct destination IPs among those events, per source IP, past 600s",
+        "type": "int32",
+        "fill": 0
+      },
+      {
+        "name": "dir_inbound",
+        "source": "1 if direction == inbound. AWS: source external and dest in RFC1918. Cisco: source zone 'outside'",
+        "type": "int8",
+        "fill": 0
+      },
+      {
+        "name": "dir_outbound",
+        "source": "1 if direction == outbound. AWS: source RFC1918 and dest external. Cisco: dest zone 'outside' and source zone not 'outside'",
+        "type": "int8",
+        "fill": 0
+      },
+      {
+        "name": "proto_tcp",
+        "source": "1 if protocol == tcp (AWS 1/6/17 = icmp/tcp/udp; Cisco proto name)",
+        "type": "int8",
+        "fill": 0
+      },
+      {
+        "name": "proto_udp",
+        "source": "1 if protocol == udp (AWS 1/6/17 = icmp/tcp/udp; Cisco proto name)",
+        "type": "int8",
+        "fill": 0
+      },
+      {
+        "name": "proto_icmp",
+        "source": "1 if protocol == icmp (AWS 1/6/17 = icmp/tcp/udp; Cisco proto name)",
+        "type": "int8",
+        "fill": 0
+      },
+      {
+        "name": "dst_port_logfreq",
+        "source": "log1p(count of this dst port in TRAIN rows not caught by rules); table in dst_port_freq.json; unseen port = 0.0",
+        "type": "float",
+        "fill": 0.0
+      }
+    ],
+    "cisco_asa": [
+      {
+        "name": "icmp_type",
+        "source": "ASA '(type X, code Y)' in message; absent for non-ICMP",
+        "type": "int",
+        "fill": -1
+      },
+      {
+        "name": "icmp_code",
+        "source": "ASA '(type X, code Y)' in message; absent for non-ICMP",
+        "type": "int",
+        "fill": -1
+      },
+      {
+        "name": "dst_port_wellknown",
+        "source": "1 if destination port < 1024 else 0",
+        "type": "int8",
+        "fill": -1
+      },
+      {
+        "name": "cnt_60s",
+        "source": "count of earlier events from the same source IP in the past 60s (timestamp >= t - w; earlier in (timestamp, event_id) order)",
+        "type": "int32",
+        "fill": 0
+      },
+      {
+        "name": "nports_60s",
+        "source": "distinct destination ports among those events, per source IP, past 60s",
+        "type": "int32",
+        "fill": 0
+      },
+      {
+        "name": "ndst_60s",
+        "source": "distinct destination IPs among those events, per source IP, past 60s",
+        "type": "int32",
+        "fill": 0
+      },
+      {
+        "name": "cnt_600s",
+        "source": "count of earlier events from the same source IP in the past 600s (timestamp >= t - w; earlier in (timestamp, event_id) order)",
+        "type": "int32",
+        "fill": 0
+      },
+      {
+        "name": "nports_600s",
+        "source": "distinct destination ports among those events, per source IP, past 600s",
+        "type": "int32",
+        "fill": 0
+      },
+      {
+        "name": "ndst_600s",
+        "source": "distinct destination IPs among those events, per source IP, past 600s",
+        "type": "int32",
+        "fill": 0
+      },
+      {
+        "name": "cnt_3600s",
+        "source": "count of earlier events from the same source IP in the past 3600s (timestamp >= t - w; earlier in (timestamp, event_id) order)",
+        "type": "int32",
+        "fill": 0
+      },
+      {
+        "name": "nports_3600s",
+        "source": "distinct destination ports among those events, per source IP, past 3600s",
+        "type": "int32",
+        "fill": 0
+      },
+      {
+        "name": "ndst_3600s",
+        "source": "distinct destination IPs among those events, per source IP, past 3600s",
+        "type": "int32",
+        "fill": 0
+      },
+      {
+        "name": "dir_inbound",
+        "source": "1 if direction == inbound. AWS: source external and dest in RFC1918. Cisco: source zone 'outside'",
+        "type": "int8",
+        "fill": 0
+      },
+      {
+        "name": "dir_outbound",
+        "source": "1 if direction == outbound. AWS: source RFC1918 and dest external. Cisco: dest zone 'outside' and source zone not 'outside'",
+        "type": "int8",
+        "fill": 0
+      },
+      {
+        "name": "proto_tcp",
+        "source": "1 if protocol == tcp (AWS 1/6/17 = icmp/tcp/udp; Cisco proto name)",
+        "type": "int8",
+        "fill": 0
+      },
+      {
+        "name": "proto_udp",
+        "source": "1 if protocol == udp (AWS 1/6/17 = icmp/tcp/udp; Cisco proto name)",
+        "type": "int8",
+        "fill": 0
+      },
+      {
+        "name": "proto_icmp",
+        "source": "1 if protocol == icmp (AWS 1/6/17 = icmp/tcp/udp; Cisco proto name)",
+        "type": "int8",
+        "fill": 0
+      },
+      {
+        "name": "dst_port_logfreq",
+        "source": "log1p(count of this dst port in TRAIN rows not caught by rules); table in dst_port_freq.json; unseen port = 0.0",
+        "type": "float",
+        "fill": 0.0
+      }
+    ]
+  }
+}

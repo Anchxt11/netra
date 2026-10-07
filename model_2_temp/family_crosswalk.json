@@ -1,0 +1,123 @@
+{
+  "Credential Attack / Brute Force": {
+    "tactic": "credential-access",
+    "primary": [
+      "T1110",
+      "T1110.001",
+      "T1110.003",
+      "T1110.004"
+    ],
+    "secondary": [
+      "T1078",
+      "T1621",
+      "T1110.002"
+    ],
+    "note": "T1110.002 (cracking) is offline, so it is kept secondary."
+  },
+  "Exploitation / RCE": {
+    "tactic": "initial-access",
+    "primary": [
+      "T1190",
+      "T1203"
+    ],
+    "secondary": [
+      "T1210",
+      "T1068",
+      "T1133"
+    ],
+    "note": "Network-facing RCE -> T1190 first; T1210 if the target is internal."
+  },
+  "Data Exfiltration": {
+    "tactic": "exfiltration",
+    "primary": [
+      "T1041",
+      "T1567",
+      "T1048"
+    ],
+    "secondary": [
+      "T1567.002",
+      "T1048.001",
+      "T1048.002",
+      "T1048.003",
+      "T1030",
+      "T1029",
+      "T1537"
+    ],
+    "note": "T1041/T1567 are 99.9% of the WitFoo incident_signals."
+  },
+  "DoS / Flooding": {
+    "tactic": "impact",
+    "primary": [
+      "T1498",
+      "T1498.001",
+      "T1498.002",
+      "T1499",
+      "T1499.001",
+      "T1499.002",
+      "T1499.003"
+    ],
+    "secondary": [
+      "T1499.004"
+    ],
+    "note": "ATT&CK has only M1037 for all of these. D3FEND/Elastic/tactic defaults must carry this family."
+  },
+  "Recon / Scanning": {
+    "tactic": "reconnaissance",
+    "primary": [
+      "T1595",
+      "T1595.001",
+      "T1595.002",
+      "T1046"
+    ],
+    "secondary": [
+      "T1595.003",
+      "T1018",
+      "T1590"
+    ],
+    "note": "ATT&CK says 'Pre-compromise' (M1056), which is not actionable. Fixes come from Elastic and D3FEND."
+  },
+  "Backdoor / Persistence": {
+    "tactic": "persistence",
+    "primary": [
+      "T1505",
+      "T1505.003",
+      "T1543",
+      "T1053",
+      "T1547"
+    ],
+    "secondary": [
+      "T1136",
+      "T1098",
+      "T1133",
+      "T1546"
+    ],
+    "note": "Web shell (T1505.003) is the most network-observable backdoor."
+  },
+  "Shellcode / Payload Execution": {
+    "tactic": "execution",
+    "primary": [
+      "T1059",
+      "T1055",
+      "T1620",
+      "T1106"
+    ],
+    "secondary": [
+      "T1204",
+      "T1027",
+      "T1203"
+    ],
+    "note": "Shellcode ~ in-memory execution / injection."
+  },
+  "Fuzzing": {
+    "tactic": "reconnaissance",
+    "primary": [
+      "T1595.002",
+      "T1190"
+    ],
+    "secondary": [
+      "T1499.004",
+      "T1211"
+    ],
+    "note": "PROXY MAPPING: ATT&CK has no fuzzing technique. Fuzzing = probing exposed apps with malformed input."
+  }
+}

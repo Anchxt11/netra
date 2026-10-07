@@ -1,0 +1,41 @@
+action_id,d3fend_technique,mapping_strength
+add_waf_rule,Application Protocol Command Analysis,supporting
+add_waf_rule,Inbound Traffic Filtering,supporting
+add_waf_rule,Web Session Access Mediation,supporting
+block_domain_port,DNS Denylisting,direct
+block_domain_port,Forward Resolution Domain Denylisting,direct
+block_domain_port,Inbound Traffic Filtering,supporting
+block_domain_port,Outbound Traffic Filtering,supporting
+block_execution,Executable Allowlisting,direct
+block_execution,Executable Denylisting,direct
+block_execution,Process Segment Execution Prevention,direct
+block_malicious_request,Application Protocol Command Analysis,supporting
+block_malicious_request,Inbound Traffic Filtering,supporting
+block_malicious_request,Web Session Access Mediation,supporting
+block_source_ip,Inbound Traffic Filtering,supporting
+block_source_ip,Reverse Resolution IP Denylisting,direct
+disable_account,Account Locking,direct
+disable_service,Disable Remote Access,direct
+enable_mfa,Multi-factor Authentication,direct
+harden_configuration,Application Configuration Hardening,direct
+harden_configuration,Credential Hardening,direct
+increase_monitoring,Administrative Network Activity Analysis,supporting
+increase_monitoring,File Analysis,supporting
+increase_monitoring,System File Analysis,supporting
+isolate_host,Hardware-based Process Isolation,direct
+isolate_host,Kernel-based Process Isolation,direct
+kill_process,Process Suspension,direct
+kill_process,Process Termination,direct
+patch_software,Software Update,direct
+quarantine_file,Content Quarantine,direct
+quarantine_file,File Eviction,direct
+reset_credentials,Credential Hardening,supporting
+reset_credentials,Reissue Credential,direct
+reset_credentials,Strong Password Policy,supporting
+restore_from_backup,Restore File,direct
+restore_from_backup,Restore Network Access,direct
+restore_from_backup,Restore Software,direct
+restore_from_backup,Restore User Account Access,direct
+restrict_data_transfer,Outbound Traffic Filtering,supporting
+revoke_sessions,Authentication Cache Invalidation,direct
+revoke_sessions,Session Termination,direct

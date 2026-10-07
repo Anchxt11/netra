@@ -1,0 +1,30 @@
+{
+  "containment": [
+    "block_source_ip",
+    "rate_limit_traffic",
+    "block_domain_port",
+    "isolate_host",
+    "kill_process",
+    "revoke_sessions",
+    "disable_account",
+    "restrict_data_transfer",
+    "block_malicious_request",
+    "add_waf_rule"
+  ],
+  "eradication_recovery": [
+    "reset_credentials",
+    "quarantine_file",
+    "patch_software",
+    "restore_from_backup"
+  ],
+  "hardening": [
+    "enable_mfa",
+    "harden_configuration",
+    "disable_service",
+    "block_execution",
+    "network_segmentation"
+  ],
+  "monitoring": [
+    "increase_monitoring"
+  ]
+}
