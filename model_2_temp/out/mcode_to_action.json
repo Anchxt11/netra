@@ -1,0 +1,132 @@
+{
+  "M1013": [
+    "harden_configuration"
+  ],
+  "M1015": [
+    "harden_configuration"
+  ],
+  "M1016": [
+    "patch_software"
+  ],
+  "M1017": [],
+  "M1018": [
+    "disable_account",
+    "harden_configuration"
+  ],
+  "M1019": [],
+  "M1020": [
+    "increase_monitoring"
+  ],
+  "M1021": [
+    "block_domain_port",
+    "block_malicious_request"
+  ],
+  "M1022": [
+    "harden_configuration"
+  ],
+  "M1024": [
+    "harden_configuration"
+  ],
+  "M1025": [
+    "harden_configuration"
+  ],
+  "M1026": [
+    "harden_configuration"
+  ],
+  "M1027": [
+    "reset_credentials"
+  ],
+  "M1028": [
+    "harden_configuration"
+  ],
+  "M1029": [
+    "restore_from_backup"
+  ],
+  "M1030": [
+    "network_segmentation"
+  ],
+  "M1031": [
+    "block_source_ip",
+    "block_domain_port"
+  ],
+  "M1032": [
+    "enable_mfa"
+  ],
+  "M1033": [
+    "block_execution"
+  ],
+  "M1034": [
+    "harden_configuration"
+  ],
+  "M1035": [
+    "network_segmentation"
+  ],
+  "M1036": [
+    "harden_configuration"
+  ],
+  "M1037": [
+    "block_source_ip",
+    "rate_limit_traffic",
+    "block_domain_port"
+  ],
+  "M1038": [
+    "block_execution"
+  ],
+  "M1039": [
+    "harden_configuration"
+  ],
+  "M1040": [
+    "kill_process",
+    "block_execution"
+  ],
+  "M1041": [
+    "harden_configuration"
+  ],
+  "M1042": [
+    "disable_service"
+  ],
+  "M1043": [
+    "harden_configuration"
+  ],
+  "M1044": [
+    "harden_configuration"
+  ],
+  "M1045": [
+    "block_execution"
+  ],
+  "M1046": [
+    "harden_configuration"
+  ],
+  "M1047": [
+    "increase_monitoring"
+  ],
+  "M1048": [
+    "harden_configuration"
+  ],
+  "M1049": [
+    "quarantine_file",
+    "kill_process"
+  ],
+  "M1050": [
+    "add_waf_rule",
+    "harden_configuration"
+  ],
+  "M1051": [
+    "patch_software"
+  ],
+  "M1052": [
+    "harden_configuration"
+  ],
+  "M1053": [
+    "restore_from_backup"
+  ],
+  "M1054": [
+    "harden_configuration"
+  ],
+  "M1055": [],
+  "M1056": [],
+  "M1057": [
+    "restrict_data_transfer"
+  ],
+  "M1060": []
+}

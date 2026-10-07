@@ -1,0 +1,258 @@
+{
+  "Credential Attack / Brute Force": [
+    {
+      "action": "Enable MFA",
+      "id": "enable_mfa",
+      "score": 0.836
+    },
+    {
+      "action": "Reset Credentials",
+      "id": "reset_credentials",
+      "score": 0.768
+    },
+    {
+      "action": "Harden Configuration",
+      "id": "harden_configuration",
+      "score": 0.523
+    },
+    {
+      "action": "Disable Compromised Account",
+      "id": "disable_account",
+      "score": 0.282
+    },
+    {
+      "action": "Block Source IP",
+      "id": "block_source_ip",
+      "score": 0.218
+    },
+    {
+      "action": "Revoke Sessions",
+      "id": "revoke_sessions",
+      "score": 0.195
+    }
+  ],
+  "Exploitation / RCE": [
+    {
+      "action": "Patch / Update Software",
+      "id": "patch_software",
+      "score": 0.643
+    },
+    {
+      "action": "Add WAF Rule",
+      "id": "add_waf_rule",
+      "score": 0.493
+    },
+    {
+      "action": "Harden Configuration",
+      "id": "harden_configuration",
+      "score": 0.429
+    },
+    {
+      "action": "Network Segmentation",
+      "id": "network_segmentation",
+      "score": 0.386
+    },
+    {
+      "action": "Block Source IP",
+      "id": "block_source_ip",
+      "score": 0.286
+    },
+    {
+      "action": "Block Execution / Allowlisting",
+      "id": "block_execution",
+      "score": 0.279
+    }
+  ],
+  "Data Exfiltration": [
+    {
+      "action": "Block Malicious Domain/Port",
+      "id": "block_domain_port",
+      "score": 0.588
+    },
+    {
+      "action": "Restrict / Block Data Transfer",
+      "id": "restrict_data_transfer",
+      "score": 0.427
+    },
+    {
+      "action": "Block Source IP",
+      "id": "block_source_ip",
+      "score": 0.346
+    },
+    {
+      "action": "Block Malicious Request",
+      "id": "block_malicious_request",
+      "score": 0.335
+    },
+    {
+      "action": "Add WAF Rule",
+      "id": "add_waf_rule",
+      "score": 0.231
+    },
+    {
+      "action": "Network Segmentation",
+      "id": "network_segmentation",
+      "score": 0.219
+    }
+  ],
+  "DoS / Flooding": [
+    {
+      "action": "Block Source IP",
+      "id": "block_source_ip",
+      "score": 0.67
+    },
+    {
+      "action": "Rate Limit Traffic",
+      "id": "rate_limit_traffic",
+      "score": 0.65
+    },
+    {
+      "action": "Block Malicious Domain/Port",
+      "id": "block_domain_port",
+      "score": 0.55
+    },
+    {
+      "action": "Increase Logging / Monitoring",
+      "id": "increase_monitoring",
+      "score": 0.12
+    },
+    {
+      "action": "Block Malicious Request",
+      "id": "block_malicious_request",
+      "score": 0.1
+    },
+    {
+      "action": "Add WAF Rule",
+      "id": "add_waf_rule",
+      "score": 0.1
+    }
+  ],
+  "Recon / Scanning": [
+    {
+      "action": "Block Source IP",
+      "id": "block_source_ip",
+      "score": 0.273
+    },
+    {
+      "action": "Increase Logging / Monitoring",
+      "id": "increase_monitoring",
+      "score": 0.241
+    },
+    {
+      "action": "Rate Limit Traffic",
+      "id": "rate_limit_traffic",
+      "score": 0.191
+    },
+    {
+      "action": "Patch / Update Software",
+      "id": "patch_software",
+      "score": 0.191
+    },
+    {
+      "action": "Network Segmentation",
+      "id": "network_segmentation",
+      "score": 0.164
+    },
+    {
+      "action": "Harden Configuration",
+      "id": "harden_configuration",
+      "score": 0.164
+    }
+  ],
+  "Backdoor / Persistence": [
+    {
+      "action": "Harden Configuration",
+      "id": "harden_configuration",
+      "score": 0.482
+    },
+    {
+      "action": "Increase Logging / Monitoring",
+      "id": "increase_monitoring",
+      "score": 0.357
+    },
+    {
+      "action": "Disable Compromised Account",
+      "id": "disable_account",
+      "score": 0.325
+    },
+    {
+      "action": "Kill Process",
+      "id": "kill_process",
+      "score": 0.286
+    },
+    {
+      "action": "Isolate Host",
+      "id": "isolate_host",
+      "score": 0.243
+    },
+    {
+      "action": "Restore from Backup",
+      "id": "restore_from_backup",
+      "score": 0.221
+    }
+  ],
+  "Shellcode / Payload Execution": [
+    {
+      "action": "Kill Process",
+      "id": "kill_process",
+      "score": 0.627
+    },
+    {
+      "action": "Block Execution / Allowlisting",
+      "id": "block_execution",
+      "score": 0.495
+    },
+    {
+      "action": "Harden Configuration",
+      "id": "harden_configuration",
+      "score": 0.368
+    },
+    {
+      "action": "Isolate Host",
+      "id": "isolate_host",
+      "score": 0.3
+    },
+    {
+      "action": "Restore from Backup",
+      "id": "restore_from_backup",
+      "score": 0.209
+    },
+    {
+      "action": "Quarantine File",
+      "id": "quarantine_file",
+      "score": 0.195
+    }
+  ],
+  "Fuzzing": [
+    {
+      "action": "Block Source IP",
+      "id": "block_source_ip",
+      "score": 0.508
+    },
+    {
+      "action": "Patch / Update Software",
+      "id": "patch_software",
+      "score": 0.475
+    },
+    {
+      "action": "Add WAF Rule",
+      "id": "add_waf_rule",
+      "score": 0.408
+    },
+    {
+      "action": "Rate Limit Traffic",
+      "id": "rate_limit_traffic",
+      "score": 0.325
+    },
+    {
+      "action": "Harden Configuration",
+      "id": "harden_configuration",
+      "score": 0.325
+    },
+    {
+      "action": "Block Malicious Domain/Port",
+      "id": "block_domain_port",
+      "score": 0.308
+    }
+  ]
+}

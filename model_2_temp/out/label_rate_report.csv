@@ -1,0 +1,21 @@
+,ATT&CK,Elastic(rules>0),Elastic human-only,D3FEND,FUSED
+Enable MFA,7.03,9.93,10.72,2.73,12.05
+Reset Credentials,6.89,31.41,31.01,2.73,24.68
+Revoke Sessions,0.0,15.01,20.0,3.73,11.91
+Disable Compromised Account,18.36,3.23,5.8,2.44,20.95
+Block Source IP,12.63,6.47,4.35,1.15,15.06
+Rate Limit Traffic,7.03,2.08,0.87,0.0,7.6
+Block Malicious Domain/Port,15.49,3.46,5.8,5.16,16.36
+Network Segmentation,6.89,9.24,20.29,0.0,12.05
+Isolate Host,0.0,61.2,58.26,5.02,39.17
+Kill Process,11.91,43.65,39.71,1.87,34.43
+Quarantine File,6.03,10.16,2.32,15.21,24.39
+Block Execution / Allowlisting,22.81,7.85,6.09,8.75,29.27
+Block Malicious Request,5.02,0.92,1.74,11.48,15.64
+Add WAF Rule,1.72,1.15,0.29,11.48,13.34
+Patch / Update Software,7.32,16.17,6.96,3.73,17.79
+Harden Configuration,50.5,27.02,36.81,3.01,56.81
+Disable Unnecessary Service,10.47,0.0,0.29,0.29,10.62
+Restrict / Block Data Transfer,1.72,1.85,1.16,4.3,6.46
+Restore from Backup,3.59,27.94,6.09,19.51,33.57
+Increase Logging / Monitoring,19.94,24.94,4.35,14.49,41.03
