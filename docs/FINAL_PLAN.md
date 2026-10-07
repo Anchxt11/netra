@@ -8,6 +8,35 @@ One day, about 8 hours, 6 people. Everything goes to `main`; no other branches. 
 - **Code freeze at H6.5.** After that, only fixes for something broken in the rehearsal.
 - **Honesty stays the selling point.** Only measured numbers on screen and in the pitch. Nothing labelled AI that isn't a model. Nothing fake presented as real.
 
+## What the judges score (Day 2 rubric) and what that means for us
+| marks | criterion | what wins it | our answer |
+|---|---|---|---|
+| 25 | Technical implementation and architecture | Reasoned trade-offs, deliberate choices; **judges ask a member to open the repo and walk through one non-trivial part** | Every member rehearses one walkthrough (table below). The architecture slide shows the trade-offs: Redpanda, at-least-once with idempotent ClickHouse, rules plus ML, correlation in the browser |
+| 20 | Working demonstration | Live **on our own machine**, the full flow unaided, **plus an edge case a judge suggests on the spot**. A video caps at the lowest band | A laptop browser on the Azure deployment, with the full stack on Anchit's laptop as a hot spare. Rehearse the edge cases below |
+| 15 | Problem fit | Sharp problem, evidence of real need | Alert fatigue numbers with sources (research R4); "time left" as the core insight |
+| 15 | Innovation | Novel compared with **existing tools**, not other teams | Comparison with Splunk, Sentinel and Elastic (R6): ranking by time left; honest, explained AI; a human-approved actuator |
+| 15 | Impact, viability, scale | **Named users**, deployment path, cost, **"what breaks at 10x"** | The filled 10x load table from the VM, a cost sheet, named pilot users (R7) |
+| 10 | Pitch and Q&A | Structure, timing, **every member contributes** | 5 to 10 min, at least 2 min of live demo, 2 to 4 min of questions. Six speaking parts |
+
+**Code walkthroughs (each member, 2 minutes, rehearsed by H6):**
+| member | the part they open and explain |
+|---|---|
+| Lead | `frontend/src/data/backend/correlate.ts`: alerts into incidents, the deadline, the attention score |
+| Anchit | `processor/consumer.py` and the rules engine: windows, batching, at-least-once, why ClickHouse is retry-safe |
+| ML 1 | `ml/atde/predict.py` and `ml_scorer/core.py`: how a flow is scored, calibrated and explained |
+| ML 2 | `ml/crie/engine.py`: how a fix is ranked (evidence plus ML) and checked for feasibility |
+| Research 1 | `ops/jobs.py`: scheduled jobs, failure alerting, the SLA check |
+| Research 2 | `docker-compose.yaml` and the Azure deployment: what runs where, what is exposed and why |
+
+**Edge cases a judge may ask for (rehearse each):**
+- An attack from a new address.
+- An evasion attack: "the rules miss it; here's why we pair them with ML".
+- Two attacks at once: the queue re-ranks.
+- Change a KPI threshold live, then watch it fire.
+- Stop a container (`docker compose stop ml-scorer`): the System tile turns red with a sentence, then recovers.
+- Reject a fix, then approve the next one.
+- Reload the page mid-attack: the history comes back.
+
 ## The six goals, who owns them
 | # | goal | owner | done when |
 |---|---|---|---|
@@ -25,7 +54,7 @@ One day, about 8 hours, 6 people. Everything goes to `main`; no other branches. 
 | H0 to H0.5 | Confirm decisions (bottom of this file); repo cleanup | Push last night's demo work to `main`; create the Azure VM | Agree on the risk-score fix (section 1) | Read this file; start R1 and R2 |
 | H0.5 to H3 | Bugs (frontend, API); "Launch attack" panel | Stack on the VM, HTTPS, the domain | Model 1 fix; model 2 work | Demo storyboard; Q&A bank |
 | H3 to H5 | Point the dashboard at the VM; build the Power BI report | Power BI access; auto-attack schedule; judge entry point | Hand over by H5, with tests | Security review of the deployment; pitch numbers with sources |
-| H5 to H6.5 | UI refinement; section 7 if ahead | Load and soak check on the VM; fix what breaks | Rerun ML_EVAL; update the model cards | Rehearse the pitch with the storyboard |
+| H5 to H6.5 | UI refinement; section 7 if ahead | **Fill the 10x load table** (docs/SLA.md) on the VM; fix what breaks | Rerun ML_EVAL; update the model cards | Cost sheet; named users; each member rehearses their code walkthrough |
 | H6.5 to H8 | **Freeze.** Two full rehearsals on the deployed system | Same | Same | Time the pitch; play hostile judge |
 
 ## 1. Machine learning (ML duo)
@@ -62,13 +91,23 @@ The deployed VM fixes "not in the same city": Postgres is on the VM, and Power B
 - **Automatic attacks** on a schedule (`ATTACKER_COMMAND=auto_attack`, slowed to one attack every 1 to 3 minutes) so the dashboard is never empty, paused while a judge attacks.
 - The research duo writes the storyboard; Claude turns it into DEMO_RUNBOOK.md.
 
-## 5. Deployment
+## 5. Deployment (and the answer to "what breaks at 10x?")
 **Recommendation: one Azure VM running the whole Docker stack.** Why:
 - **Microsoft Innovate:** judges will ask what runs on Azure.
 - **It fixes several problems at once:** the single-laptop risk, remote Power BI (the database gets a public address with a firewall), and the IPv6 build problem.
 - **No re-architecture:** the stack is already Docker Compose.
 
-Shape: Ubuntu 22.04 VM, 4 vCPU and 16 GB (for example `Standard_D4s_v5`), Docker plus Compose. Caddy in front for HTTPS on a free name (`<ip>.sslip.io`, or our own domain), serving the dashboard build and passing `/api` and `/ws` to the API, all on one address, so no CORS problems. Only ports 80, 443 and (for the lead's IP only) 5432 are open. Change every default password and `jwt_secret` before it's public. Keep Anchit's laptop running the same stack as a fallback. **Fallback if Azure access is slow:** run on Anchit's laptop behind a Cloudflare Tunnel (free, about 10 minutes) for the public HTTPS link.
+Shape: Ubuntu 22.04 VM, 4 vCPU and 16 GB (for example `Standard_D4s_v5`), Docker plus Compose. Caddy in front for HTTPS on a free name (`<ip>.sslip.io`, or our own domain), serving the dashboard build and passing `/api` and `/ws` to the API, all on one address, so no CORS problems. Only ports 80, 443 and (for the lead's IP only) 5432 are open. Change every default password and `jwt_secret` before it's public. Keep Anchit's laptop running the same stack as a fallback.
+
+**Cost (for the viability question):** a 4 vCPU, 16 GB VM is roughly USD 0.17 to 0.20 an hour, so about USD 4 to 5 a day or USD 130 to 150 a month if left on. Deallocate it when not in use. Check the live price in the Azure pricing calculator for our region before quoting it.
+
+**Scale path, each step justified, not "Microsoft for its own sake":**
+- **Redpanda to Azure Event Hubs.** Event Hubs speaks the Kafka protocol, so the processor's Kafka client points at it with a config change, not a rewrite.
+- **Postgres to Azure Database for PostgreSQL.** Managed backups, and Power BI connects without a laptop in the middle.
+- **ClickHouse stays, or moves to Azure Data Explorer or a Fabric Eventhouse** for time-series analytics.
+- **Containers to Azure Container Apps or AKS,** so the processor and `ml-scorer` scale out by Kafka partition.
+
+The 10x table in docs/SLA.md, measured on the VM, says which hop breaks first. That's the honest answer to "what breaks at ten times the usage". **Fallback if Azure access is slow:** run on Anchit's laptop behind a Cloudflare Tunnel (free, about 10 minutes) for the public HTTPS link.
 
 ## 6. UI and refinement
 The lead's list, plus: projector contrast, 1280x720, the "+N new alerts" row (B4), the Launch-attack panel, a "Replayed flow logs" label (if the replay runs), and removing anything that still says PENDING but is now measured.
@@ -79,6 +118,10 @@ An analyst approves "Block source IPs", and nginx starts refusing that address w
 - Each action is **reversible** (an undo button) and **expires** (for example after 15 min), and each is logged with who approved it, when, and the CRIE version.
 - The pitch claim, kept honest: "In the lab, approved fixes are applied in seconds through an allowlisted actuator. In a company, the same actuator would call the firewall, the identity provider or the WAF through their APIs, still behind a human approval."
 
+## End of day: repo hand-in
+- Delete the merged branches once everyone is on `main`. `feat/person-a-clickhouse` (one unmerged commit) is kept as a tag before its branch goes, so nothing is lost.
+- Remove Claude Code's files and mentions (CLAUDE.md files, `.claude/` folders, "Co-Authored-By" commit trailers) as the last step, after the code freeze. Commit trailers live in the history, so removing them means rewriting history and a force-push, and everyone re-clones afterwards. Do it once, last, together.
+
 ## Research duo
 - **R1, the judging criteria:** map each criterion to what we show, and where. Flag any criterion we don't cover by H2.
 - **R2, the demo storyboard (3, 5 and 8 minute versions):** what the judge sees at each moment, which attack, the line we say.
@@ -86,9 +129,10 @@ An analyst approves "Block source IPs", and nginx starts refusing that address w
 - **R4, numbers with sources:** alert fatigue, mean time to respond, analyst workload, from reputable reports (with links). Only quote what we can cite.
 - **R5, a security review of our own deployment:** exposed ports, the Juice Shop entry point, default passwords, rate limits. A judge in cybersecurity may try it.
 - **R6, competitive framing:** one slide on how SIEMs and SOAR tools rank alerts, and where "time left" and the human-approved actuator differ.
+- **R7, named users and adoption:** who buys and uses this. The SOC analyst (NETRA) and the risk or SOC manager (the Power BI report). A short call with the university IT or security team, or a small company's IT lead, for one quote or interest note, is worth more than any slide. Plus the adoption path: one web app first, then more log sources.
 
-## Decisions needed from the lead now
-1. Azure: do we have a subscription or credits (Azure for Students gives $100)? Who creates the VM?
-2. Repo cleanup: approve the delete list.
-3. Branches: approve deleting the merged branches, once Anchit has pushed.
-4. Paste the judging criteria.
+## Decisions (2026-10-08)
+1. Azure: Anchit sets up the VM on the Azure for Students credit (USD 100).
+2. Repo cleanup: done (generator/ kept).
+3. Branches: delete the merged ones once everyone confirms they're on `main`.
+4. Rubric: received; see the top of this file.
