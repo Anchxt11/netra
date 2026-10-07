@@ -37,13 +37,14 @@ SELECT id, alert_id, rule_id, model,
        status, created_ts, updated_ts, date_trunc('minute', created_ts) AS created_minute
 FROM public.incidents;
 
--- Decisions are logged in the incident's notes, one line each: "<time> <user> APPROVED|REJECTED <action>".
+-- Decisions are logged in the incident's notes, one line each: "<time> <user> APPROVED|REJECTED <action>",
+-- optionally followed by " (recommended by <crie version>)" since R3.
 CREATE OR REPLACE VIEW bi.bi_decisions AS
 SELECT i.id AS incident_id, i.rule_id,
        m[1]::timestamptz AS decided_at, m[2] AS decided_by, lower(m[3]) AS decision, m[4] AS action_id
 FROM public.incidents i,
      LATERAL regexp_split_to_table(coalesce(i.notes, ''), E'\n') AS line,
-     LATERAL regexp_match(line, '^(\S+) (\S+) (APPROVED|REJECTED) (\S+)$') AS m
+     LATERAL regexp_match(line, '^(\S+) (\S+) (APPROVED|REJECTED) (\S+)( \(recommended by .*\))?$') AS m
 WHERE m IS NOT NULL;
 
 CREATE OR REPLACE VIEW bi.bi_kpi_alerts AS
