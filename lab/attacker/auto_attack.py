@@ -8,24 +8,25 @@ import sys
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s', stream=sys.stdout)
 
 # Define the attacks, their severity, and their probability weight.
-# Higher weight = happens more frequently.
 ATTACKS = [
-    {"name": "web_scan",                 "severity": "low",      "weight": 20},
-    {"name": "brute_force",              "severity": "medium",   "weight": 10},
-    {"name": "credential_stuffing",      "severity": "medium",   "weight": 10},
-    {"name": "http_flood",               "severity": "medium",   "weight": 10},
-    {"name": "sqli",                     "severity": "high",     "weight": 5},
-    {"name": "data_exfiltration",        "severity": "high",     "weight": 3},
-    {"name": "account_takeover",         "severity": "critical", "weight": 2},
+    # --- Core Scenarios ---
+    {"name": "web_scan",                 "severity": "low",      "weight": 20, "risk_range": (0.20, 0.35)},
+    {"name": "brute_force",              "severity": "medium",   "weight": 10, "risk_range": (0.40, 0.55)},
+    {"name": "credential_stuffing",      "severity": "medium",   "weight": 10, "risk_range": (0.50, 0.65)},
+    {"name": "http_flood",               "severity": "medium",   "weight": 10, "risk_range": (0.60, 0.70)},
+    {"name": "sqli",                     "severity": "high",     "weight": 5,  "risk_range": (0.75, 0.85)},
+    {"name": "data_exfiltration",        "severity": "high",     "weight": 3,  "risk_range": (0.80, 0.90)},
+    {"name": "account_takeover",         "severity": "critical", "weight": 2,  "risk_range": (0.85, 0.90)},
+    
     # --- Evasion Scenarios (ML Test Set) ---
-    {"name": "evasion_low_slow_brute",   "severity": "evasion",  "weight": 5},
-    {"name": "evasion_distributed_cred", "severity": "evasion",  "weight": 5},
-    {"name": "evasion_obfuscated_sqli",  "severity": "evasion",  "weight": 5},
-    {"name": "evasion_xss_traversal",    "severity": "evasion",  "weight": 5},
-    {"name": "evasion_slowloris",        "severity": "evasion",  "weight": 5},
-    {"name": "evasion_idor_enum",        "severity": "evasion",  "weight": 5},
-    {"name": "evasion_slow_exfil",       "severity": "evasion",  "weight": 5},
-    {"name": "evasion_account_enum",     "severity": "evasion",  "weight": 5}
+    {"name": "evasion_account_enum",     "severity": "evasion",  "weight": 5,  "risk_range": (0.10, 0.25)},
+    {"name": "evasion_low_slow_brute",   "severity": "evasion",  "weight": 5,  "risk_range": (0.45, 0.55)},
+    {"name": "evasion_distributed_cred", "severity": "evasion",  "weight": 5,  "risk_range": (0.55, 0.65)},
+    {"name": "evasion_idor_enum",        "severity": "evasion",  "weight": 5,  "risk_range": (0.65, 0.75)},
+    {"name": "evasion_slowloris",        "severity": "evasion",  "weight": 5,  "risk_range": (0.70, 0.80)},
+    {"name": "evasion_xss_traversal",    "severity": "evasion",  "weight": 5,  "risk_range": (0.75, 0.85)},
+    {"name": "evasion_obfuscated_sqli",  "severity": "evasion",  "weight": 5,  "risk_range": (0.80, 0.90)},
+    {"name": "evasion_slow_exfil",       "severity": "evasion",  "weight": 5,  "risk_range": (0.85, 0.90)}
 ]
 
 def select_attack():
@@ -49,7 +50,12 @@ def main():
         time.sleep(delay)
         
         attack = select_attack()
-        logging.info(f"🔥 FIRE: Launching {attack['severity'].upper()} severity attack -> {attack['name']}")
+        
+        # Calculate a random artificial risk score within the assigned range
+        min_risk, max_risk = attack['risk_range']
+        risk_score = round(random.uniform(min_risk, max_risk), 2)
+        
+        logging.info(f"🔥 FIRE: Launching {attack['severity'].upper()} severity attack -> {attack['name']} [Artificial Risk Score: {risk_score}]")
         
         # Execute the bash attack script natively
         try:
