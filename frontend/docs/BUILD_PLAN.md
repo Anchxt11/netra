@@ -3,6 +3,15 @@
 Checked against GitHub (github.com/Anchxt11/netra) on 2026-10-07. The frontend is done (light refinements at the end only), so this plan covers what is left: bringing the backend team's work in, model 1 on everything, Power BI, and the rehearsal.
 Paste the prompts into **Track 1** (the Claude Code session at the repo root) one at a time; each ends with tests and a commit, and asks before pushing.
 
+## Who runs what (Claude Code is only on your laptop)
+Claude Code cannot reach Anchit's laptop. Everything between the two laptops goes through GitHub and messages:
+1. **Your laptop, Claude Code** writes and tests the code (unit tests, the build, the stand-in API with `npm run live-backend`), commits, and pushes to `integration` once you say yes.
+2. **You send Anchit** the "Anchit's steps" block for that step (copy it from this file into a message). Each block starts with `git pull` and lists every command he types, and what to send back.
+3. **Anchit runs them** on his laptop (Docker, the full stack, Juice Shop) and sends back what the block asks for: the terminal output as text and a screenshot of the dashboard.
+4. **You paste his reply into Track 1**, which reads it, fixes what broke, and pushes again. Repeat until his run is clean.
+
+Rule of thumb: anything with `make`, `docker` or a database runs on **Anchit's** laptop; anything with `npm`, Power BI or Claude Code runs on **yours**.
+
 ## Where things are
 | part | where | state |
 |---|---|---|
@@ -28,15 +37,15 @@ Model 1 was trained on **network-flow records** (packets, bytes, ports, protocol
 ## Run order
 | # | what | who | needs |
 |---|---|---|---|
-| M1 | bring the Juice Shop lab into `integration` | Track 1 | now |
-| M2 | concurrency changes from the backend's plan | backend team (or Track 1 if they ask) | M1 |
+| M1 | bring the Juice Shop lab into `integration`, push | Track 1, then Anchit runs it | now |
+| M2 | concurrency changes from the backend's plan | backend team, on their own laptops | M1 |
 | B0 | send the ML team the missing files message | you | now |
 | B1 | load model 1, prove it scores like training, list the field gap | Track 1 | updated model pushed |
-| B2 | the scoring service: model 1 on all traffic | Track 1 | B1, field gap settled |
+| B2 | the scoring service: model 1 on all traffic, push | Track 1, then Anchit runs it | B1, field gap settled |
 | B3 | model 1 on the screen | Track 1 (touches `frontend/`) | B2 |
-| C2 | end-to-end run on the Juice Shop lab | Track 1 + Anchit | M1, B2 |
-| P1 | Power BI practice (CSV) | you | Anchit's CSV export |
-| P2 | Power BI live report | you + Anchit | at the venue |
+| C2 | end-to-end run on the Juice Shop lab | Anchit runs it, you relay to Track 1 | M1, B2 |
+| P1 | Power BI practice (CSV) | Anchit exports, you build | Anchit's CSV export |
+| P2 | Power BI live report | you + Anchit, same room | at the venue |
 | E1 | runbook and rehearsal | everyone | everything |
 | F1 | frontend refinements and redeploy | Track 2 | last |
 
@@ -47,10 +56,19 @@ Model 1 was trained on **network-flow records** (packets, bytes, ports, protocol
 ## M. Bring the backend team's work in
 
 **M1 The Juice Shop lab** (Track 1)
-> Merge `origin/feat/event-gen` into `integration` (don't switch away from `integration`). Keep the backend team's docker-compose.yaml, Makefile, README and lab/ as theirs, and keep our A3 ops service and A5 Postgres changes in docker-compose.yaml (list every conflict you resolve). Then check, by reading the code: the normaliser writes `events.raw` in the 16-field schema that the processor, the rules and the dashboard expect; logins from Juice Shop become `login` events with the email as `user`; and add a way to tell lab traffic from the simulator (for example `source: "juice-shop"` or a lab field) so the dashboard can label it "Lab capture" honestly. Update frontend/docs/BACKEND_INTEGRATION.md "Where things are" and "Run it" for `make up` plus `make lab`. Commit only your own paths; ask me before pushing.
+> Merge `origin/feat/event-gen` into `integration` (don't switch away from `integration`). Keep the backend team's docker-compose.yaml, Makefile, README and lab/ as theirs, and keep our A3 ops service and A5 Postgres changes in docker-compose.yaml (list every conflict you resolve). Then check, by reading the code: the normaliser writes `events.raw` in the 16-field schema that the processor, the rules and the dashboard expect; logins from Juice Shop become `login` events with the email as `user`; and add a way to tell lab traffic from the simulator (for example `source: "juice-shop"` or a lab field) so the dashboard can label it "Lab capture" honestly. Update frontend/docs/BACKEND_INTEGRATION.md "Where things are" and "Run it" for `make up` plus `make lab`. You cannot run Docker here (it runs on a teammate's laptop), so prove what you can with tests and by reading the code, and say plainly what only his run can prove. Commit only your own paths; ask me before pushing.
+
+**Anchit's steps after M1** (send this once Track 1 has pushed)
+> 1. `git fetch`, then `git checkout integration`, then `git pull`
+> 2. `make up`, wait until `docker compose ps` shows everything healthy, then `make lab`
+> 3. Leave it for 5 minutes, then send me: the output of `docker compose ps`, the last 50 lines of `docker compose logs processor` and of `docker compose logs lab-normalizer`, and any error you saw.
+
+Paste his reply into Track 1: "Here is a teammate's run of M1 on Docker. Fix what broke and ask me before pushing."
 
 **M2 Concurrency** (backend team; Track 1 only if they ask)
 > Implement `Concurrency/Netra_Concurrency_Fix_Plan.md` exactly as its "Implementation Order" says (processor commits after output instead of flushing per event, partitioning by source IP kept, Vector disk buffer, ClickHouse safe on retries), then its Step 5 test, and record the numbers in docs/SLA.md's results table. Nothing outside that plan.
+
+The backend team does this on their own laptops, not through your Claude Code. Your only job: when they say it is pushed, ask Track 1 to pull it and update the table at the top of this file.
 
 ---
 
@@ -64,7 +82,11 @@ How it fits now: the rules flag known attacks; **model 1 scores every event**. F
 > Model 1 is in ml/model1/ (VERSION, features.json, preprocess.py, the Isolation Forest models per log type, the XGBoost model and label encoder, model_card.md). Read model_card.md and features.json first. Write ml/atde/predict.py: load once; `score(rows)` returns the anomaly score, the family (or UNKNOWN), the probability and the top 3 SHAP reasons, using the bundle's own preprocess.py (never re-implement features). If samples.jsonl exists, test that every row reproduces its expected output; if not, say so. Measure rows per second. Then compare features.json with what our live events actually carry (events.raw from the Juice Shop normaliser) and write the exact field gap into docs/ML_INTEGRATION.md; stop there if the gap is big.
 
 **B2 The scoring service** (Track 1, after the field gap is settled)
-> Build an `ml-scorer` compose service: it consumes `events.enriched` (or the flow topic, if the lab produces one), builds features with the bundle's preprocess.py, and scores **every event** in 1 s micro-batches. For events a rule flagged, it emits a model alert attached to the same event (rule_id null, model "atde-<version>", risk score, family, top reasons) so the incident gets a risk score; for unflagged events above the anomaly cutoff, it emits a model alert that opens an AI-only incident. Alerts carry the event's ip, user and host (contracts/LIVE_API.md 5.1). Scores go to a ClickHouse `ml_scores` table. Report version and heartbeat for `models`, add a healthcheck, and make the A3 health watch include it. Never send the placeholder DummyScorer's output as a model alert. Tests with recorded events.
+> Build an `ml-scorer` compose service: it consumes `events.enriched` (or the flow topic, if the lab produces one), builds features with the bundle's preprocess.py, and scores **every event** in 1 s micro-batches. For events a rule flagged, it emits a model alert attached to the same event (rule_id null, model "atde-<version>", risk score, family, top reasons) so the incident gets a risk score; for unflagged events above the anomaly cutoff, it emits a model alert that opens an AI-only incident. Alerts carry the event's ip, user and host (contracts/LIVE_API.md 5.1). Scores go to a ClickHouse `ml_scores` table. Report version and heartbeat for `models`, add a healthcheck, and make the A3 health watch include it. Never send the placeholder DummyScorer's output as a model alert. Tests with recorded events (you cannot run Docker here; say what only a run on the stack can prove). Ask me before pushing.
+
+**Anchit's steps after B2**
+> 1. `git pull` on `integration`, then `make up` (it builds the new `ml-scorer`), then `make lab`
+> 2. After 5 minutes send me: `docker compose ps`, the last 50 lines of `docker compose logs ml-scorer`, and a screenshot of the dashboard with an incident open.
 
 **B3 Model 1 on the screen** (Track 1, in frontend/)
 > In frontend/src/data/backend: model alerts on a flagged event add an "AI engine" signal with its score and reasons to that incident ("AI engine: unusual for this address, score 0.81"); model alerts with no rule hit open an AI-only incident named "Unusual activity" (or the model's family when it names a known attack). ATDE shows ready with its version from `models`. DETECTIONS / MIN splits rules and AI. Update tests/correlate.test.ts, `npm test`, `npm run build`.
@@ -79,15 +101,27 @@ How it fits now: the rules flag known attacks; **model 1 scores every event**. F
 
 ## C. Juice Shop end to end
 
-**C2 One full run** (Track 1 with Anchit, on his laptop)
-> With `make up` and `make lab` running, check that each attack the lab runs fires the matching rule, that the incident sentences read well for Juice Shop paths and emails, that the live feed shows normal and attack traffic, and that the dashboard says "Lab capture". Fix what reads badly. Write one command per attack into docs/DEMO_RUNBOOK.md.
+**C2 One full run** (Anchit runs it; you carry the results to Track 1)
+
+**Anchit's steps**
+> 1. `git pull` on `integration`, then `make up`, then `make lab`.
+> 2. In `frontend/`: `npm install` (first time only), `npm run build:live`, `npm run preview:live`, open http://localhost:4174 and sign in with the development account in `api/app/settings.py`.
+> 3. Run each attack the lab has (the commands are in the lab README), one at a time, a minute apart.
+> 4. Send me: a screenshot of the dashboard after each attack, and the output of `docker compose logs --since 15m processor`.
+
+**Then paste his reply into Track 1 with this prompt:**
+> Here is a teammate's full run on the Juice Shop lab (screenshots and logs below). Check that each attack fired the matching rule, that the incident sentences read well for Juice Shop paths and emails, that the live feed shows normal and attack traffic, and that the dashboard says "Lab capture". Fix what reads badly, and write the start steps and one command per attack into docs/DEMO_RUNBOOK.md. Ask me before pushing.
+
+Repeat C2 after each fix until his run is clean.
 
 ---
 
 ## P. Power BI
 The data side is done (`docs/POWER_BI.md`). Power BI Desktop runs on your Windows laptop and reads Anchit's Postgres over the network, so the live report waits for the venue.
 
-**P1 Practice now:** when Anchit has the stack running, he exports the `bi_` views as CSV (commands in `docs/POWER_BI.md`) and sends them. You build the page from the CSVs (Get data > Text/CSV) to learn the screens; ask Track 2 to walk you through it.
+**P1 Practice now:**
+- **Anchit's steps:** with the stack and the lab running for at least 15 minutes, run the CSV export commands in `docs/POWER_BI.md` and send you the CSV files.
+- **You:** save them in a folder on your laptop, open Power BI Desktop, Get data > Text/CSV, and build the page. Ask Track 2 to walk you through it screen by screen.
 
 **P2 At the venue (30 to 45 minutes):** both laptops on Anchit's phone hotspot; Anchit runs the stack and sends his IP; you run `Test-NetConnection <his IP> -Port 5432`; then rebuild the page live (Get data > PostgreSQL database, DirectQuery, the `bi_` views, automatic page refresh) and save `bi/NETRA_Ops.pbix`.
 
@@ -96,7 +130,10 @@ The data side is done (`docs/POWER_BI.md`). Power BI Desktop runs on your Window
 ## E. Rehearsal
 
 **E1 Runbook and dry run** (everyone)
-> Write docs/DEMO_RUNBOOK.md: start order and checks (`make up`, `make lab`, the dashboard with `npm run build:live` and `npm run preview:live`, sign in), the scripted attacks, what to show in Power BI, and the fallback if anything fails (the simulated site, `/live?demo=1`). Run the whole demo once and fix what breaks. Update the deck's slides 5, 7, 8 and 9 with real numbers only.
+Track 1 writes the runbook on your laptop; the dry run happens on Anchit's laptop (or at the venue, together).
+> Write docs/DEMO_RUNBOOK.md for a teammate who has no Claude Code: start order and checks (`make up`, `make lab`, the dashboard with `npm run build:live` and `npm run preview:live`, sign in), the scripted attacks, what to show in Power BI, and the fallback if anything fails (the simulated site, `/live?demo=1`, which runs on any laptop with no backend). Every command copy-pasteable, with what the screen should show after it. Ask me before pushing.
+
+Then Anchit follows the runbook start to finish and sends you screenshots of anything that differs; paste them into Track 1 to fix. Update the deck's slides 5, 7, 8 and 9 with real numbers only.
 
 **F1 Frontend refinements and redeploy** (Track 2, last)
 > Your list of small refinements; then both builds, a check at 1440×900 and 1280×720, and the Vercel redeploy steps.
