@@ -10,13 +10,15 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(me
 # Define the attacks, their severity, and their probability weight.
 # Higher weight = happens more frequently.
 ATTACKS = [
-    {"name": "web_scan",            "severity": "low",      "weight": 40},
-    {"name": "brute_force",         "severity": "medium",   "weight": 20},
+    {"name": "web_scan",            "severity": "low",      "weight": 35},
+    {"name": "brute_force",         "severity": "medium",   "weight": 18},
     {"name": "credential_stuffing", "severity": "medium",   "weight": 15},
-    {"name": "http_flood",          "severity": "medium",   "weight": 15},
+    {"name": "http_flood",          "severity": "medium",   "weight": 12},
     {"name": "sqli",                "severity": "high",     "weight": 5},
     {"name": "data_exfiltration",   "severity": "high",     "weight": 3},
-    {"name": "account_takeover",    "severity": "critical", "weight": 2}
+    {"name": "account_takeover",    "severity": "critical", "weight": 2},
+    {"name": "ssrf",                "severity": "critical", "weight": 5},
+    {"name": "slowloris",           "severity": "high",     "weight": 5}
 ]
 
 def select_attack():

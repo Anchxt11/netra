@@ -18,6 +18,9 @@ def test_enrichment_contract():
     # Verify new feature keys exist
     features = json.loads(enriched['features'])
     assert 'path_has_sqli' in features
+    assert 'path_has_ssrf' in features
+    assert 'is_timeout' in features
+    assert 'response_ms_extreme' in features
     assert 'ua_is_scanner' in features
     assert 'bytes_out_large' in features
     assert 'is_data_transfer' in features

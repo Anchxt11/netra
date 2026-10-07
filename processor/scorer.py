@@ -11,10 +11,12 @@ class DummyScorer(Scorer):
         score=0.0
         if features.get('is_failure'): score += .10
         if features.get('is_server_error'): score += .10
+        if features.get('is_timeout') and features.get('response_ms_extreme'): score += .30
         if features.get('path_has_admin'): score += .15
         if features.get('process_has_sudo'): score += .20
         if features.get('process_has_useradd'): score += .25
         if features.get('path_has_sqli'): score += .25
+        if features.get('path_has_ssrf'): score += .35
         if features.get('path_has_traversal'): score += .20
         if features.get('ua_is_scanner'): score += .15
         if features.get('process_has_netcat'): score += .30

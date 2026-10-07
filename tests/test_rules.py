@@ -240,3 +240,30 @@ def test_features_large_bytes():
     f = build_features(event)
     assert f['bytes_out_large'] is True
     assert f['is_data_transfer'] is True
+
+
+def test_ssrf_rule():
+    e = RuleEngine.from_directory(RULES)
+    x = {'event_type': 'http_request', 'ip': '10.0.0.95', 'user': '-', 'status': 'success',
+         'path': '/profile?url=http://169.254.169.254/latest/meta-data/', 'http_status': 200}
+    hits = e.evaluate(x, now=0)
+    assert any(h.rule_id == 'ssrf_metadata_probe' for h in hits)
+
+
+def test_features_ssrf():
+    event = {'path': '/api/fetch?url=http://169.254.169.254/computeMetadata/v1/', 'process': '',
+             'user_agent': 'curl/8.4.0', 'status': 'success', 'event_type': 'http_request',
+             'http_status': 200, 'response_ms': 15, 'bytes_out': 100, 'method': 'GET', 'source': 'web'}
+    f = build_features(event)
+    assert f['path_has_ssrf'] is True
+
+
+def test_features_slowloris_timeout():
+    event = {'path': '/', 'process': '', 'user_agent': 'Mozilla/5.0 (compatible; Slowloris/1.0)',
+             'status': 'failure', 'event_type': 'http_request', 'http_status': 408,
+             'response_ms': 35000, 'bytes_out': 100, 'method': 'GET', 'source': 'web'}
+    f = build_features(event)
+    assert f['is_timeout'] is True
+    assert f['response_ms_extreme'] is True
+    assert f['ua_is_scanner'] is True
+

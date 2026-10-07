@@ -376,6 +376,33 @@ def a_http_flood(s, t, tag):
               ms=int(50 + frac * random.uniform(0, 4000)), tag=tag)
 
 
+def a_ssrf(s, t, tag):
+    ip = s.w.attacker_ip()
+    ua = weighted(BROWSER_UAS) if random.random() < 0.5 else random.choice(TOOL_UAS)
+    ssrf_payloads = [
+        "/profile?url=http://169.254.169.254/latest/meta-data/",
+        "/api/fetch?url=http://169.254.169.254/computeMetadata/v1/",
+        "/import?target=http://127.0.0.1:8080/actuator/env",
+        "/preview?url=http://169.254.169.254/latest/meta-data/iam/security-credentials/",
+        "/proxy?dest=http://metadata.google.internal/computeMetadata/v1/"
+    ]
+    for _ in range(random.randint(5, 15)):
+        s.req(t, "-", ip, ua, "GET", random.choice(ssrf_payloads),
+              random.choice([403, 500, 200]), random.randint(100, 500), tag=tag)
+        t += random.uniform(0.2, 1.5)
+
+
+def a_slowloris(s, t, tag):
+    w = s.w
+    ips = [w.attacker_ip() for _ in range(random.randint(2, 5))]
+    uas = {ip: "Mozilla/5.0 (compatible; Slowloris/1.0)" for ip in ips}
+    for _ in range(random.randint(8, 20)):
+        ip = random.choice(ips)
+        s.req(t, "-", ip, uas[ip], "GET", "/", random.choice([408, 499, 504]),
+              random.randint(50, 250), ms=random.randint(15000, 60000), tag=tag)
+        t += random.uniform(2.0, 8.0)
+
+
 ATTACKS = {  # name: (function, weight, eligible(hour) or None)
     "brute_force": (a_brute_force, 3, None),
     "credential_stuffing": (a_credential_stuffing, 2, None),
@@ -384,6 +411,8 @@ ATTACKS = {  # name: (function, weight, eligible(hour) or None)
     "data_exfiltration": (a_data_exfiltration, 1, None),
     "admin_abuse": (a_admin_abuse, 1, lambda h: 0 <= h < 5),
     "http_flood": (a_http_flood, 1, None),
+    "ssrf": (a_ssrf, 2, None),
+    "slowloris": (a_slowloris, 2, None),
 }
 
 

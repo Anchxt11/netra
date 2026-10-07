@@ -79,6 +79,8 @@ make attack SCENARIO=brute_force
 #   sqli                  (SQL injection)
 #   data_exfiltration     (Huge file downloads)
 #   account_takeover      (Successful login from high-risk IP)
+#   ssrf                  (Server-Side Request Forgery & metadata probes)
+#   slowloris             (Low-rate connection exhaustion DoS)
 
 # Trigger ALL attack scenarios sequentially
 make attack-full
@@ -127,15 +129,15 @@ netra/
 ├── infrastructure/            # Infrastructure config & scripts
 │   └── clickhouse/init/       # ClickHouse MergeTree & MV definitions
 ├── simulator/                 # Team A — event generator
-│   ├── web_traffic_sim.py     # Discrete event simulator with 7 attack scenarios
+│   ├── web_traffic_sim.py     # Discrete event simulator with 9 attack scenarios
 │   └── Dockerfile
 ├── processor/                 # Team B — stream processor + rule engine
 │   ├── main.py                # Entry point
 │   ├── processor.py           # Enrichment orchestrator
 │   ├── rule_engine.py         # Sigma-style YAML rule engine
 │   └── Dockerfile
-├── rules/sigma/               # 10 Detection rules (YAML)
-├── tests/                     # Unit tests (31 tests)
+├── rules/sigma/               # 11 Detection rules (YAML)
+├── tests/                     # Unit tests (34 tests)
 ├── docker-compose.yaml        # Full stack definition (Redpanda, API, Processor, ClickHouse)
 ├── Makefile                   # Developer commands
 └── pyproject.toml
@@ -149,7 +151,7 @@ The processor consumes from `events.raw` and produces to `events.enriched`, addi
 
 | Field          | Type            | Description                              |
 |----------------|-----------------|------------------------------------------|
-| `features`     | `string` (JSON) | 23 extracted features as a JSON string   |
+| `features`     | `string` (JSON) | 26 extracted features as a JSON string   |
 | `risk_score`   | `float [0, 1]`  | Weighted risk score from the Scorer      |
 | `rule_hits`    | `array[string]` | List of triggered rule IDs               |
 | `processed_ts` | `string`        | ISO-8601 UTC timestamp of processing     |
@@ -169,7 +171,7 @@ When rules trigger, alerts are published to the `alerts` topic:
 
 ## Detection Rules
 
-10 Sigma-style YAML rules covering all 7 generator attack scenarios:
+11 Sigma-style YAML rules covering key generator attack scenarios:
 
 | Rule                   | Severity | Type     | Detects                                |
 |------------------------|----------|----------|----------------------------------------|
@@ -178,6 +180,7 @@ When rules trigger, alerts are published to the `alerts` topic:
 | `excessive_requests`   | medium   | Windowed | 100 HTTP requests / 60s per IP         |
 | `http_flood`           | critical | Windowed | 200 HTTP requests / 30s per IP (DDoS)  |
 | `web_scan`             | high     | Windowed | 10 probe-path hits / 60s (SQLi, etc.)  |
+| `ssrf_metadata_probe`  | critical | Instant  | Cloud metadata (169.254...) / SSRF     |
 | `data_exfiltration`    | critical | Instant  | data_transfer with bytes > 50 MB       |
 | `privilege_escalation` | high     | Instant  | sudo command execution                 |
 | `malicious_process`    | critical | Instant  | Reverse shells, shadow reads, curl\|sh |
@@ -186,7 +189,7 @@ When rules trigger, alerts are published to the `alerts` topic:
 
 ### Rule Engine & Processing Logic
 
-The Python processor continuously reads raw web traffic from `events.raw` and extracts 23 specific security features (e.g., `ua_is_scanner`, `bytes_out`). It then evaluates these features against a custom **YAML Rule Engine** inspired by Sigma.
+The Python processor continuously reads raw web traffic from `events.raw` and extracts 26 specific security features (e.g., `ua_is_scanner`, `path_has_ssrf`, `is_timeout`, `bytes_out`). It then evaluates these features against a custom **YAML Rule Engine** inspired by Sigma.
 
 #### How the Rule Engine Works
 - **Dot-Notation**: Rules can target nested JSON keys in the enriched event, such as `features.process_has_shadow: true`.
@@ -215,7 +218,7 @@ Current implementation: `DummyScorer` (heuristic weights). Drop-in replacement w
 ## Attack Scenarios (Live Lab & Synthetic)
 
 ### Live Lab Scenarios (Orchestrated by `auto_attack.py`)
-These are launched via real HTTP requests (using `ffuf`, `ab`, `sqlmap`, etc.) from the attacker containers in the Lab Profile:
+These are launched via real HTTP requests (using `ffuf`, `ab`, `sqlmap`, sockets, etc.) from the attacker containers in the Lab Profile:
 
 | Scenario              | Tool Used  | Description                                        |
 |-----------------------|------------|----------------------------------------------------|
@@ -226,6 +229,8 @@ These are launched via real HTTP requests (using `ffuf`, `ab`, `sqlmap`, etc.) f
 | `sqli`                | `sqlmap`   | Automated SQL injection against the product search |
 | `data_exfiltration`   | `curl`     | Rapid download of huge backup files from `/ftp`    |
 | `account_takeover`    | `curl`     | Successful login from a high-risk geo IP (RU/CN)   |
+| `ssrf`                | `curl`     | Cloud metadata & localhost probing                 |
+| `slowloris`           | `sockets`  | Low-rate slow header connection exhaustion DoS     |
 
 ### Synthetic Generator Scenarios
 The simulator (`make sim`) generates fake telemetry and injects these mathematical patterns without doing any real HTTP networking:
@@ -239,6 +244,8 @@ The simulator (`make sim`) generates fake telemetry and injects these mathematic
 | `data_exfiltration`   | Large file exports or rapid API scraping            |
 | `admin_abuse`         | Malicious commands (reverse shells, shadow reads)   |
 | `http_flood`          | Distributed L7 DDoS with server degradation         |
+| `ssrf`                | Metadata IP queries and internal endpoint probing   |
+| `slowloris`           | High response latency (15s+) connection exhaustion  |
 
 ## Freshness SLA
 
