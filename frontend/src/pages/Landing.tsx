@@ -1,14 +1,15 @@
 // Landing (/), v2: a calm product page (DESIGN.md v2, PAGES.md section 4).
 // Hero with the cooling-words line and the dotted globe; then the ONE particle moment: on scroll the
-// globe's dots break apart and re-form as the dashboard, and the live product shot takes over.
-// Then how it works (hover-alive cards), why NETRA, enterprise, and the live dashboard itself.
-import { useRef } from "react";
+// globe's dots break apart and re-form as the NETRA eye. Then how it works (hover-alive cards),
+// why NETRA, enterprise and the live dashboard, each easing in quietly as it scrolls into view.
+import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion, useScroll, useSpring, useTransform } from "motion/react";
 import { Globe } from "../landing/Globe";
 import { CoolingWords } from "../landing/CoolingWords";
 import { HowItWorks } from "../landing/HowItWorks";
-import { ProductShot } from "../landing/ProductShot";
-import { SHOT, dashboardOutline } from "../landing/dashboardOutline";
+import { loadMarkTargets } from "../landing/markTargets";
+import { Reveal } from "../landing/Reveal";
+import type { TargetPoint } from "../landing/Globe";
 import { DASHBOARD_ANCHOR, DashboardSection } from "../landing/DashboardSection";
 import styles from "./Landing.module.css";
 
@@ -33,16 +34,20 @@ export default function Landing() {
   const still = useReducedMotion() ?? false;
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end end"] });
   const p = useSpring(scrollYProgress, { stiffness: 80, damping: 22, mass: 0.6, restDelta: 0.0001 });
+  const [markTargets, setMarkTargets] = useState<(() => TargetPoint[]) | undefined>(undefined);
+  useEffect(() => {
+    loadMarkTargets().then((fn) => setMarkTargets(() => fn), () => {});
+  }, []);
 
   // The hero copy gives way; the globe stops swaying, glides to the centre, breaks apart and
-  // re-forms as the dashboard; the live product shot then appears exactly over the dots.
+  // re-forms as the NETRA eye; the wordmark then appears under it.
   const copyOpacity = useTransform(p, [0.04, 0.22], [1, 0]);
   const copyY = useTransform(p, [0.04, 0.22], [0, -24]);
   const sway = useTransform(p, [0, 0.12], [1, 0]);
   const stageX = useTransform(p, [0.08, 0.45], ["24vw", "0vw"]);
   const morph = useTransform(p, [0.24, 0.7], [0, 1]);
-  const globeVisible = useTransform(p, [0.8, 0.9], [1, 0]);
-  const shotOpacity = useTransform(p, [0.74, 0.88], [0, 1]);
+  const wordOpacity = useTransform(p, [0.72, 0.86], [0, 1]);
+  const wordY = useTransform(p, [0.72, 0.86], [12, 0]);
   const ribbonOpacity = useTransform(p, [0, 0.4], [0.32, 0.1]);
 
   return (
@@ -51,10 +56,6 @@ export default function Landing() {
         <div className={styles.sticky}>
           <motion.div className={styles.ribbon} style={still ? undefined : { opacity: ribbonOpacity }} aria-hidden="true" />
           <motion.div className={styles.copy} style={still ? undefined : { opacity: copyOpacity, y: copyY }}>
-            <span className={styles.kicker}>
-              <i aria-hidden="true" />
-              Real-time security risk, ranked by the time left to act
-            </span>
             <h1 className={styles.headline}>
               Security decisions while the data is <em>still warm.</em>
             </h1>
@@ -70,106 +71,81 @@ export default function Landing() {
           </motion.div>
 
           <motion.div className={styles.stage} style={still ? undefined : { x: stageX }}>
-            <motion.div className={styles.globeLayer} style={still ? undefined : { opacity: globeVisible }}>
-              <Globe sway={sway} morph={morph} visible={globeVisible} targets={dashboardOutline} />
-            </motion.div>
-            {!still && (
-              <motion.div
-                className={styles.shot}
-                style={{
-                  opacity: shotOpacity,
-                  left: `${(SHOT.x / 760) * 100}%`,
-                  top: `${(SHOT.y / 760) * 100}%`,
-                  width: `${(SHOT.w / 760) * 100}%`,
-                }}
-              >
-                <ProductShot />
-              </motion.div>
-            )}
+            <div className={styles.globeLayer}>
+              <Globe sway={sway} morph={morph} targets={markTargets} />
+            </div>
           </motion.div>
 
           {!still && (
-            <motion.p className={styles.shotCaption} style={{ opacity: shotOpacity }}>
-              The live dashboard, running below on a simulated feed.
+            <motion.p className={styles.markWord} style={{ opacity: wordOpacity, y: wordY }} aria-hidden="true">
+              NETRA
             </motion.p>
           )}
         </div>
       </section>
 
-      {still && (
-        <section className={styles.section}>
-          <ProductShot />
-        </section>
-      )}
-
       <section id="how" className={styles.section}>
-        <div className={styles.intro}>
+        <Reveal className={styles.intro}>
           <span className={styles.eyebrow}>How it works</span>
           <h2 className={styles.h2}>From a flood of events to the one that matters.</h2>
           <p className={styles.sub}>Five steps. Hover a card and its drawing comes alive.</p>
-        </div>
-        <HowItWorks />
+        </Reveal>
+        <Reveal kind="settle" delay={0.1}>
+          <HowItWorks />
+        </Reveal>
       </section>
 
       <section id="why" className={styles.section}>
-        <div className={styles.intro}>
+        <Reveal className={styles.intro}>
           <span className={styles.eyebrow}>Why NETRA</span>
           <h2 className={styles.h2}>Most dashboards show you alerts. NETRA tells you which one first, and why.</h2>
-        </div>
-        <div className={styles.why}>
+        </Reveal>
+        <Reveal kind="soften" delay={0.1} className={styles.why}>
           {WHY.map(([title, text]) => (
             <div key={title} className={styles.whyCell}>
               <h3>{title}</h3>
               <p>{text}</p>
             </div>
           ))}
-        </div>
+        </Reveal>
       </section>
 
       <section id="enterprise" className={styles.section}>
-        <div className={styles.intro}>
+        <Reveal className={styles.intro}>
           <span className={styles.eyebrow}>Enterprise</span>
           <h2 className={styles.h2}>Built to the brief's enterprise bar, and measured.</h2>
-        </div>
+        </Reveal>
         <div className={styles.enterprise}>
-          <div className={styles.entCard}>
+          <Reveal kind="slide" delay={0.00} className={styles.entCard}>
             <span className={styles.entLabel}>Freshness SLA</span>
             <span className={styles.entBig}>
               5<span> s p95</span>
             </span>
             <p>The target from an event happening to it showing on screen, measured at every hop.</p>
-          </div>
-          <div className={styles.entCard}>
+          </Reveal>
+          <Reveal kind="slide" delay={0.08} className={styles.entCard}>
             <span className={styles.entLabel}>Concurrent load</span>
             <span className={styles.entBig}>
               10<span>×</span>
             </span>
             <p>Normal traffic with many dashboards open. Results: PENDING until the load test runs.</p>
-          </div>
-          <div className={styles.entCard}>
+          </Reveal>
+          <Reveal kind="slide" delay={0.16} className={styles.entCard}>
             <span className={styles.entLabel}>Failure alerting</span>
             <span className={styles.entText}>Scheduled jobs that tell you when they fail</span>
             <p>A stalled feed, a slow pipeline or a failed job shows on screen in red, with words.</p>
-          </div>
-          <div className={styles.entCard}>
+          </Reveal>
+          <Reveal kind="slide" delay={0.24} className={styles.entCard}>
             <span className={styles.entLabel}>Roles and audit</span>
             <span className={styles.entText}>Analyst and admin sign-in, every decision logged</span>
             <p>On the live backend, nothing runs without a named person approving it.</p>
-          </div>
+          </Reveal>
         </div>
       </section>
 
-      <section className={styles.section}>
-        <div className={styles.cta}>
-          <h2 className={styles.ctaTitle}>Watch the data cool.</h2>
-          <p className={styles.sub}>The live dashboard runs right below, on a simulated feed.</p>
-          <a href={`#${DASHBOARD_ANCHOR}`} className={styles.primary} onClick={(e) => toDashboard(e, !still)}>
-            Open the live dashboard
-          </a>
-        </div>
-      </section>
-
-      <DashboardSection />
+      <Reveal kind="settle">
+        <DashboardSection />
+      </Reveal>
 
       <footer className={styles.band}>
         <span className={styles.wordmark}>NETRA</span>

@@ -56,7 +56,7 @@ export function IncidentHero({ incident }: { incident: Incident }) {
       </header>
 
       <div className={styles.body}>
-        <CountdownRing remaining={remaining} timeLeftMs={timeLeftMs} staleBy={incident.staleBy} size={224} />
+        <CountdownRing remaining={remaining} timeLeftMs={timeLeftMs} staleBy={incident.staleBy} />
         <EscalationChart key={incident.id} signals={incident.signals} />
         <div className={styles.evidence}>
           <EvidenceBar signals={incident.signals} attention={incident.attentionScore} />

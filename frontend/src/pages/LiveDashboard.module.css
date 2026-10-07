@@ -37,6 +37,7 @@
 @media (max-height: 820px) {
   .page {
     --kpi-strip: 58px;
+    min-height: calc(540px + var(--kpi-strip) + var(--gap));
   }
 }
 
