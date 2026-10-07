@@ -74,7 +74,7 @@ One day, about 8 hours, 6 people. Everything goes to `main`; no other branches. 
 | # | bug | owner |
 |---|---|---|
 | B1 | `bi_decisions` is always empty: the R3 decision line ends with "(recommended by …)", which the view's pattern (ops/bi.py) rejects | Claude (lead) |
-| B2 | `sla_check` job fails with HTTP 503 right after start-up (the API isn't ready yet): retry, or skip the first minute | Anchit |
+| B2 ✅ | `sla_check` job fails with HTTP 503 right after start-up (the API isn't ready yet): retry, or skip the first minute | Anchit |
 | B3 | `make replay` and every `--build` fail when Docker Hub resolves over IPv6 (goes away on the VM; for laptops, a note in the README) | Anchit |
 | B4 | Same attack type from the same address joins the open incident (by design), so a repeated demo attack seems to do nothing: show "+N new alerts" on the row | Claude (lead) |
 | B5 | The dashboard has never been checked against the real CRIE engine (only the stand-in) | Anchit (on the VM) |

@@ -4,6 +4,8 @@ import json
 import os
 import subprocess
 import sys
+import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta
@@ -28,6 +30,8 @@ RETRAIN_TIMEOUT_S = int(os.getenv("RETRAIN_TIMEOUT_SECONDS", "3600"))
 TZ = os.getenv("TZ", "UTC")
 KEEP_JOB_RUNS_DAYS = int(os.getenv("KEEP_JOB_RUNS_DAYS", "7"))
 KEEP_ALERTS_DAYS = int(os.getenv("KEEP_ALERTS_DAYS", "30"))
+STARTUP_GRACE_S = int(os.getenv("OPS_STARTUP_GRACE_SECONDS", "90"))
+STARTED = time.monotonic()
 
 
 def get_json(url: str, timeout: float = 4) -> dict:
@@ -123,8 +127,21 @@ def health_watch(store) -> Outcome:
 
 # ------------------------------------------------------------------ SLA check (every 30 s)
 
+def _freshness(tries: int = 3, wait: float = 2) -> dict:
+    """GET /freshness, retried: right after start-up the API (or its ClickHouse) answers 503 for a few seconds (B2)."""
+    for i in range(tries):
+        try:
+            return get_json(f"{API_URL}/freshness")
+        except (urllib.error.URLError, ConnectionError, TimeoutError) as e:
+            if i == tries - 1:
+                if time.monotonic() - STARTED < STARTUP_GRACE_S:
+                    raise Skip(f"The API is still starting ({type(e).__name__}: {e}).") from e
+                raise
+            time.sleep(wait)
+
+
 def sla_check(store) -> Outcome:
-    f = get_json(f"{API_URL}/freshness")
+    f = _freshness()
     breach = f.get("status") in ("breach", "stalled")
     sla = f.get("sla_p95_seconds")
     msg = (f"Pipeline freshness p95 is {f.get('p95_seconds')} s, over the {sla} s SLA."

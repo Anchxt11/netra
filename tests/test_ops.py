@@ -134,3 +134,38 @@ def test_schedules():
     assert Daily(time(10, 0)).next_after(t) == datetime(2026, 10, 7, 10, 0, tzinfo=timezone.utc)
     assert Daily(time(9, 0)).next_after(t) == datetime(2026, 10, 8, 9, 0, tzinfo=timezone.utc)
     assert webhook_payload("hi") == {"text": "hi", "content": "hi"}
+
+
+def test_sla_check_skips_while_the_api_starts(monkeypatch):
+    import urllib.error
+    from ops import jobs
+
+    def down(url, timeout=4):
+        raise urllib.error.HTTPError(url, 503, "Service Unavailable", None, None)
+
+    monkeypatch.setattr(jobs, "get_json", down)
+    monkeypatch.setattr(jobs.time, "sleep", lambda s: None)
+    monkeypatch.setattr(jobs, "STARTED", jobs.time.monotonic())
+    import pytest
+    with pytest.raises(Skip):
+        jobs.sla_check(None)
+    monkeypatch.setattr(jobs, "STARTED", jobs.time.monotonic() - jobs.STARTUP_GRACE_S - 1)
+    with pytest.raises(urllib.error.HTTPError):
+        jobs.sla_check(None)
+
+
+def test_sla_check_retries_a_503_then_succeeds(monkeypatch):
+    import urllib.error
+    from ops import jobs
+    calls = []
+
+    def flaky(url, timeout=4):
+        calls.append(url)
+        if len(calls) == 1:
+            raise urllib.error.HTTPError(url, 503, "Service Unavailable", None, None)
+        return {"status": "ok", "p95_seconds": 0.4, "sla_p95_seconds": 5}
+
+    monkeypatch.setattr(jobs, "get_json", flaky)
+    monkeypatch.setattr(jobs.time, "sleep", lambda s: None)
+    out = jobs.sla_check(None)
+    assert out.status == "ok" and len(calls) == 2
