@@ -1,4 +1,4 @@
-"""The processor's batch loop (Concurrency/Netra_Concurrency_Fix_Plan.md, step 1): no flush per event,
+"""The processor's batch loop (docs/CONCURRENCY_PLAN.md, step 1): no flush per event,
 offsets committed only after every output of the batch was delivered."""
 import json
 

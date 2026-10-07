@@ -45,4 +45,4 @@ file and those two disagree, this file describes what is built. Open items at th
 - Live mode has no fix cards until CRIE exists, so APPROVE FIX is only reachable on the simulated feed.
 - Reduced motion on the landing: transforms and the pixel break-apart are off and steps crossfade; PAGES.md's "five stacked still frames" layout is not built.
 - `public/brand/hero-fallback.png` is not needed (the globe is plain canvas, no WebGL) and was not created.
-- Yapari licence for the wordmark (see START_HERE.md).
+- Yapari licence for the wordmark.

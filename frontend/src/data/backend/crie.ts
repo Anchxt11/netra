@@ -4,7 +4,7 @@
 // mitigations from our own table: nothing is invented.
 import type { Fix, Incident } from "../types";
 
-/** The R0 input shape (frontend/docs/BUILD_PLAN.md, R0). */
+/** The R0 input shape (contracts/LIVE_API.md 4.7). */
 export interface CrieRequest {
   incident_id: string;
   attack_type: string;

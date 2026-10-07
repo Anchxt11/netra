@@ -35,7 +35,7 @@ Check, top bar: LIVE is ticking, Freshness reads under 5 s. Dashboard: the live 
 
 ## 4. Power BI (you, on your laptop)
 - **Same Wi-Fi or hotspot as Anchit:** follow `docs/POWER_BI.md` (Get data > PostgreSQL, DirectQuery, the six `bi_` views, page refresh 30 s), using Anchit's IP. First test it: `Test-NetConnection <his IP> -Port 5432`.
-- **No network:** use the CSVs in `powerbi_exports/` (Get data > Text/CSV) and the same page layout.
+- **No network:** run `./export_csvs.sh` on the backend laptop and use the CSVs it writes to `powerbi_exports/` (Get data > Text/CSV) and the same page layout.
 - Open it before the pitch and leave it on its page.
 
 ## 5. Before you walk on (10 minutes before)

@@ -2,7 +2,7 @@
 
 The contract between the backend (track 1: `api/`, `processor/`, the `ops` service, `ml-scorer`) and the dashboard (track 2: `frontend/`). Both tracks code against this file. To change a shape, change this file first, then the code on both sides.
 
-Written 2026-10-07 on branch `integration` (updated the same day after A1), from `api/app` (routes, `ws.py`, `consumers.py`, `repo.py`), `api/db/init.sql`, `processor/alerts.py`, `frontend/src/data/source.ts`, `frontend/src/data/backend/` and `frontend/docs/BUILD_PLAN.md`. It covers everything in `contracts/API_SPEC.md` (the backend team's spec of what exists) plus what the build plan adds.
+Written 2026-10-07 on branch `integration` (updated the same day after A1), from `api/app` (routes, `ws.py`, `consumers.py`, `repo.py`), `api/db/init.sql`, `processor/alerts.py`, `frontend/src/data/source.ts` and `frontend/src/data/backend/`. It covers everything in `contracts/API_SPEC.md` (the backend team's spec of what exists) plus what was added since.
 
 **Status words**
 - **exists**: in the code today. The example is what the code sends.
@@ -535,7 +535,7 @@ Which models are running, from what `ml-scorer` reports and from each bundle's o
 ### 4.7 `POST /crie/recommend` (R2): CRIE's fixes for one incident
 CRIE (model 2) **only recommends**: the answer is a list for an analyst, and nothing is ever carried out. "Approve fix" records the decision; a person does the fix.
 
-Request (signed in, any role), the R0 input shape (frontend/docs/BUILD_PLAN.md, R0):
+Request (signed in, any role), the R0 input shape:
 ```json
 {
   "incident_id": "0131",

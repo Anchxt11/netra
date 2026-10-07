@@ -55,3 +55,6 @@ elastic/
 !models/*.pkl
 !model_2_temp/*.csv
 !model_2_temp/out/*.csv
+
+# Power BI CSV snapshots (made by export_csvs.sh): local only
+powerbi_exports/

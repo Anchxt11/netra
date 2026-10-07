@@ -1,4 +1,4 @@
-"""CRIE (model 2) behind the R0 contract (frontend/docs/BUILD_PLAN.md, section R0).
+"""CRIE (model 2) behind the R0 contract (contracts/LIVE_API.md 4.7).
 
     from ml.crie.engine import recommend
     recommend(incident) -> {"version", "fixes": [...3]} or {"version", "fallback": {...}}

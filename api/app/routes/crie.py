@@ -21,7 +21,7 @@ class Context(BaseModel):
 
 
 class Incident(BaseModel):
-    """The R0 input shape (frontend/docs/BUILD_PLAN.md, R0)."""
+    """The R0 input shape (contracts/LIVE_API.md 4.7)."""
     incident_id: str
     attack_type: str
     mitre_technique: str | None = None

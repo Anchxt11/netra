@@ -5,7 +5,7 @@ from .config import *
 
 log=logging.getLogger(__name__)
 
-# Concurrency fix plan, step 1 (Concurrency/Netra_Concurrency_Fix_Plan.md): no flush() per event.
+# Concurrency fix plan, step 1 (docs/CONCURRENCY_PLAN.md): no flush() per event.
 # Events are consumed in small batches; each is processed in order (one partition = one IP = one
 # order, so the rule windows stay correct), its outputs are queued, and once per batch both
 # producers are flushed. Offsets are committed only after every output of the batch was delivered,

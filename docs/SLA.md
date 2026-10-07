@@ -55,7 +55,7 @@ Each step runs 3 minutes. Pass = time to screen p95 at most 5 s.
 | 10× | 100 | 25 | | | | | | |
 | 10× | 100 | 100 | | | | | | |
 
-## Concurrency check (Concurrency/Netra_Concurrency_Fix_Plan.md, step 5)
+## Concurrency check (docs/CONCURRENCY_PLAN.md, step 5)
 Real HTTP traffic only: `make lab`, wait for the lab to settle, note the counts below, run `make attack SCENARIO=http_flood`, wait 30 s after it ends, and note them again. The difference at each hop should be the same N, give or take the benign user's background requests, which you can see by taking the counts twice without an attack.
 
 | hop | command (repo root, with the stack running) |
