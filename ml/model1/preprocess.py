@@ -1,310 +1,201 @@
-"""
-Model 1 preprocessing for ATDE v1.0.0.
-
-Converts raw network-log rows into the same feature representation
-used during Isolation Forest training.
-
-Expected input columns:
-    stream_name
-    timestamp
-    event_id
-    message_sanitized
-
-Supported streams:
-    aws_vpc_flow_log
-    cisco_asa
-"""
-
+"""Model 1 preprocessing: raw rows -> Isolation Forest feature matrix.
+Mirrors src/parse_messages.py, src/parse.py (direction), src/features.py and
+the notebook build_if_matrix. Input rows need: stream_name, timestamp,
+event_id, message_sanitized. Rows must cover the preceding 3600 s (Cisco) /
+600 s (AWS) of history for rolling features to match training."""
+import ipaddress, json
+from collections import Counter, defaultdict, deque
 from pathlib import Path
-import sys
-
 import numpy as np
 import pandas as pd
 
+HERE = Path(__file__).resolve().parent
+WINDOWS = [60, 600, 3600]
+TIE_RULE = "ordered_by_event_id"
+_ROLL = [f"{n}_{w}s" for w in WINDOWS for n in ("cnt", "nports", "ndst")]
+_COMMON = ["dir_inbound", "dir_outbound", "proto_tcp", "proto_udp", "proto_icmp",
+           "dst_port_logfreq"]
+FEATURES = {
+    "aws_vpc_flow_log": ["packets", "bytes", "duration", "bytes_per_packet",
+        "dst_port_wellknown", "cnt_60s", "nports_60s", "ndst_60s", "cnt_600s",
+        "nports_600s", "ndst_600s"] + _COMMON,
+    "cisco_asa": ["icmp_type", "icmp_code", "dst_port_wellknown", "cnt_60s",
+        "nports_60s", "ndst_60s", "cnt_600s", "nports_600s", "ndst_600s",
+        "cnt_3600s", "nports_3600s", "ndst_3600s"] + _COMMON,
+}
+INTERNAL_NETS = [ipaddress.ip_network(n) for n in
+                 ("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16")]
+AWS_COLS = ["version", "account_id", "interface_id", "srcaddr", "dstaddr",
+            "srcport", "dstport", "protocol", "packets", "bytes",
+            "start", "end", "action", "log_status"]
+AWS_NUM = ["srcport", "dstport", "protocol", "packets", "bytes"]
+CISCO_RE = (
+    r'^<\d+>(?P<mtime>[A-Z][a-z]{2} +\d+ \d{4} \d{2}:\d{2}:\d{2}): '
+    r'%ASA-\d+-(?P<msg_id>\d+): Deny (?P<proto>\w+) '
+    r'src (?P<src_zone>[\w-]+):(?P<m_src_ip>[\d.]+)(?:/(?P<src_port>\d+))? '
+    r'dst (?P<dst_zone>[\w-]+):(?P<m_dst_ip>[\d.]+)(?:/(?P<dst_port>\d+))?'
+    r'(?: \(type (?P<icmp_type>\d+), code (?P<icmp_code>\d+)\))? '
+    r'by access-group "(?P<acl>[^"]+)"'
+)
+_FREQ = None
 
 
-# ---------------------------------------------------------------------
-# Make the project's src modules available.
-# ---------------------------------------------------------------------
-
-ROOT = Path(__file__).resolve().parents[4]
-SRC = ROOT / "src"
-
-if str(SRC) not in sys.path:
-    sys.path.insert(0, str(SRC))
-
-from src import features as _features
+def _freq_tables():
+    global _FREQ
+    if _FREQ is None:
+        path = HERE / "dst_port_freq.json"
+        if not path.exists():
+            raise FileNotFoundError(f"{path} missing; run make_artifacts.py")
+        _FREQ = json.loads(path.read_text())
+    return _FREQ
 
 
-
-# ---------------------------------------------------------------------
-# Required raw columns
-# ---------------------------------------------------------------------
-
-REQUIRED_COLUMNS = [
-    "stream_name",
-    "timestamp",
-    "event_id",
-    "message_sanitized",
-]
-
-
-# ---------------------------------------------------------------------
-# Isolation Forest feature construction
-# ---------------------------------------------------------------------
-
-DROP_COLUMNS = [
-    "src_port",
-    "dst_port",
-    "protocol",
-    "proto",
-    "src_zone",
-    "dst_zone",
-    "acl",
-]
-
-AWS_DROP_COLUMNS = [
-    "cnt_3600s",
-    "nports_3600s",
-    "ndst_3600s",
-]
+def _parse_aws(msg):
+    msg = msg.fillna("")
+    p = msg.str.split(expand=True).reindex(columns=range(14))
+    p.columns = AWS_COLS
+    out = pd.DataFrame(index=msg.index)
+    for c in AWS_NUM:
+        out[c] = pd.to_numeric(p[c], errors="coerce")
+    out["duration"] = (pd.to_numeric(p["end"], errors="coerce")
+                       - pd.to_numeric(p["start"], errors="coerce"))
+    out["m_src_ip"], out["m_dst_ip"] = p["srcaddr"], p["dstaddr"]
+    return out
 
 
-def _build_if_matrix(stream, X, raw):
-    """
-    Convert the training feature matrix into the exact
-    Isolation Forest representation used by Model 1.
-    """
+def _parse_cisco(msg):
+    m = msg.fillna("").str.strip().str.extract(CISCO_RE)
+    out = pd.DataFrame(index=msg.index)
+    for c in ["proto", "src_zone", "dst_zone", "acl", "m_src_ip", "m_dst_ip"]:
+        out[c] = m[c]
+    for c in ["src_port", "dst_port", "icmp_type", "icmp_code"]:
+        out[c] = pd.to_numeric(m[c], errors="coerce")
+    return out
 
-    M = X.copy()
 
-    # -------------------------------------------------------------
-    # Direction
-    # -------------------------------------------------------------
-
-    # parse_messages.py in the training pipeline derives direction
-    # from the raw network message.
-    import parse_messages as pm
-
-    parsed = pm.parse_aws(
-        raw.loc[M.index, "message_sanitized"]
-    ) if stream == "aws_vpc_flow_log" else pm.parse_cisco(
-        raw.loc[M.index, "message_sanitized"]
-    )
-
-    # Direction is derived from private/public addressing.
-    def is_private(ip):
-        if pd.isna(ip):
-            return False
-
-        value = str(ip)
-
+def _is_internal(ips):
+    lut = {}
+    for ip in ips.dropna().unique():
         try:
-            import ipaddress
-            return ipaddress.ip_address(value).is_private
+            a = ipaddress.ip_address(ip)
+            lut[ip] = any(a in n for n in INTERNAL_NETS)
         except ValueError:
-            return False
+            lut[ip] = False
+    return ips.map(lut).fillna(False).astype(bool)
 
-    src_private = parsed["m_src_ip"].map(is_private)
-    dst_private = parsed["m_dst_ip"].map(is_private)
 
-    direction = np.select(
-        [
-            (~src_private) & dst_private,
-            src_private & (~dst_private),
-            src_private & dst_private,
-        ],
-        [
-            "inbound",
-            "outbound",
-            "internal",
-        ],
-        default="external",
-    )
+def _direction(src_ip, dst_ip, src_zone=None, dst_zone=None):
+    si, di = _is_internal(src_ip), _is_internal(dst_ip)
+    d = pd.Series(np.select([(~si) & di, si & (~di), si & di],
+                            ["inbound", "outbound", "internal"],
+                            default="external"), index=src_ip.index)
+    if src_zone is not None:                      # Cisco: zones override IP ranges
+        sz = src_zone.fillna("").astype(str)
+        dz = dst_zone.fillna("").astype(str)
+        has = sz != ""
+        d[has & (sz == "outside")] = "inbound"
+        d[has & (sz != "outside") & (dz == "outside")] = "outbound"
+        d[has & (sz != "outside") & (dz != "outside")] = "internal"
+    return d
 
-    M["dir_inbound"] = (
-        direction == "inbound"
-    ).astype("int8")
 
-    M["dir_outbound"] = (
-        direction == "outbound"
-    ).astype("int8")
-
-    # -------------------------------------------------------------
-    # Protocol one-hot features
-    # -------------------------------------------------------------
-
+def parse_static(msgs, stream):
+    """-> (base features + dst_port, protocol-name Series, direction Series)"""
     if stream == "aws_vpc_flow_log":
-        proto = M["protocol"].map(
-            {
-                1: "icmp",
-                6: "tcp",
-                17: "udp",
-            }
-        )
+        p = _parse_aws(msgs)
+        X = p[["protocol", "packets", "bytes", "duration", "m_src_ip", "m_dst_ip"]].copy()
+        X["dst_port"] = p["dstport"]
+        X["bytes_per_packet"] = X["bytes"] / X["packets"].clip(lower=1)
+        proto = p["protocol"].map({1: "icmp", 6: "tcp", 17: "udp"})
+        dirs = _direction(p["m_src_ip"], p["m_dst_ip"])
     else:
-        proto = M["proto"].astype(str).str.lower()
+        p = _parse_cisco(msgs)
+        X = p[["icmp_type", "icmp_code", "dst_port", "m_src_ip", "m_dst_ip"]].copy()
+        proto = p["proto"]
+        dirs = _direction(p["m_src_ip"], p["m_dst_ip"], p["src_zone"], p["dst_zone"])
+    X["dst_port_wellknown"] = (X["dst_port"] < 1024).astype("int8")
+    return X, proto, dirs
 
-    for p in ["tcp", "udp", "icmp"]:
-        M[f"proto_{p}"] = (
-            proto == p
-        ).astype("int8")
 
-    # -------------------------------------------------------------
-    # Destination-port frequency
-    # -------------------------------------------------------------
+def _rolling_past(ts, key, port, dst, windows, tie_rule):
+    t_arr = (ts - pd.Timestamp("1970-01-01", tz="UTC")).dt.total_seconds().to_numpy()
+    keys, ports, dsts = key.to_numpy(), port.to_numpy(dtype=float), dst.to_numpy()
+    n = len(t_arr)
+    out = {f"{nm}_{w}s": np.zeros(n, dtype="int32") for w in windows
+           for nm in ("cnt", "nports", "ndst")}
+    state = [defaultdict(lambda: [deque(), Counter(), Counter()]) for _ in windows]
 
-    # IMPORTANT:
-    # The training notebook fitted this frequency on training
-    # residual rows only. For live preprocessing we cannot use
-    # future rows, so this value is computed from the supplied
-    # historical/batch context.
-    freq = M["dst_port"].value_counts()
+    def add(k, t, p, ds):
+        for st in state:
+            dq, cp, cd = st[k]
+            dq.append((t, p, ds))
+            if p == p:
+                cp[p] += 1
+            cd[ds] += 1
 
-    M["dst_port_logfreq"] = (
-        np.log1p(
-            M["dst_port"].map(freq)
-        ).fillna(0.0)
-    )
+    def evict(s, t, w):
+        dq, cp, cd = s
+        while dq and dq[0][0] < t - w:
+            _, p, ds = dq.popleft()
+            if p == p:
+                cp[p] -= 1
+                if cp[p] == 0:
+                    del cp[p]
+            cd[ds] -= 1
+            if cd[ds] == 0:
+                del cd[ds]
 
-    # -------------------------------------------------------------
-    # Remove fields not used by the Isolation Forest
-    # -------------------------------------------------------------
+    strict, pending, pend_t = tie_rule == "strict_past", [], None
+    for i in range(n):
+        t = t_arr[i]
+        if strict and pending and pend_t != t:
+            for r in pending:
+                add(*r)
+            pending = []
+        for j, w in enumerate(windows):
+            s = state[j][keys[i]]
+            evict(s, t, w)
+            out[f"cnt_{w}s"][i], out[f"nports_{w}s"][i], out[f"ndst_{w}s"][i] = \
+                len(s[0]), len(s[1]), len(s[2])
+        row = (keys[i], t, ports[i], dsts[i])
+        if strict:
+            pending.append(row)
+            pend_t = t
+        else:
+            add(*row)
+    return pd.DataFrame(out)
 
-    M = M.drop(
-        columns=DROP_COLUMNS,
-        errors="ignore",
-    )
 
-    if stream == "aws_vpc_flow_log":
-        M = M.drop(
-            columns=AWS_DROP_COLUMNS,
-            errors="ignore",
-        )
-
-    # Same fill behavior used in training.
+def build_features(rows, stream=None):
+    """rows: DataFrame or list of dicts (one stream, unique index).
+    Returns a DataFrame in the exact column order of the saved model."""
+    df = rows.copy() if isinstance(rows, pd.DataFrame) else pd.DataFrame(rows)
+    need = ["stream_name", "timestamp", "event_id", "message_sanitized"]
+    miss = [c for c in need if c not in df.columns]
+    if miss:
+        raise ValueError(f"missing required fields: {miss}")
+    if stream is None:
+        s = df["stream_name"].unique()
+        if len(s) != 1:
+            raise ValueError("rows must contain exactly one stream_name")
+        stream = s[0]
+    if stream not in FEATURES:
+        raise ValueError(f"unknown stream {stream!r}")
+    if not df.index.is_unique:
+        raise ValueError("row index must be unique")
+    df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True)
+    g = df.sort_values(["timestamp", "event_id"], kind="mergesort")
+    X, proto, dirs = parse_static(g["message_sanitized"], stream)
+    R = _rolling_past(g["timestamp"], X["m_src_ip"], X["dst_port"], X["m_dst_ip"],
+                      WINDOWS, TIE_RULE)
+    R.index = g.index
+    M = pd.concat([X, R], axis=1)
+    M["dir_inbound"] = (dirs == "inbound").astype("int8")
+    M["dir_outbound"] = (dirs == "outbound").astype("int8")
+    for p in ("tcp", "udp", "icmp"):
+        M[f"proto_{p}"] = (proto == p).astype("int8")
+    freq = pd.Series({float(k): v for k, v in _freq_tables()[stream].items()},
+                     dtype="float64")
+    M["dst_port_logfreq"] = np.log1p(M["dst_port"].map(freq)).fillna(0.0)
     M = M.fillna(-1)
-
-    return M
-
-
-# ---------------------------------------------------------------------
-# Public API
-# ---------------------------------------------------------------------
-
-def build_features(rows):
-    """
-    Build Model 1 Isolation Forest features.
-
-    Parameters
-    ----------
-    rows:
-        pandas.DataFrame or list of dictionaries containing:
-            stream_name
-            timestamp
-            event_id
-            message_sanitized
-
-    Returns
-    -------
-    dict[str, pandas.DataFrame]
-        One feature matrix per stream.
-
-    Example
-    -------
-    features = build_features(rows)
-
-    aws_features = features["aws_vpc_flow_log"]
-    cisco_features = features["cisco_asa"]
-    """
-
-    if isinstance(rows, list):
-        rows = pd.DataFrame(rows)
-
-    if not isinstance(rows, pd.DataFrame):
-        raise TypeError(
-            "rows must be a pandas DataFrame "
-            "or list of dictionaries"
-        )
-
-    missing = [
-        c for c in REQUIRED_COLUMNS
-        if c not in rows.columns
-    ]
-
-    if missing:
-        raise ValueError(
-            f"Missing required columns: {missing}"
-        )
-
-    d = rows.copy()
-
-    # -------------------------------------------------------------
-    # Normalize timestamps
-    # -------------------------------------------------------------
-
-    d["timestamp"] = pd.to_datetime(
-        d["timestamp"],
-        utc=True,
-        errors="coerce",
-    )
-
-    if d["timestamp"].isna().any():
-        raise ValueError(
-            "Invalid timestamp found in input rows"
-        )
-
-    # -------------------------------------------------------------
-    # Ensure deterministic event ordering
-    # -------------------------------------------------------------
-
-    if "event_id" not in d.columns:
-        d["event_id"] = np.arange(len(d))
-
-    d = d.sort_values(
-        ["timestamp", "event_id"]
-    )
-
-    # -------------------------------------------------------------
-    # Use the SAME feature builder used during training.
-    # -------------------------------------------------------------
-
-    feature_sets = _features.build_features(
-        d,
-        CONFIG,
-    )
-
-    result = {}
-
-    for stream, X in feature_sets.items():
-
-        M = _build_if_matrix(
-            stream,
-            X,
-            d,
-        )
-
-        result[stream] = M
-
-    return result
-
-
-# ---------------------------------------------------------------------
-# Convenience helper
-# ---------------------------------------------------------------------
-
-def build_features_single_stream(rows, stream):
-    """
-    Convenience function when the caller knows the stream.
-
-    Returns one DataFrame instead of a dictionary.
-    """
-
-    result = build_features(rows)
-
-    if stream not in result:
-        raise ValueError(
-            f"No rows found for stream: {stream}"
-        )
-
-    return result[stream]
+    return M.loc[df.index, FEATURES[stream]]

@@ -117,7 +117,7 @@ class Detector:
     # Public entry point
     # -----------------------------------------------------------------
 
-    def score_event(self, event, rule_hit=None):
+    def score_event(self, event, rule_hit=None, enriched_event=None):
         """
         Score one event.
 
@@ -185,8 +185,14 @@ class Detector:
                 ),
                 severity_source="rule",
             )
-
-            out["latency_ms"] = self._latency_ms(t0)
+            
+            try:
+                _if = self.if_stage.score(event)
+                out["model_score"] = _if["anomaly_score"]
+                out["score"] = _if["anomaly_score"]
+            except ValueError:
+                pass  # row has no flow features (e.g. web events)
+            
             return out
 
         # =============================================================
@@ -282,6 +288,7 @@ class Detector:
                     f"classifier is uncertain"
                 ),
             )
+            
 
         # -------------------------------------------------------------
         # Known XGBoost family

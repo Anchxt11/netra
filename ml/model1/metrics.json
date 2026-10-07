@@ -1,0 +1,77 @@
+{
+  "scope": "Isolation Forest stage, test split, rows not caught by rules",
+  "anomaly_cutoff": 0.5,
+  "combined": {
+    "n": 57517,
+    "n_malicious": 3738,
+    "precision": 0.14352325713635847,
+    "recall": 0.675227394328518,
+    "f1": 0.2367285687488276,
+    "pr_auc": 0.16347560773100547,
+    "confusion_matrix": {
+      "labels": [
+        "benign",
+        "malicious"
+      ],
+      "matrix": [
+        [
+          38717,
+          15062
+        ],
+        [
+          1214,
+          2524
+        ]
+      ]
+    }
+  },
+  "aws_vpc_flow_log": {
+    "n": 13160,
+    "n_malicious": 3113,
+    "precision": 0.2302314368370299,
+    "recall": 0.6135560552521683,
+    "f1": 0.3348233850468928,
+    "pr_auc": 0.2374330831123195,
+    "confusion_matrix": {
+      "labels": [
+        "benign",
+        "malicious"
+      ],
+      "matrix": [
+        [
+          3661,
+          6386
+        ],
+        [
+          1203,
+          1910
+        ]
+      ]
+    }
+  },
+  "cisco_asa": {
+    "n": 44357,
+    "n_malicious": 625,
+    "precision": 0.06609257265877287,
+    "recall": 0.9824,
+    "f1": 0.12385274836106909,
+    "pr_auc": 0.125666985730256,
+    "confusion_matrix": {
+      "labels": [
+        "benign",
+        "malicious"
+      ],
+      "matrix": [
+        [
+          35056,
+          8676
+        ],
+        [
+          11,
+          614
+        ]
+      ]
+    }
+  },
+  "xgboost": "not evaluated: AWS/Cisco rows have no src/dst packet or byte split"
+}
