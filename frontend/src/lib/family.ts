@@ -1,15 +1,18 @@
 // Attack families = the five sectors of the THREAT SCOPE. Spec: docs/DATA_CONTRACT.md, "Attack families".
 import type { AttackType } from "../data/types.ts";
 
-export type Family = "IDENTITY" | "WEB" | "FLOOD" | "DATA" | "ADMIN";
+// UNKNOWN: what the AI engine found unusual but could not name. Its own sector, so the scope never
+// files an unnamed anomaly under an attack family.
+export type Family = "IDENTITY" | "WEB" | "FLOOD" | "DATA" | "ADMIN" | "UNKNOWN";
 
 /** Sector centres in degrees, 0 = right, clockwise (SVG convention). */
 export const FAMILY_CENTRE: Record<Family, number> = {
-  IDENTITY: -100,
-  WEB: -20,
-  FLOOD: 50,
-  DATA: 125,
-  ADMIN: 195,
+  IDENTITY: -90,
+  WEB: -30,
+  FLOOD: 30,
+  DATA: 90,
+  ADMIN: 150,
+  UNKNOWN: 210,
 };
 
 export const FAMILIES = Object.keys(FAMILY_CENTRE) as Family[];
@@ -22,14 +25,12 @@ const FAMILY_OF: Record<AttackType, Family> = {
   http_flood: "FLOOD",
   data_exfiltration: "DATA",
   admin_abuse: "ADMIN",
-  // An anomaly the AI engine cannot name: shown with probing for now (a sector of its own is a design decision).
-  unusual_activity: "WEB",
+  unusual_activity: "UNKNOWN",
 };
 
 export const familyOf = (type: AttackType): Family => FAMILY_OF[type];
 
-// The spec says 72° sectors, but the centres are only 65° to 80° apart, so blips
-// spread ±26° around their centre: neighbouring families can never touch.
+// Six sectors, 60° apart; blips spread ±26° around their centre, so neighbouring families never touch.
 export const BLIP_SPREAD = 26;
 
 /** Sector edges (for divider lines): halfway between neighbouring centres. */

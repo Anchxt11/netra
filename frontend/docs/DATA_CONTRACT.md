@@ -215,14 +215,15 @@ Benign anomalies (never enter the incident queue):
 | nightly_backup | Nightly backup | user is svc_backup, process is `pg_dump --format=custom appdb`, known DB host, expected backup time |
 
 ## Attack families (`src/lib/family.ts`)
-The THREAT SCOPE groups incidents into five sectors. Each family's sector is 72° wide; blips are spread within their sector by a stable hash of the incident id, so they don't jump between renders.
+The THREAT SCOPE groups incidents into six sectors, 60° apart; blips spread ±26° within their sector by a stable hash of the incident id, so they don't jump between renders.
 | family | attack types | sector centre (degrees, 0 = right, clockwise) |
 |---|---|---|
-| IDENTITY | brute_force, credential_stuffing, account_takeover | -100 |
-| WEB | web_scan | -20 |
-| FLOOD | http_flood | 50 |
-| DATA | data_exfiltration | 125 |
-| ADMIN | admin_abuse | 195 |
+| IDENTITY | brute_force, credential_stuffing, account_takeover | -90 |
+| WEB | web_scan | -30 |
+| FLOOD | http_flood | 30 |
+| DATA | data_exfiltration | 90 |
+| ADMIN | admin_abuse | 150 |
+| UNKNOWN | unusual_activity (the AI engine alone, naming no attack; live backend only) | 210 |
 Blip distance from centre = `min(timeLeftMinutes / 10, 1) × radius`; size = `2.5 + attention / 100 × 4.5` px; colour = heat state.
 
 ## Signal sentence templates (plain language for every rule)
