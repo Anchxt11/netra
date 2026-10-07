@@ -10,7 +10,7 @@ reserved for the host-level lab addendum (Section 16).
 Mapping (nginx → raw schema):
   event_id    : generated UUID4
   event_ts    : nginx $msec → UTC ISO-8601 with ms
-  source      : "lab"   (to be overwritten to match existing schema enum — see note)
+  source      : "juice-shop" (lab capture; the simulator's events say web/auth/endpoint/network)
   ip          : $remote_addr
   user        : parsed from req_body on login endpoint, else "-"
   event_type  : derived from method + path + status
@@ -25,11 +25,9 @@ Mapping (nginx → raw schema):
   user_agent  : $http_user_agent
   response_ms : $request_time × 1000
 
-NOTE on `source`: The frozen raw_event.schema.json defines source as
-  enum: ["web","auth","endpoint","network"].
-  Lab events use source="web" to stay schema-compliant. The processor can
-  distinguish lab vs synthetic traffic by checking the `host` field
-  ("juice-shop" vs "web-01"/"web-02") or by adding a downstream feature.
+NOTE on `source`: contracts/raw_event.schema.json allows "juice-shop" in the source enum
+  (added 2026-10-07) so the dashboard can label lab traffic "Lab capture" honestly. Nothing in
+  the processor, the rules or the API filters on source, so they treat it like any web event.
 """
 import json
 import logging
@@ -156,7 +154,7 @@ def normalize_web(raw_line: str) -> dict | None:
     raw_event = {
         "event_id":    str(uuid.uuid4()),
         "event_ts":    msec_to_iso(ng.get("ts", "0")),
-        "source":      "web",           # schema enum: web/auth/endpoint/network
+        "source":      "juice-shop",    # lab capture (schema enum); the simulator uses web/auth/...
         "user":        user,
         "ip":          ip,
         "event_type":  event_type,

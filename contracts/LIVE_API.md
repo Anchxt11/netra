@@ -70,6 +70,7 @@ No prompt in the build plan builds the server's `traffic` message yet (A1 built 
 - **Units.** Rates are ratios from 0 to 1, not percentages. Bytes are bytes. Durations carry their unit in the field name (`_ms`, `_seconds`).
 - **`null` means not measured or not known.** The dashboard shows PENDING for it. Never send 0 for unknown.
 - **`"-"` as a user** means no account (the simulator's convention). The dashboard treats it as unknown.
+- **Lab capture vs simulated feed.** An event with `source: "juice-shop"` (and `host: "juice-shop"`) was captured from the Juice Shop lab (`make lab`); any other source came from the simulator. The dashboard labels the first "Lab capture" and the second "Simulated feed" (build plan C2). Alerts carry the event's `event_ids`, so the same label follows them to incidents.
 - **Errors** are FastAPI's: an HTTP status and `{"detail": "<message>"}`. 401 = not signed in or token expired (sign in again). 403 = wrong role. 404 = not found. 409 = conflict. 422 = bad request body. 503 = ClickHouse unavailable.
 - **A new route answering 404** means this API build does not have it yet. The dashboard shows PENDING, not an error. This lets the dashboard ship before the backend.
 - **WebSocket envelope.** Every message is `{"type": "<type>", "data": <data>, "server_ts": "<time>"}`, sometimes with extra top-level fields (`dropped` on `events`). `pong` has no `data`. Clients ignore types they do not know, so the backend can add a type before the dashboard reads it.

@@ -1,16 +1,19 @@
 # Connecting the backend to the dashboard
 
-Updated 2026-10-06 from the team repo (github.com/Anchxt11/netra), branch `feat/person-a-infrastructure` at 2b127ea.
-The frontend side is done: the dashboard runs on the real backend as it is today.
+Updated 2026-10-07 on branch `integration` (github.com/Anchxt11/netra), which merges `main`, `feat/person-a-infrastructure` and `feat/event-gen` (the Juice Shop lab).
+The frontend side is done for what the backend sends today; the live API's full contract is `contracts/LIVE_API.md`.
 
 ## Where things are
 | part | state |
 |---|---|
-| Simulator, Redpanda, processor (10 rules, 31 tests), ClickHouse, Postgres, FastAPI (login, REST, WebSocket, `/freshness`) | done, one command (`make sim`), on `feat/person-a-infrastructure`, **not on `main` yet** |
+| Simulator, Redpanda, processor (10 rules), ClickHouse, Postgres, FastAPI (login, REST, WebSocket, `/freshness`) | done, on `integration` (pull request to `main` open) |
+| Live KPIs and KPI alerts (A1), freshness SLA (A2, `docs/SLA.md`), ops service with job log and failure alerts (A3), Power BI views (A5, `docs/POWER_BI.md`) | done, on `integration` |
+| Juice Shop lab (`make lab`): Juice Shop behind nginx, two attackers and a benign user on an internal network, Vector ships nginx's JSON log to `events.lab`, the lab normaliser writes `events.raw` in the 16-field schema with `source: "juice-shop"` | done, on `integration`; the dashboard does not label "Lab capture" yet (C2) |
+| Load test (A4) | owned by the backend team (concurrency docs) |
 | ATDE (Isolation Forest + XGBoost) | in progress; the processor still runs `DummyScorer` (hand-written weights, never shown as AI) |
 | CRIE | not started: the dashboard shows MITRE's mitigations with CRIE PENDING |
 | Dashboard on the real backend | **done** (this document) |
-| Dashboard in the team repo | not yet: the frontend commits are only on this machine's `main` |
+| Dashboard in the team repo | on `integration`, in the pull request to `main` |
 
 ## How the dashboard reads the backend
 Set `VITE_DATA_SOURCE=ws` (or use the `:live` scripts below). Code: `src/data/backend/`.
@@ -44,7 +47,15 @@ Set `VITE_DATA_SOURCE=ws` (or use the `:live` scripts below). Code: `src/data/ba
 | a model's alert (`rule_id` null) | ATDE | adds to that address's or account's incident | 20 | only if the model is not the dummy |
 
 ## Run it
-**With the real stack (needs Docker Desktop):** in the backend checkout `make sim`, then in `frontend/`:
+**With the real stack (needs Docker Desktop).** At the repo root, start the stack with one of:
+```
+make up      # the pipeline, API and ops service, no traffic yet
+make sim     # the same plus the simulator (about 10 events/s, attacks on a timer)
+make lab     # the same plus the Juice Shop lab: real HTTP traffic captured by nginx
+```
+`make lab` can run on its own or after `make up`; `make lab-full` runs the simulator and the lab together. In the lab, run an attack with `make attack SCENARIO=brute_force` (also `credential_stuffing`, `account_takeover`, `web_scan`, `sqli`, `http_flood`, `data_exfiltration`, `full`). Juice Shop is at http://localhost:8888 (through nginx, on this laptop only). `make lab-logs` follows the lab, `make lab-down` stops it.
+
+Then in `frontend/`:
 ```
 npm run dev:live            # development, http://localhost:5174
 npm run build:live          # the demo build (dist-live/), then:
