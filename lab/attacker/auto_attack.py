@@ -34,8 +34,8 @@ def main():
     logging.info("Simulating random severity-based cyberattacks in the background...")
     
     while True:
-        # Random delay between 15 and 45 seconds for a dynamic, fast-paced demo
-        delay = random.randint(15, 45)
+        # Random delay between 5 and 10 seconds (aggressive attack feed)
+        delay = random.randint(5, 10)
         logging.info(f"Idling... Next cyberattack will launch in {delay} seconds.")
         time.sleep(delay)
         

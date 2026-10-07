@@ -203,7 +203,7 @@ services:
         while true; do
           for path in "/" "/api/Products" "/rest/languages" "/assets/public/favicon.ico" "/api/Challenges"; do
             curl -s -o /dev/null "http://nginx$$path"
-            sleep $$(( (RANDOM % 3) + 1 ))
+            sleep $$(awk "BEGIN{srand(); print 0.33+rand()*0.67}")
           done
         done
       '
