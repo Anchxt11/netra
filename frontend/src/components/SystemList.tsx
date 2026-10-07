@@ -20,7 +20,7 @@ function modelRow(m: ModelStatus | undefined, label: string): Row {
   if (m.status === "pending") return { key, label, value: "PENDING", tone: "muted" };
   if (m.status === "training") return { key, label, value: "TRAINING", tone: "muted" };
   if (m.version === "example") return { key, label, value: "EXAMPLE", tone: "muted" };
-  return { key, label, value: `v${m.version} READY`, tone: "ok" };
+  return { key, label, value: `v${m.version} ready`, tone: "ok" };
 }
 
 /** Freshness p95 over the last minute, scaled against the 5 s target (top = target). */
@@ -48,11 +48,11 @@ export function SystemList({ health, now }: { health: PipelineHealth; now: numbe
       ? { key: "feed", label: `Live feed stopped ${stoppedFor} s ago. Showing the last known state.`, value: "", tone: "fail" }
       : health.alerts.length > 0
         ? { key: "feed", label: health.alerts[0].sentence, value: "", tone: "fail" }
-        : { key: "feed", label: "Live feed", value: `${health.eventsPerSec} EVENTS/S`, tone: "ok" };
+        : { key: "feed", label: "Live feed", value: `${health.eventsPerSec} events/s`, tone: "ok" };
 
   const retrain: Row =
     health.retraining.status === "failed"
-      ? { key: "retrain", label: "Next retraining", value: "LAST RUN FAILED", tone: "fail" }
+      ? { key: "retrain", label: "Next retraining", value: "last run failed", tone: "fail" }
       : health.retraining.nextRun
         ? { key: "retrain", label: "Next retraining", value: formatHM(health.retraining.nextRun), tone: "ok" }
         : { key: "retrain", label: "Next retraining", value: "PENDING", tone: "muted" };
@@ -64,7 +64,7 @@ export function SystemList({ health, now }: { health: PipelineHealth; now: numbe
       : {
           key: "fresh",
           label: "Freshness p95",
-          value: `${(p95 / 1000).toFixed(1)}S/${health.slaMs / 1000}S${over ? " OVER" : ""}`,
+          value: `${(p95 / 1000).toFixed(1)} s / ${health.slaMs / 1000} s${over ? " over" : ""}`,
           tone: over ? "fail" : "ok",
           spark: health.freshnessHistory.map((f) => f.p95),
         },
@@ -73,7 +73,7 @@ export function SystemList({ health, now }: { health: PipelineHealth; now: numbe
       : {
           key: "screen",
           label: "Time to screen p95",
-          value: `${(health.timeToScreenMs.p95 / 1000).toFixed(1)}S/${health.slaMs / 1000}S${health.timeToScreenMs.p95 > health.slaMs ? " OVER" : ""}`,
+          value: `${(health.timeToScreenMs.p95 / 1000).toFixed(1)} s / ${health.slaMs / 1000} s${health.timeToScreenMs.p95 > health.slaMs ? " over" : ""}`,
           tone: health.timeToScreenMs.p95 > health.slaMs ? "fail" : "ok",
           spark: health.timeToScreenHistory.map((f) => f.p95),
         },
@@ -83,7 +83,7 @@ export function SystemList({ health, now }: { health: PipelineHealth; now: numbe
     {
       key: "decisions",
       label: "Fixes approved today",
-      value: `${health.decisions.approved} / ${health.decisions.rejected} REJECTED`,
+      value: `${health.decisions.approved} / ${health.decisions.rejected} rejected`,
       tone: "ok",
     },
   ];
