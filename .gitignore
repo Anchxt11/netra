@@ -3,41 +3,55 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 .eggs/
+.ipynb_checkpoints/
+Untitled*.ipynb
 
-<<<<<<< HEAD
-# Virtual environments
+# Virtual environments and tool caches
 .venv/
 venv/
-
-# uv
 .uv-cache/
-
-# Environment variables
-.env
-.env.*.local
-
-# Testing / tooling caches
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
 htmlcov/
 .coverage
 
-# IDE
+# Secrets: never commit these
+.env
+.env.*.local
+
+# IDE and OS
 .idea/
 .vscode/
 *.swp
-
-# OS
 .DS_Store
 Thumbs.db
 
-# Docker
+# Logs
 *.log
-=======
-data/
 
-.ipynb_checkpoints/
-__pycache__/
-Untitled*.ipynb
->>>>>>> 18a90a7 (Add Model 1 ATDE pipeline v1.0.0)
+# Data stays out of git, except the files a service reads:
+# the simulator's labels and the held-out replay set (flow-replay, ml/atde/eval_replay.py).
+data/*
+!data/labels.jsonl
+!data/replay/
+data/replay/*
+!data/replay/flows_test.jsonl
+!data/replay/labels_test.jsonl
+
+# The ML team's raw downloads and big intermediates (their notebooks rebuild them)
+*.parquet
+*.zip
+*.rar
+d3fend-full-mappings.csv
+enterprise-attack.json
+elastic/
+
+# CSV and pickle files are data unless they ship with a model: model folders keep theirs
+# (CRIE's D3FEND tables, model 1's label encoder).
+*.csv
+*.pkl
+!ml/**/*.pkl
+!models/*.pkl
+!model_2_temp/*.csv
+!model_2_temp/out/*.csv
