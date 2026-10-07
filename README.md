@@ -12,7 +12,7 @@ Generator ─► Redpanda [events.raw] ─► Processor ─► Redpanda [events.
 
 | Component          | Technology                                        |
 |--------------------|---------------------------------------------------|
-| Data Generator     | Python simulator (configurable rate, 7 attack types) |
+| Data Generator     | Python simulator (configurable rate, 9 attack types) |
 | Event Stream       | Redpanda (Kafka-compatible)                       |
 | Event Processing   | Python rule engine + scorer                       |
 | Eventhouse         | ClickHouse (Kafka engine + MV + MergeTree)        |
@@ -265,8 +265,8 @@ The `/freshness` endpoint (Team C) returns p50/p95 of `stored_ts − event_ts` o
 make test
 ```
 
-31 tests covering:
-- All 10 detection rules (windowed and instant)
+34 tests covering:
+- All 11 detection rules (windowed and instant)
 - All 10 field modifiers
 - `condition: all` and `condition: any`
 - Enrichment contract compliance
@@ -291,7 +291,7 @@ make test
 | Person | Owns                        | Status  |
 |--------|-----------------------------|---------|
 | A      | Generator, Redpanda, Docker Compose, ClickHouse DDL, Load Test | ✅ Generator & ClickHouse done |
-| B      | Processor, YAML rules, Scorer interface, Alert emitter | ✅ Done (10 rules, 31 tests) |
+| B      | Processor, YAML rules, Scorer interface, Alert emitter | ✅ Done (11 rules, 34 tests) |
 | C      | PostgreSQL, FastAPI, WebSocket, Auth | ✅ Done (REST + WS endpoints active) |
 | Frontend | React dashboard            | Pending |
 | ML     | IsolationForest / XGBoost model | Pending |
