@@ -2,6 +2,12 @@
   position: relative;
 }
 
+/* After the entrance: no clip or filter left behind (a filter would trap the dashboard's fixed overlays). */
+.done {
+  clip-path: none !important;
+  filter: none !important;
+}
+
 /* The scan line: a thin rust edge with a soft ember glow trailing above it. */
 .line {
   position: absolute;
