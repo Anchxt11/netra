@@ -90,6 +90,18 @@ export function createBackendSource({ apiUrl, wsUrl, getToken }: Options): DataS
         }
       };
 
+      // The ops service's jobs and open alerts. Without it (404, or not running yet) SYSTEM shows PENDING.
+      const backfillOps = async (token: string) => {
+        try {
+          const [jobs, ops] = await Promise.all([api.jobs(token), api.opsAlerts(token)]);
+          if (stopped) return;
+          health.setJobs(jobs);
+          for (const a of ops) health.opsAlert(a);
+        } catch (e) {
+          if (e instanceof ApiError && e.status === 401) unauthorized();
+        }
+      };
+
       // The KPI strip's past and any alert still open. An API without KPIs answers 404: the strip shows PENDING.
       const backfillKpi = async (token: string) => {
         try {
@@ -138,6 +150,12 @@ export function createBackendSource({ apiUrl, wsUrl, getToken }: Options): DataS
           case "alert":
             alert(msg.data);
             break;
+          case "job_runs":
+            for (const r of msg.data ?? []) health.jobRun(r);
+            break;
+          case "ops_alert":
+            health.opsAlert(msg.data);
+            break;
           case "kpi":
             onMessage({ type: "kpi", payload: kpiSnapshotFromApi(msg.data) });
             break;
@@ -165,6 +183,7 @@ export function createBackendSource({ apiUrl, wsUrl, getToken }: Options): DataS
           onStatus("open");
           void backfill(token);
           void backfillKpi(token);
+          void backfillOps(token);
         };
         ws.onmessage = (e) => {
           const msg = parse(e.data);

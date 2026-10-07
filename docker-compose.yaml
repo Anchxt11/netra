@@ -1,5 +1,5 @@
 # Netra — Near Real-Time SOC Dashboard
-# Full stack: Redpanda, Generator, Processor, Console
+# Full stack: Redpanda, Generator, Processor, Console, ClickHouse, Postgres, API, Ops
 name: netra
 
 services:
@@ -28,6 +28,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
+    restart: unless-stopped
     volumes:
       - redpanda-data:/var/lib/redpanda/data
 
@@ -37,7 +38,7 @@ services:
     depends_on:
       redpanda:
         condition: service_healthy
-    restart: "no"
+    restart: "no"   # one-shot: it exits 0 when the topics exist, so no healthcheck and no restart
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
@@ -56,6 +57,12 @@ services:
       KAFKA_BROKERS: redpanda:9092
     ports:
       - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8080/admin/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
 
   # ─── Team A: Traffic generator (requires --profile sim) ──────────────────────
   generator:
@@ -75,6 +82,12 @@ services:
       - /data/labels.jsonl
     volumes:
       - ./data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os; os.kill(1, 0)"]   # the main process is alive
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
 
   # ─── Team B: Event processor + YAML rule engine ─────────────────────────────
   processor:
@@ -93,6 +106,11 @@ services:
       RULES_DIR: /app/rules/sigma
       SCORER: ${SCORER:-dummy}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os; os.kill(1, 0)"]   # the main process is alive
+      interval: 10s
+      timeout: 5s
+      retries: 3
     restart: unless-stopped
 
   # ─── Team C: ClickHouse, Postgres, FastAPI ──────────────────────────────────
@@ -122,6 +140,7 @@ services:
       timeout: 5s
       retries: 30
       start_period: 10s
+    restart: unless-stopped
 
   postgres:
     image: postgres:16-alpine
@@ -137,6 +156,7 @@ services:
       interval: 3s
       timeout: 3s
       retries: 20
+    restart: unless-stopped
 
   api:
     build: ./api
@@ -156,6 +176,43 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin12345}
       ANALYST_PASSWORD: ${ANALYST_PASSWORD:-analyst12345}
     ports: ["8000:8000"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+
+  # ─── Ops: scheduled jobs, job log, failure alerts (build plan A3) ────────────
+  ops:
+    build:
+      context: .
+      dockerfile: ops/Dockerfile
+    depends_on:
+      postgres: { condition: service_healthy }
+      topic-init: { condition: service_completed_successfully }
+    environment:
+      DATABASE_URL: postgresql://soc:soc@postgres:5432/soc
+      API_URL: http://api:8000
+      CLICKHOUSE_URL: http://clickhouse:8123
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-netra}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-netra}
+      CLICKHOUSE_TABLE: netra.events
+      KAFKA_BOOTSTRAP: redpanda:9092
+      PROCESSOR_GROUP_ID: netra-processor
+      RAW_TOPIC: events.raw
+      ALERT_WEBHOOK_URL: ${ALERT_WEBHOOK_URL:-}   # a Teams, Discord or Slack incoming webhook; empty = off
+      TZ: ${OPS_TZ:-UTC}                          # the time zone of the 02:00, 03:00 and 06:00 jobs
+      ML_DIR: /srv/ml
+    volumes:
+      - ./ml:/srv/ml:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os, sys, time; sys.exit(time.time() - os.path.getmtime('/tmp/ops.alive') > 30)"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     restart: unless-stopped
 
 volumes:

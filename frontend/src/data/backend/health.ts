@@ -1,7 +1,7 @@
 // Pipeline health on the real backend, built from what actually arrives plus GET /freshness and /health.
 // Anything the backend does not measure stays empty (PENDING on screen): nothing here is made up.
-import type { PipelineHealth } from "../types";
-import type { FreshnessReport, ServerHealth } from "./types";
+import type { JobStatus, OpsAlert, PipelineHealth } from "../types";
+import type { FreshnessReport, JobRunWire, JobWire, OpsAlertWire, ServerHealth } from "./types";
 import type { ScreenMinute } from "./screenTime";
 
 const STALLED_MS = 5_000; // no events for 5 s: stalled
@@ -27,6 +27,34 @@ export class HealthTracker {
   private model: string | null = null;
   private unsavedAt = -Infinity;
   private screen: ScreenMinute[] = [];
+  private jobs: Map<string, JobStatus> | null = null; // null until GET /jobs answers
+  private ops = new Map<number, OpsAlert>();
+
+  /** GET /jobs: the schedule and each job's last run. */
+  setJobs(rows: JobWire[]) {
+    this.jobs = new Map(rows.map((j) => [j.job, {
+      job: j.job, schedule: j.schedule, nextRunAt: j.next_run_at,
+      lastRunAt: j.last_run?.finished_at ?? null, status: j.last_run?.status ?? null, detail: j.last_run?.detail ?? null,
+    }]));
+  }
+
+  /** A `job_runs` row: that job's latest run. */
+  jobRun(r: JobRunWire) {
+    const jobs = this.jobs ?? new Map<string, JobStatus>();
+    const prev = jobs.get(r.job);
+    jobs.set(r.job, { job: r.job, schedule: prev?.schedule ?? "", nextRunAt: prev?.nextRunAt ?? null, lastRunAt: r.finished_at, status: r.status, detail: r.detail });
+    this.jobs = jobs;
+  }
+
+  /** An `ops_alert`: kept while firing, gone when cleared. */
+  opsAlert(a: OpsAlertWire) {
+    if (a.state !== "firing") {
+      this.ops.delete(a.id);
+      return;
+    }
+    const kind = a.kind === "job_failed" || a.kind === "sla_breach" ? a.kind : "health";
+    this.ops.set(a.id, { id: a.id, kind, source: a.source, level: a.level === "warn" ? "warn" : "crit", message: a.message, startedAt: a.started_at });
+  }
 
   /** Time-to-screen minutes from the ScreenTimer. */
   setScreenTime(minutes: ScreenMinute[]) {
@@ -80,6 +108,13 @@ export class HealthTracker {
     this.unsavedAt = now;
   }
 
+  /** The model_retrain job, once the ops service reports it. */
+  private retraining(): PipelineHealth["retraining"] {
+    const j = this.jobs?.get("model_retrain");
+    if (!j) return { lastRun: null, nextRun: null, status: "scheduled" };
+    return { lastRun: j.lastRunAt, nextRun: j.nextRunAt, status: j.status === "failed" ? "failed" : j.status === "ok" ? "ok" : "scheduled" };
+  }
+
   snapshot(now: number): PipelineHealth {
     this.arrivals = this.arrivals.filter((a) => now - a.at < RATE_WINDOW_MS);
     const lastSign = Math.max(this.lastEventAt, this.changedAt);
@@ -124,8 +159,10 @@ export class HealthTracker {
         { name: "ATDE", version: this.model ?? "", trainedAt: null, status: this.model ? "ready" : "pending" },
         { name: "CRIE", version: "", trainedAt: null, status: "pending" },
       ],
-      retraining: { lastRun: null, nextRun: null, status: "scheduled" },
+      retraining: this.retraining(),
       alerts,
+      jobs: this.jobs ? [...this.jobs.values()] : null,
+      opsAlerts: [...this.ops.values()].sort((a, b) => Date.parse(b.startedAt) - Date.parse(a.startedAt)),
       decisions: { ...this.decisions },
     };
   }

@@ -1,6 +1,6 @@
 // SYSTEM: can you trust what the dashboard shows? Green = healthy. Pink = our own pipeline failing.
-import type { ModelStatus, PipelineHealth } from "../data/types";
-import { formatHM } from "../lib/time";
+import type { JobStatus, ModelStatus, PipelineHealth } from "../data/types";
+import { formatClock, formatHM } from "../lib/time";
 import styles from "./SystemList.module.css";
 
 type Tone = "ok" | "muted" | "fail";
@@ -21,6 +21,28 @@ function modelRow(m: ModelStatus | undefined, label: string): Row {
   if (m.status === "training") return { key, label, value: "TRAINING", tone: "muted" };
   if (m.version === "example") return { key, label, value: "EXAMPLE", tone: "muted" };
   return { key, label, value: `v${m.version} ready`, tone: "ok" };
+}
+
+// The ops service's jobs, in the order they matter on the day (contracts/LIVE_API.md 4.5).
+const JOBS: [string, string][] = [
+  ["health_watch", "Health watch"],
+  ["sla_check", "SLA check"],
+  ["daily_report", "Daily report"],
+  ["model_retrain", "Model retrain"],
+  ["data_retention", "Data retention"],
+];
+
+function jobRows(jobs: JobStatus[] | null): Row[] {
+  if (jobs === null) return [{ key: "jobs", label: "Scheduled jobs", value: "PENDING", tone: "muted" }];
+  return JOBS.map(([job, label]) => {
+    const j = jobs.find((x) => x.job === job);
+    const key = `job-${job}`;
+    if (!j || !j.status || !j.lastRunAt) return { key, label, value: j?.nextRunAt ? `first run ${formatHM(j.nextRunAt)}` : "not run yet", tone: "muted" };
+    const at = formatClock(j.lastRunAt);
+    if (j.status === "failed") return { key, label, value: `failed ${at}`, tone: "fail" };
+    if (j.status === "skipped") return { key, label, value: `skipped ${at}`, tone: "muted" };
+    return { key, label, value: `ok ${at}`, tone: "ok" };
+  });
 }
 
 /** Freshness p95 over the last minute, scaled against the 5 s target (top = target). */
@@ -57,8 +79,12 @@ export function SystemList({ health, now }: { health: PipelineHealth; now: numbe
         ? { key: "retrain", label: "Next retraining", value: formatHM(health.retraining.nextRun), tone: "ok" }
         : { key: "retrain", label: "Next retraining", value: "PENDING", tone: "muted" };
 
+  // Every open ops alert is its own pink sentence (the first one may already be the top row).
+  const ops: Row[] = health.opsAlerts.map((a) => ({ key: `ops-${a.id}`, label: a.message, value: "", tone: "fail" }));
+
   const rows: Row[] = [
     first,
+    ...ops,
     p95 === undefined
       ? { key: "fresh", label: "Freshness p95", value: "PENDING", tone: "muted" }
       : {
@@ -80,6 +106,7 @@ export function SystemList({ health, now }: { health: PipelineHealth; now: numbe
     modelRow(health.models.find((m) => m.name === "ATDE"), "ATDE detection model"),
     modelRow(health.models.find((m) => m.name === "CRIE"), "CRIE remediation model"),
     retrain,
+    ...jobRows(health.jobs),
     {
       key: "decisions",
       label: "Fixes approved today",

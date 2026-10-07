@@ -34,9 +34,9 @@ Numbers in the examples are made up to show the shape. They are not results.
 | GET | `/kpi/alerts` | any user | exists | A1 |
 | GET | `/traffic/recent` | any user | **new** | not assigned (see 4.3) |
 | GET | `/models` | any user | **new** | B2 |
-| GET | `/jobs` | any user | **new** | A3 |
-| GET | `/jobs/runs` | any user | **new** | A3 |
-| GET | `/ops/alerts` | any user | **new** | A3 |
+| GET | `/jobs` | any user | exists | A3 |
+| GET | `/jobs/runs` | any user | exists | A3 |
+| GET | `/ops/alerts` | any user | exists | A3 |
 
 "Any user" means a signed-in analyst or admin.
 
@@ -51,8 +51,8 @@ Numbers in the examples are made up to show the shape. They are not results.
 | `kpi` | every 5 s | exists | A1 |
 | `kpi_alert` | a KPI alert opens, changes level or clears | exists | A1 |
 | `traffic` | every 1 s | **new** | not assigned (see 4.3) |
-| `ops_alert` | an ops alert opens, changes level or clears | **new** | A3 |
-| `job_runs` | a scheduled job finished a run | **new** | A3 |
+| `ops_alert` | an ops alert opens, changes level or clears | exists | A3 |
+| `job_runs` | a scheduled job finished a run | exists | A3 |
 | `models` | a model's status, version or metrics changed | **new** | B2 |
 
 The browser sends only the text `ping`. Everything else it does (decisions, thresholds) goes through REST.
@@ -696,7 +696,7 @@ An invalid or expired token: the server accepts, then closes with code **4401** 
 These do not change what the dashboard sees. They are a default, so the two halves of track 1 fit together.
 - **Postgres tables:** `kpi_alerts` exists (A1). New: `job_runs`, `ops_alerts`, `daily_reports` (A3). A table added after the first release goes in `api/app/schema.py`, because `api/db/init.sql` only runs on an empty volume. New columns on `incidents` for section 5's fields (B2, ask 2).
 - **New ClickHouse table:** `ml_scores` (B2). The BI views are A5's.
-- **`ops` service to API:** the `ops` service writes its rows to Postgres and publishes each one to a Kafka topic `ops.events` as `{"kind": "job_run" | "ops_alert", "row": {...}}`. The API consumes it and broadcasts `job_runs` or `ops_alert`, the same way it handles `alerts` today.
+- **`ops` service to API (built, A3):** the `ops` service (`ops/`) writes its rows to Postgres and sends each one with `pg_notify('ops_events', '{"kind": "job_run" | "ops_alert", "row": {...}}')`. The API LISTENs (`api/app/ops.py`) and broadcasts `job_runs` or `ops_alert`. No Kafka topic needed. The ops service creates its tables itself (`ops/store.py`): `job_runs`, `ops_alerts`, `daily_reports`, and `ops_jobs` (each job's schedule and next run, for `GET /jobs`); until it has started once, the three routes answer with empty lists. `ml_scorer` is not checked by the health watch yet (B2).
 - **`ml-scorer` to API:** model alerts on `alerts` (as today). A heartbeat every 5 s on a topic `models.heartbeat`, as `{"model_id", "version", "status", "scored_per_sec", "ts"}`. The API reads `trained_at` and `metrics` from the bundle folder of the version in the heartbeat.
 - **The KPI loop** runs inside the API (exists, A1). The `traffic` counter should too. The counter needs the `alerts` consumer to mark which events a model flagged.
 

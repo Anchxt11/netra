@@ -44,8 +44,44 @@ export type BackendMessage =
   | { type: "alert"; data: AlertRow; server_ts: string }
   | { type: "incident_update"; data: AlertRow; server_ts: string }
   | { type: "kpi"; data: KpiSnapshotWire; server_ts: string }
+  | { type: "job_runs"; data: JobRunWire[]; server_ts: string }
+  | { type: "ops_alert"; data: OpsAlertWire; server_ts: string }
   | { type: "kpi_alert"; data: KpiAlertWire; server_ts: string }
   | { type: "pong"; server_ts: string };
+
+/** A row of job_runs (`job_runs` message, GET /jobs/runs). */
+export interface JobRunWire {
+  id: number;
+  job: string;
+  started_at: string;
+  finished_at: string;
+  duration_ms: number;
+  status: "ok" | "failed" | "skipped";
+  detail: string | null;
+  result: unknown;
+}
+
+/** GET /jobs */
+export interface JobWire {
+  job: string;
+  schedule: string;
+  next_run_at: string | null;
+  last_run: JobRunWire | null;
+  consecutive_failures: number;
+}
+
+/** `ops_alert`, GET /ops/alerts */
+export interface OpsAlertWire {
+  id: number;
+  kind: string;
+  source: string;
+  level: string;
+  state: string;
+  message: string;
+  started_at: string;
+  updated_at: string;
+  cleared_at: string | null;
+}
 
 /** One KPI in the `kpi` message (contracts/LIVE_API.md 4.1). */
 export interface KpiReadingWire {

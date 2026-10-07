@@ -159,6 +159,26 @@ export interface ModelStatus {
   status: "ready" | "training" | "failed" | "pending";
 }
 
+/** One scheduled job of the ops service (contracts/LIVE_API.md 4.5). */
+export interface JobStatus {
+  job: string;
+  schedule: string; // "every 10 s", "daily 02:00"
+  lastRunAt: string | null;
+  status: "ok" | "failed" | "skipped" | null; // null: never ran
+  detail: string | null;
+  nextRunAt: string | null;
+}
+
+/** A firing ops alert: our own pipeline failing (contracts/LIVE_API.md 4.4). */
+export interface OpsAlert {
+  id: number;
+  kind: "health" | "job_failed" | "sla_breach";
+  source: string;
+  level: "warn" | "crit";
+  message: string;
+  startedAt: string;
+}
+
 export interface PipelineHealth {
   feed: "live" | "stalled" | "down";
   lastEventAt: string;
@@ -177,5 +197,9 @@ export interface PipelineHealth {
   models: ModelStatus[];
   retraining: { lastRun: string | null; nextRun: string | null; status: "ok" | "failed" | "scheduled" };
   alerts: { id: string; ts: string; sentence: string }[];
+  /** The ops service's jobs, or null when this source has none (the simulated feed). */
+  jobs: JobStatus[] | null;
+  /** Firing ops alerts, newest first. */
+  opsAlerts: OpsAlert[];
   decisions: { approved: number; rejected: number };
 }

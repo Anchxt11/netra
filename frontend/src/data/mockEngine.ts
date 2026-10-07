@@ -642,6 +642,9 @@ class MockEngine {
       ],
       retraining: { lastRun: iso(lastRun), nextRun: iso(lastRun + 86_400_000), status: "scheduled" },
       alerts: [],
+      // The simulated feed has no ops service: SYSTEM shows its jobs as PENDING.
+      jobs: null,
+      opsAlerts: [],
       decisions: { approved: 0, rejected: 0 },
     };
   }
