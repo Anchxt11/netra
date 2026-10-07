@@ -44,6 +44,15 @@ make sim
 ```
 *Note: Do not run `make sim` and `make lab` at the same time, as they simulate overlapping scenarios using different techniques.*
 
+**If `--build` (or `make replay`) hangs or fails pulling base images** with `dial tcp [2606:...]:443: connect: network is unreachable` or a TLS timeout, Docker is resolving Docker Hub over IPv6 on a network with no working IPv6 route. This is a laptop network issue, not a NETRA bug; the Azure VM doesn't have it. Use either fix:
+```bash
+# A: tell Docker not to use IPv6, then restart it
+echo '{ "ipv6": false, "ip6tables": false }' | sudo tee /etc/docker/daemon.json && sudo systemctl restart docker
+# B: prefer IPv4 for name lookups on this machine (Linux/glibc)
+echo 'precedence ::ffff:0:0/96  100' | sudo tee -a /etc/gai.conf
+```
+If `/etc/docker/daemon.json` already exists, add the two keys to it rather than overwriting the file. If neither fix works, pull the images on another network (`docker compose --profile lab --profile replay pull`) and build without `--pull`.
+
 ### 2. Managing the Environment
 
 ```bash
