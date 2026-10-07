@@ -65,7 +65,7 @@ Model 1 was trained on **network-flow records** (packets, bytes, ports, protocol
 | B3 | model 1 on the screen | **done** (Track 2) | B2 |
 | R1 | load CRIE and prove it matches the notebook | Track 1 | CRIE handed over |
 | R2 | the fix endpoint `POST /crie/recommend`, push | Track 1, then Anchit runs it | R1 |
-| R3 | CRIE's fixes on the screen | Track 1 (touches `frontend/`) | R2 |
+| R3 | CRIE's fixes on the screen | **done** (Track 2) | R2 |
 | C2 | end-to-end run on the Juice Shop lab | Anchit runs it, you relay to Track 1 | M1, B2 |
 | P1 | Power BI practice (CSV) | Anchit exports, you build | Anchit's CSV export |
 | P2 | Power BI live report | you + Anchit, same room | at the venue |

@@ -5,7 +5,8 @@
 import type { AttackType, Incident, Severity, SignalLevel } from "../types";
 import { formatBytes, SCENARIOS } from "../catalog.ts";
 import { AI, BACKEND_RULES, isRealModel, rulePoints, severityOf, STUFFING_ACCOUNTS, WATCHLIST, WATCHLIST_RULE } from "./rules.ts";
-import { aiSentence, attackTypeOfClass, type ModelView } from "./model.ts";
+import { aiSentence, attackTypeOfClass, namedClass, type ModelView } from "./model.ts";
+import type { CrieRequest } from "./crie.ts";
 import type { AlertRow, EnrichedEvent } from "./types";
 
 const EVENT_CACHE = 20_000; // enriched events kept to look up an alert's address, account and host
@@ -140,6 +141,36 @@ export class Correlator {
   /** The backend rows behind one of our incidents (to record decisions against). */
   rowsOf(incidentId: string): number[] {
     return this.byId.get(incidentId)?.rows ?? [];
+  }
+
+  /** CRIE's input for one open incident (the R0 shape): its attack, rules, model 1's view and who is involved. */
+  crieInput(incidentId: string): CrieRequest | undefined {
+    const d = this.byId.get(incidentId);
+    if (!d) return undefined;
+    const signals = [...d.signals.values()];
+    const ai = signals.find((s) => s.code === AI.code);
+    const rules = signals.filter((s) => s.code !== AI.code && (s.ruleId in BACKEND_RULES || s.ruleId === WATCHLIST_RULE));
+    const view = ai?.view;
+    const named = namedClass(view?.cls);
+    const technique = SCENARIOS[d.attackType].mitre.id;
+    return {
+      incident_id: d.id,
+      attack_type: d.attackType,
+      mitre_technique: technique || null,
+      severity: Math.max(...signals.map((s) => s.severity)),
+      detected_by: ai && rules.length ? "both" : ai ? "ai" : "rule",
+      rules: [...new Set(rules.map((s) => s.ruleId))],
+      model: view
+        ? {
+            attack_family: named ?? "UNKNOWN",
+            confidence: view.probability ?? null,
+            is_unknown: !named,
+            if_score: view.score ?? null,
+            top3: (view.reasons ?? []).slice(0, 3).map((r) => r.feature),
+          }
+        : null,
+      context: { src_ips: [...d.ips], usernames: [...d.users], hosts: [...d.hosts], dst_ip: null, domain: null },
+    };
   }
 
   /** An analyst approved a fix: the incident is decided, like the mock's. If the attack goes on, a new one opens. */

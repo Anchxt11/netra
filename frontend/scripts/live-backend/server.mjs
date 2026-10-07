@@ -15,6 +15,9 @@
 //   POST /_dev/model?status=ready|offline|pending   what GET /models and the `models` message say about ATDE
 //   POST /_dev/model-alert?ip=10.0.4.17[&flag=<event id>][&class=…]   one model alert shaped like ml-scorer's
 //        (contracts/LIVE_API.md 5.1). Test input only: there is no model in the stand-in.
+//   POST /_dev/crie?status=ready|pending|failed   CRIE's status in /models; POST /crie/recommend then answers
+//        with the contract's example fixes (4.7), or its fallback for an incident with no technique.
+//        Test input only: the real CRIE runs in the API (ml/crie/engine.py).
 import { spawn } from "node:child_process";
 import { createHash, createHmac } from "node:crypto";
 import { createServer } from "node:http";
@@ -135,6 +138,20 @@ function storeAlert(a) {
 
 // ------------------------------------------------------------------ models (contracts/LIVE_API.md 4.6)
 let atdeStatus = "pending";
+let crieStatus = "pending";
+const CRIE_VERSION = "crie-standin-example";
+// contracts/LIVE_API.md 4.7, the example answer: the same three fixes for every incident (test input).
+const CRIE_EXAMPLE = [
+  { action_id: "reset_credentials", name: "Reset Credentials", d3fend: { id: "D3-RIC", name: "Reissue Credential" }, confidence: 0.9705, rank: 1,
+    reasons: [{ feature: "knowledge_base_evidence", value: 1.0, contribution: 0.75 }, { feature: "ml_probability", value: 0.8821, contribution: 0.2205 }],
+    provenance: ["MITRE ATT&CK", "Elastic Detection Rules", "D3FEND"] },
+  { action_id: "block_ips", name: "Block Source IPs", d3fend: { id: "D3-ITF", name: "Inbound Traffic Filtering" }, confidence: 0.8411, rank: 2,
+    reasons: [{ feature: "knowledge_base_evidence", value: 0.9, contribution: 0.675 }, { feature: "ml_probability", value: 0.6644, contribution: 0.1661 }],
+    provenance: ["MITRE ATT&CK", "D3FEND"] },
+  { action_id: "enable_mfa", name: "Enable MFA", d3fend: { id: "D3-MFA", name: "Multi-factor Authentication" }, confidence: 0.7124, rank: 3,
+    reasons: [{ feature: "knowledge_base_evidence", value: 0.8, contribution: 0.6 }, { feature: "ml_probability", value: 0.4496, contribution: 0.1124 }],
+    provenance: ["MITRE ATT&CK"] },
+];
 const CRIE_ROW = { name: "CRIE", model_id: null, version: null, status: "pending", trained_at: null, loaded_at: null,
   last_heartbeat_at: null, detail: "Not in the live pipeline yet.", metrics: null, scored_per_sec: null };
 function modelsList() {
@@ -142,7 +159,10 @@ function modelsList() {
     ? { ...CRIE_ROW, name: "ATDE", detail: "No model in the stand-in. Use POST /_dev/model to test." }
     : { name: "ATDE", model_id: "atde-1.0.0", version: "1.0.0", status: atdeStatus, trained_at: null, loaded_at: now(),
         last_heartbeat_at: now(), detail: null, metrics: null, scored_per_sec: null };
-  return [atde, CRIE_ROW];
+  const crie = crieStatus === "pending" ? CRIE_ROW
+    : { ...CRIE_ROW, model_id: CRIE_VERSION, version: CRIE_VERSION, status: crieStatus,
+        detail: crieStatus === "failed" ? "Test: CRIE failed to load." : null };
+  return [atde, crie];
 }
 
 setInterval(() => {
@@ -318,6 +338,10 @@ const server = createServer(async (req, res) => {
       atdeStatus = url.searchParams.get("status") ?? "ready";
       broadcast("models", modelsList());
     }
+    if (path === "/_dev/crie") {
+      crieStatus = url.searchParams.get("status") ?? "ready";
+      broadcast("models", modelsList());
+    }
     if (path === "/_dev/model-alert") {
       const flagged = url.searchParams.get("flag");
       const ev = flagged ? events.find((e) => e.event_id === flagged) : undefined;
@@ -353,6 +377,13 @@ const server = createServer(async (req, res) => {
   if (!me) return send(res, 401, { detail: "Invalid or expired token" });
 
   if (path === "/models") return send(res, 200, modelsList());
+  if (path === "/crie/recommend" && req.method === "POST") {
+    if (crieStatus !== "ready") return send(res, 503, { detail: crieStatus === "failed" ? "Test: CRIE failed to load." : "CRIE is loading." });
+    const body = await readBody(req);
+    console.log(`crie/recommend for incident ${body.incident_id} (${body.attack_type}, ${body.detected_by})`);
+    if (!body.mitre_technique) return send(res, 200, { version: CRIE_VERSION, fallback: { technique: null, mitigations: [] } });
+    return send(res, 200, { version: CRIE_VERSION, fixes: CRIE_EXAMPLE });
+  }
   if (path === "/auth/me") return send(res, 200, { id: Number(me.sub), username: me.username, role: me.role });
   if (path === "/kpi") {
     const since = Date.now() - Math.min(60, Number(url.searchParams.get("minutes") ?? 15)) * 60_000;
