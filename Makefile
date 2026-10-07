@@ -5,7 +5,8 @@ LAB      := --profile lab
 VENV     := .venv/bin
 
 .PHONY: help up sim lab replay down restart logs logs-processor logs-generator \
-        build test lint topics lag status clean lab-down lab-logs attack auto-on auto-off
+        build test lint topics lag status clean lab-down lab-logs attack auto-on auto-off \
+        azure-up azure-ps azure-logs azure-down
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -61,7 +62,7 @@ lag: ## Show processor consumer lag
 	docker exec redpanda rpk group describe netra-processor
 
 clickhouse-counts: ## Show event counts in ClickHouse
-	docker exec clickhouse clickhouse-client -u netra --password netra -q "SELECT 'events_raw', count() FROM netra.events_raw UNION ALL SELECT 'events', count() FROM netra.events UNION ALL SELECT 'events_errors', count() FROM netra.events_errors;"
+	echo "SELECT 'events_raw', count() FROM netra.events_raw UNION ALL SELECT 'events', count() FROM netra.events UNION ALL SELECT 'events_errors', count() FROM netra.events_errors" | docker exec -i clickhouse sh -c 'clickhouse-client -u "$$CLICKHOUSE_USER" --password "$$CLICKHOUSE_PASSWORD"'
 
 api-health: ## Check the FastAPI backend health
 	curl -s http://localhost:8000/health
@@ -136,3 +137,18 @@ attack-evasion: ## Run all evasion (ML test) scenarios in sequence
 
 consume-lab: ## Consume live events from events.lab (Ctrl+C to stop)
 	docker exec redpanda rpk topic consume events.lab --offset end -f json
+
+# ─── Azure VM (docs/DEPLOY.md) ────────────────────────────────────────────────
+AZURE := docker compose -f docker-compose.yaml -f docker-compose.azure.yaml --profile lab
+
+azure-up: ## On the VM: build and start the whole stack behind Caddy (HTTPS)
+	$(AZURE) up -d --build
+
+azure-ps: ## On the VM: container status
+	$(AZURE) ps
+
+azure-logs: ## On the VM: tail all logs
+	$(AZURE) logs -f --tail=100
+
+azure-down: ## On the VM: stop everything (keeps data)
+	$(AZURE) down

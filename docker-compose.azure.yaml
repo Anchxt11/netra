@@ -1,0 +1,44 @@
+# The Azure VM deployment (docs/FINAL_PLAN.md section 5, docs/DEPLOY.md). Used on top of the main file:
+#   docker compose -f docker-compose.yaml -f docker-compose.azure.yaml --profile lab up -d --build
+# (or `make azure-up`). It adds Caddy as the one public address and keeps everything else off the
+# internet: only 80 and 443 (Caddy) and 5432 (Postgres, for Power BI) are published on all interfaces,
+# and the Azure network security group opens 5432 to the lead's address only.
+services:
+
+  # ─── Caddy: HTTPS, the dashboard, /api and /ws on one address ────────────────
+  web:
+    build:
+      context: ./frontend
+      dockerfile: ../deploy/web.Dockerfile
+      args:
+        NETRA_HOST: ${NETRA_HOST:?set NETRA_HOST in .env, e.g. 20-244-8-57.sslip.io}
+    environment:
+      NETRA_HOST: ${NETRA_HOST}
+    depends_on:
+      api: { condition: service_healthy }
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data            # the certificate: kept, so a restart doesn't ask Let's Encrypt again
+      - caddy-config:/config
+    restart: unless-stopped
+
+  # Reachable through Caddy (api) or an SSH tunnel (console, redpanda) only.
+  api:
+    ports: !override ["127.0.0.1:8000:8000"]
+  console:
+    ports: !override ["127.0.0.1:8080:8080"]
+  redpanda:
+    ports: !override ["127.0.0.1:19092:19092", "127.0.0.1:19644:9644"]
+
+  # The lab comes back by itself after a VM reboot, like the core services.
+  juice-shop: { restart: unless-stopped }
+  nginx: { restart: unless-stopped }
+  attacker: { restart: unless-stopped }
+  attacker2: { restart: unless-stopped }
+  benign-user: { restart: unless-stopped }
+  vector: { restart: unless-stopped }
+
+volumes:
+  caddy-data:
+  caddy-config:

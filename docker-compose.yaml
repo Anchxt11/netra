@@ -146,7 +146,7 @@ services:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: soc
-      POSTGRES_PASSWORD: soc
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-soc}   # set in .env before anything public (DEPLOY.md)
       POSTGRES_DB: soc
     # Published for Power BI Desktop (docs/POWER_BI.md): on this laptop and, through the firewall rule
     # in that doc, from another one on the same network. Power BI signs in as the read-only BI user.
@@ -169,17 +169,18 @@ services:
       postgres: { condition: service_healthy }
       topic-init: { condition: service_completed_successfully }
     environment:
-      DATABASE_URL: postgresql://soc:soc@postgres:5432/soc
+      DATABASE_URL: postgresql://soc:${POSTGRES_PASSWORD:-soc}@postgres:5432/soc
       KAFKA_BOOTSTRAP: redpanda:9092
       CLICKHOUSE_HOST: clickhouse
       CLICKHOUSE_PORT: "8123"
-      CLICKHOUSE_USER: netra
-      CLICKHOUSE_PASSWORD: netra
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-netra}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-netra}
       CLICKHOUSE_DB: netra
       CLICKHOUSE_TABLE: events
       JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me-please-0123456789}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin12345}
       ANALYST_PASSWORD: ${ANALYST_PASSWORD:-analyst12345}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}           # the dashboard's origin when it is public, e.g. https://<host>
     ports: ["8000:8000"]
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
@@ -205,7 +206,7 @@ services:
       CLICKHOUSE_URL: http://clickhouse:8123
       CLICKHOUSE_USER: ${CLICKHOUSE_USER:-netra}
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-netra}
-      DATABASE_URL: postgresql://soc:soc@postgres:5432/soc
+      DATABASE_URL: postgresql://soc:${POSTGRES_PASSWORD:-soc}@postgres:5432/soc
     healthcheck:
       test: ["CMD", "python", "-c", "import os, sys, time; sys.exit(time.time() - os.path.getmtime('/tmp/ml-scorer.alive') > 30)"]
       interval: 15s
@@ -223,7 +224,7 @@ services:
       postgres: { condition: service_healthy }
       api: { condition: service_healthy }   # the BI views read the API's kpi_alerts table
     environment:
-      DATABASE_URL: postgresql://soc:soc@postgres:5432/soc
+      DATABASE_URL: postgresql://soc:${POSTGRES_PASSWORD:-soc}@postgres:5432/soc
       API_URL: http://api:8000
       BI_PASSWORD: ${BI_PASSWORD:-netra_bi_read}  # the read-only Power BI user netra_bi; change it before anything public
       CLICKHOUSE_URL: http://clickhouse:8123
