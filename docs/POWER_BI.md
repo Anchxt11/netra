@@ -27,7 +27,7 @@ Power BI signs in as **`netra_bi`**, a user that can only read these six views. 
 ---
 
 ## 0. Before you start (on the laptop that runs Docker)
-1. Start the stack: `make sim`. Wait 2 minutes: the first summary row appears one minute after the ops service starts.
+1. Start the stack at the repo root: `make up` (the pipeline, API and ops service), then `make lab` (the Juice Shop lab, whose benign user and attackers make the traffic). Wait 2 minutes: the first summary row appears one minute after the ops service starts. (`make sim` still works if you want the simulator instead of the lab.)
 2. Check that the views have rows (this signs in as the read-only user):
    ```
    docker compose exec -e PGPASSWORD=netra_bi_read postgres psql -h localhost -U netra_bi -d soc -c "select count(*) from bi.bi_traffic_minute"
@@ -122,7 +122,7 @@ On **the second laptop**:
 |---|---|
 | No **Page refresh** card | The data is in Import mode. Connect again with **DirectQuery** (section 2). |
 | `password authentication failed for user "netra_bi"` | The password differs from `BI_PASSWORD`, or the ops service has not run yet. Check `docker compose logs ops`. |
-| The views are empty | The ops service writes a row each minute only while events flow. Check that the generator runs (`make sim`) and look for `bi_rollup` lines in `docker compose logs ops`. |
+| The views are empty | The ops service writes a row each minute only while events flow. Check that traffic flows: `make lab` is running (`make lab-status`), or run an attack (`make attack SCENARIO=brute_force`). Then look for `bi_rollup` lines in `docker compose logs ops`. |
 | Timed out from the second laptop | The firewall rule is missing, the network is set to Public, or the address changed. Repeat section 6. |
 | `permission denied for table ...` | You chose a table instead of a view. Only the six `bi.` views are readable. |
 
