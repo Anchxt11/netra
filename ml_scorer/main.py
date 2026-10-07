@@ -47,7 +47,8 @@ CREATE TABLE IF NOT EXISTS netra.ml_scores
     probability   Nullable(Float32),
     rule_flagged  UInt8,
     src_ip        String,
-    reasons       String
+    reasons       String,
+    source        LowCardinality(String) DEFAULT ''   -- "replay" for flow-replay rows, empty for live
 )
 ENGINE = ReplacingMergeTree(scored_ts)
 PARTITION BY toDate(scored_ts)
@@ -132,6 +133,9 @@ def main():
     atde = ATDE()
     scorer = Scorer(atde)
     clickhouse(ML_SCORES_SQL)
+    # Tables made before the replay `source` field existed get the column too: ClickHouse refuses
+    # rows with unknown fields, so without it the first replay batch would fail.
+    clickhouse("ALTER TABLE netra.ml_scores ADD COLUMN IF NOT EXISTS source LowCardinality(String) DEFAULT ''")
     beat = Heartbeat(atde)
     consumer = Consumer({"bootstrap.servers": BOOTSTRAP, "group.id": GROUP, "auto.offset.reset": "latest",
                          "enable.auto.commit": False, "allow.auto.create.topics": True})

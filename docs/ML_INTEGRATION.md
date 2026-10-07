@@ -77,3 +77,16 @@ Model 1 reads **network flow records**: one row per connection, as an AWS VPC fl
 - that the API turns those alerts into incidents and the dashboard shows the AI engine;
 - the scorer's speed with real history: rolling features are rebuilt over up to 20,000 history rows per batch, so throughput must be measured, and the history cap lowered if it falls behind;
 - that the healthcheck and the ops health watch go red when the scorer is stopped.
+
+## The ML team's `src/score.py` (main 3b2e092)
+Their `Detector.score_event` in `src/score.py` no longer scores rule-flagged events. A rule hit now returns the rule's result straight away, with no Isolation Forest score (the earlier `model_score` on rule hits was removed). `score_event` also lost its `enriched_event` parameter.
+
+**The live pipeline is unaffected:** `ml-scorer` scores through `ml/atde/predict.py` (the bundle's `preprocess.py` and the saved Isolation Forests) and never imports `src/score.py`. It still gives every rule-flagged flow row the model's view (`rule_flagged: true`; `tests/test_ml_scorer.py`). Only the ML team's own `ml/model1/replay_score.py` imports from `src/`, and only `src/if_stage.py`.
+
+## Replay (B4): the data and the service
+`main`'s `data/replay/` export matches what `replay/producer.py` and `ml/atde/eval_replay.py` read. Checked 2026-10-07:
+- 57,758 rows in each file, with the same event ids.
+- `flows_test.jsonl`: exactly `stream_name`, `timestamp`, `event_id` and `message_sanitized`, in time order, with no labels inside (13,160 AWS VPC rows and 44,598 Cisco ASA rows).
+- `labels_test.jsonl`: `event_id`, `label_binary` (3,824 malicious, 53,934 suspicious) and `incident_ids`.
+
+`make replay` streams the flows onto `flows.raw` with `source: "replay"`. ml-scorer forwards that field to its alerts and to `ml_scores`, which got a `source` column so replay rows are not refused. The evaluation numbers are in `docs/ML_EVAL.md`.
