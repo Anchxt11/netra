@@ -12,6 +12,15 @@ Three pieces are left. They touch different folders, so they run at the same tim
 | **Power BI**: practice page (P1), live report at the venue (P2) | **you** | `bi/NETRA_Ops.pbix` | CSVs from Anchit; the venue |
 | Rehearsal (E1) | everyone | `docs/DEMO_RUNBOOK.md` | all of the above |
 
+**Also left, outside the three pieces:**
+| what | who | why it matters |
+|---|---|---|
+| **Load test results** in `docs/SLA.md` ("Results" table is empty): implement `Concurrency/Netra_Concurrency_Fix_Plan.md`, run its step 5, fill the table | backend team (Anchit); you chase it | **The brief requires it** ("validate performance under concurrent load"). Until then the deck and the landing page's "Concurrent load" card say PENDING |
+| Anchit's 8 new lab attacks (`feat/event-gen`, 7d8a5c4) into `integration`, then C2: one full Juice Shop run, checking each attack shows on the dashboard | Track 1 merges; Anchit runs C2; you relay | Attacks no rule catches show nothing on screen |
+| `docs/POWER_BI.md` still says `make sim`: change to `make up` + `make lab` (+ `make replay`) | Track 1 | P1 and P2 follow it step by step |
+| E1: `docs/DEMO_RUNBOOK.md`, one full dry run, the deck's slides 5, 7, 8, 9 and the landing's enterprise cards with real numbers only | Track 1 writes, everyone runs; Track 2 for the landing | The demo |
+| F1: your frontend refinements, merge `integration` into `main`, redeploy Vercel | you + Track 2 | The public link |
+
 The two meeting points: the teammate's model alerts carry `"source": "replay"` (the dashboard labels them), and he sends the final model's class names (the dashboard maps them in `frontend/src/data/backend/model.ts`).
 
 ## Who runs what (Claude Code is only on your laptop)
