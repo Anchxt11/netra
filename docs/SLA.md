@@ -68,4 +68,4 @@ Pass: unique event_ids in ClickHouse ≈ N, with no unexpected loss between hops
 
 | run | requests N (nginx lines added) | events.lab | events.raw | events.enriched | ClickHouse unique event_ids | ClickHouse rows | lost | pass |
 |---|---|---|---|---|---|---|---|---|
-| http_flood, 1 processor | | | | | | | | |
+| http_flood, 1 processor | 6961 | 6961 | 6960 | 6962 | 6959 | 6959 | 0 | yes |
