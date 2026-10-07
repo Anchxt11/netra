@@ -1,7 +1,7 @@
 FROM debian:bookworm-slim
 
 # Install attack tooling: hydra, sqlmap, ffuf, ab (apache2-utils), curl, jq
-# nikto skipped — not packaged in bookworm; redundant with ffuf per plan
+# slowhttptest: for evasion scenario #5 (slow-rate DoS / Slowloris)
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         hydra \
@@ -14,6 +14,7 @@ RUN apt-get update && \
         dnsutils \
         procps \
         python3 \
+        slowhttptest \
     && rm -rf /var/lib/apt/lists/*
 
 # Install ffuf (Go binary)

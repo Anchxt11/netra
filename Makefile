@@ -114,11 +114,14 @@ lab-nginx-logs: ## Tail raw nginx JSON log (real data view)
 lab-status: ## Show lab container status
 	$(COMPOSE) $(LAB) ps
 
-attack: ## Run an attack scenario: make attack SCENARIO=brute_force
+attack: ## Run an attack scenario: make attack SCENARIO=brute_force (or evasion_low_slow_brute, etc.)
 	docker compose exec attacker attack-runner $(SCENARIO)
 
-attack-full: ## Run all attack scenarios in sequence
+attack-full: ## Run all core attack scenarios in sequence
 	docker compose exec attacker attack-runner full
+
+attack-evasion: ## Run all evasion (ML test) scenarios in sequence
+	docker compose exec attacker attack-runner evasion_full
 
 consume-lab: ## Consume live events from events.lab (Ctrl+C to stop)
 	docker exec redpanda rpk topic consume events.lab --offset end -f json

@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 
 import asyncpg
 
+from . import crie
 from .db import get_pool
 from .ws import manager
 
@@ -13,8 +14,8 @@ log = logging.getLogger("models")
 STALE_AFTER = timedelta(seconds=15)
 _last_sent = None
 
-CRIE = {"name": "CRIE", "model_id": None, "version": None, "status": "pending", "trained_at": None, "loaded_at": None,
-        "last_heartbeat_at": None, "detail": "Not in the live pipeline yet.", "metrics": None, "scored_per_sec": None}
+PENDING = {"model_id": None, "version": None, "status": "pending", "trained_at": None, "loaded_at": None,
+           "last_heartbeat_at": None, "metrics": None, "scored_per_sec": None}
 
 
 async def current() -> list[dict]:
@@ -23,7 +24,7 @@ async def current() -> list[dict]:
     except asyncpg.UndefinedTableError:
         row = None
     if row is None:
-        atde = {**CRIE, "name": "ATDE", "detail": "ml-scorer has not started yet."}
+        atde = {**PENDING, "name": "ATDE", "detail": "ml-scorer has not started yet."}
     else:
         r = dict(row)
         fresh = r["last_heartbeat_at"] and datetime.now(timezone.utc) - r["last_heartbeat_at"] < STALE_AFTER
@@ -31,7 +32,7 @@ async def current() -> list[dict]:
                 "status": "ready" if fresh else "offline", "trained_at": r["trained_at"], "loaded_at": r["loaded_at"],
                 "last_heartbeat_at": r["last_heartbeat_at"], "detail": r["detail"], "metrics": r["metrics"],
                 "scored_per_sec": r["scored_per_sec"]}
-    return [atde, CRIE]
+    return [atde, crie.model_entry()]  # CRIE lives in the API itself (app/crie.py)
 
 
 def _comparable(models):

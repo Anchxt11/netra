@@ -4,6 +4,8 @@
 import type { ConnectionStatus, DataSource, Decision, ServerMessage } from "../source";
 import { ApiError, createApi } from "./api";
 import { Correlator } from "./correlate";
+import { CrieClient, withAnswer } from "./crie";
+import type { Incident } from "../types";
 import { HealthTracker } from "./health";
 import { ScreenTimer } from "./screenTime";
 import { kpiAlertFromApi, kpiHistoryFromApi, kpiSnapshotFromApi, thresholdsFromConfig } from "./kpi";
@@ -41,6 +43,7 @@ export function createBackendSource({ apiUrl, wsUrl, getToken }: Options): DataS
   const api = createApi(apiUrl);
   let correlator: Correlator | null = null;
   let tracker: HealthTracker | null = null;
+  let crieClient: CrieClient | null = null;
   let username = "";
   const log = new Map<string, string[]>(); // decisions per incident, written to the backend row's notes
 
@@ -62,10 +65,36 @@ export function createBackendSource({ apiUrl, wsUrl, getToken }: Options): DataS
         health.setScreenTime(screen.minutes());
         if (a) onMessage({ type: "kpi_alert", payload: a });
       };
+      // CRIE's fixes ride on every publish of an incident; a new answer re-publishes it.
+      const latest = new Map<string, Incident>();
+      const publish = (incident: Incident) => onMessage({ type: "incident.upsert", payload: withAnswer(incident, crie.answer(incident.id)) });
+      const crie = new CrieClient(
+        (req) => {
+          const token = getToken();
+          return token ? api.crieRecommend(token, req) : Promise.reject(new Error("signed out"));
+        },
+        (id) => {
+          const incident = latest.get(id);
+          if (incident) publish(incident);
+        },
+      );
+      crieClient = crie;
+      const gone = (id: string) => {
+        latest.delete(id);
+        crie.forget(id);
+      };
       const corr = new Correlator({
-        upsert: (incident) => onMessage({ type: "incident.upsert", payload: incident }),
-        remove: (id, into) => onMessage({ type: "incident.remove", payload: { id, into } }),
+        upsert: (incident) => {
+          latest.set(incident.id, incident);
+          publish(incident);
+          crie.changed(corr.crieInput(incident.id));
+        },
+        remove: (id, into) => {
+          gone(id);
+          onMessage({ type: "incident.remove", payload: { id, into } });
+        },
         expire: (id) => {
+          gone(id);
           health.expiredOne();
           onMessage({ type: "incident.expire", payload: { id } });
         },
@@ -237,8 +266,10 @@ export function createBackendSource({ apiUrl, wsUrl, getToken }: Options): DataS
         timers.forEach((t) => window.clearInterval(t));
         window.clearTimeout(retry);
         socket?.close();
+        crie.stop();
         correlator = null;
         tracker = null;
+        crieClient = null;
         log.clear();
       };
     },
@@ -269,10 +300,15 @@ export function createBackendSource({ apiUrl, wsUrl, getToken }: Options): DataS
       const token = getToken();
       const row = correlator?.rowsOf(d.incidentId)[0];
       if (!token || row === undefined) return;
-      const line = `${new Date().toISOString()} ${username || "analyst"} ${d.decision === "approve" ? "APPROVED" : "REJECTED"} ${d.actionId}`;
+      // The action and the CRIE version that recommended it; CRIE only recommends, a person does the fix.
+      const by = crieClient?.version(d.incidentId);
+      const line = `${new Date().toISOString()} ${username || "analyst"} ${d.decision === "approve" ? "APPROVED" : "REJECTED"} ${d.actionId}${by ? ` (recommended by ${by})` : ""}`;
       const lines = [...(log.get(d.incidentId) ?? []), line];
       log.set(d.incidentId, lines);
-      if (d.decision === "approve") correlator?.close(d.incidentId);
+      if (d.decision === "approve") {
+        correlator?.close(d.incidentId);
+        crieClient?.forget(d.incidentId);
+      }
       const health = tracker;
       void api
         .updateIncident(token, row, { notes: lines.join("\n"), ...(d.decision === "approve" ? { status: "acknowledged" as const } : {}) })

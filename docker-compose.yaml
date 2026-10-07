@@ -162,7 +162,9 @@ services:
     restart: unless-stopped
 
   api:
-    build: ./api
+    build:
+      context: .                 # the repo root: the image includes CRIE (api/Dockerfile)
+      dockerfile: api/Dockerfile
     depends_on:
       postgres: { condition: service_healthy }
       topic-init: { condition: service_completed_successfully }

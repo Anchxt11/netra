@@ -29,6 +29,7 @@ Set `VITE_DATA_SOURCE=ws` (or use the `:live` scripts below). Code: `src/data/ba
   - `suspicious_ip` only adds to an open incident of that address;
   - the deadline is the attack type's window from the first alert; an approved incident is closed.
 - **Models** (SYSTEM, boot screen): ATDE's and CRIE's status and version come from `GET /models` on connect and the `models` message after (contracts/LIVE_API.md 4.6), never from alerts. `offline` shows red. The AI engine's score is the model alert's own `risk_score`; an event's `risk_score` (the placeholder scorer's) is never shown.
+- **Fixes (CRIE, model 2)**: 2 s after an incident last changed, the dashboard sends it to `POST /crie/recommend` (contracts/LIVE_API.md 4.7) and shows the top 3 as fix cards; it asks again only when the incident's evidence changes. CRIE only recommends: approving writes the action and CRIE's version to the decision log, and a person does the fix. While CRIE is loading, failed or answers with its fallback, the incident keeps MITRE's mitigations from our own table (`src/data/backend/crie.ts`).
 - **Health** (top bar, SYSTEM): events per second as they arrive; freshness p50/p95 from `GET /freshness` every 5 s; server problems from `GET /health` every 10 s; feed STALLED after 5 s without events, DOWN after 15 s. Anything the backend does not measure shows PENDING (EVENTS TODAY, models, retraining).
 - **Decisions:** approving writes the decision log into the incident's first backend row (`PATCH /incidents/{id}`, notes, status `acknowledged`). A failed save shows in pink in SYSTEM.
 
@@ -69,7 +70,7 @@ Sign in with the backend's development accounts (`api/app/settings.py`). Change 
 npm run live-backend -- --backend <path to a checkout of the backend branch> --rate 12 --warmup 15 --attack-every 45
 npm run dev:live
 ```
-Test switches: `POST http://localhost:8000/_dev/stall?seconds=20` (feed stalls), `/_dev/drop` (connection drops), `/_dev/expire` (session ends), `/_dev/refuse-writes?seconds=30` (decisions fail to save), `/_dev/model?status=ready|offline|pending` (what `/models` says about ATDE), `/_dev/model-alert?ip=…[&flag=<event id>][&class=…]` (one model alert shaped like `ml-scorer`'s; test input only, there is no model in the stand-in).
+Test switches: `POST http://localhost:8000/_dev/stall?seconds=20` (feed stalls), `/_dev/drop` (connection drops), `/_dev/expire` (session ends), `/_dev/refuse-writes?seconds=30` (decisions fail to save), `/_dev/model?status=ready|offline|pending` (what `/models` says about ATDE), `/_dev/model-alert?ip=…[&flag=<event id>][&class=…]` (one model alert shaped like `ml-scorer`'s; test input only, there is no model in the stand-in), `/_dev/crie?status=ready|pending|failed` (CRIE's status; when ready, `/crie/recommend` answers with the contract's example fixes, or the fallback for an incident with no technique; test input only).
 
 The public Vercel site stays on the simulated feed: it cannot reach a backend on a laptop.
 

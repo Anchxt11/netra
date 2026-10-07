@@ -1,4 +1,5 @@
 // REST calls to the backend API (api/app/routes on the backend branch). Spec: contracts/API_SPEC.md there.
+import type { CrieAnswer, CrieRequest } from "./crie";
 import type { AlertRow, EnrichedEvent, FreshnessReport, JobWire, KpiAlertWire, ModelWire, OpsAlertWire, KpiReport, LoginResponse, ServerHealth } from "./types";
 
 export class ApiError extends Error {
@@ -48,6 +49,9 @@ export function createApi(base: string) {
     opsAlerts: (token: string) => call<OpsAlertWire[]>(base, "/ops/alerts?state=firing", {}, token),
     /** Which models are running (contracts/LIVE_API.md 4.6). 404 on an API without them. */
     models: (token: string) => call<ModelWire[]>(base, "/models", {}, token),
+    /** CRIE's top 3 fixes for one incident (contracts/LIVE_API.md 4.7). 503 while CRIE is loading or failed. */
+    crieRecommend: (token: string, body: CrieRequest) =>
+      call<CrieAnswer>(base, "/crie/recommend", { method: "POST", body: JSON.stringify(body) }, token),
     config: (token: string) => call<Record<string, unknown>>(base, "/config", {}, token),
     /** Admin only: 403 for an analyst, 422 for a value the API refuses. */
     putConfig: (token: string, key: string, value: unknown) =>

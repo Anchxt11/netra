@@ -37,6 +37,7 @@ Numbers in the examples are made up to show the shape. They are not results.
 | GET | `/jobs` | any user | exists | A3 |
 | GET | `/jobs/runs` | any user | exists | A3 |
 | GET | `/ops/alerts` | any user | exists | A3 |
+| POST | `/crie/recommend` | any user | exists | R2 |
 
 "Any user" means a signed-in analyst or admin.
 
@@ -515,7 +516,7 @@ Which models are running, from what `ml-scorer` reports and from each bundle's o
 - `name` is `ATDE` or `CRIE`. Both are always listed.
 - `model_id` is exactly the `model` value on that model's alerts (`atde-<version>`).
 - `status`:
-  - `pending`: no bundle loaded. ATDE until B2 runs; CRIE for now.
+  - `pending`: no bundle loaded. ATDE until B2 runs; CRIE while the API is still loading it (about 13 s after start).
   - `ready`: loaded, with a heartbeat less than 15 s old.
   - `offline`: was ready, but there has been no heartbeat for 15 s (`ml-scorer` is down).
   - `training`: a retrain is running (B5).
@@ -530,6 +531,52 @@ Which models are running, from what `ml-scorer` reports and from each bundle's o
 `GET /models` returns the same list.
 
 ---
+
+### 4.7 `POST /crie/recommend` (R2): CRIE's fixes for one incident
+CRIE (model 2) **only recommends**: the answer is a list for an analyst, and nothing is ever carried out. "Approve fix" records the decision; a person does the fix.
+
+Request (signed in, any role), the R0 input shape (frontend/docs/BUILD_PLAN.md, R0):
+```json
+{
+  "incident_id": "0131",
+  "attack_type": "brute_force",
+  "mitre_technique": "T1110.001",
+  "severity": 4,
+  "detected_by": "rule",
+  "rules": ["brute_force", "suspicious_login"],
+  "model": null,
+  "context": {"src_ips": ["172.30.0.10"], "usernames": ["admin@juice-sh.op"], "hosts": ["juice-shop"], "dst_ip": null, "domain": null}
+}
+```
+- `severity` is 1 to 5 (low 2, medium 3, high 4, critical 5). `detected_by` is `rule`, `ai` or `both`.
+- `model` is model 1's output, or `null`: `{"attack_family", "confidence", "is_unknown", "if_score", "top3"}`.
+
+Response 200: CRIE's answer, unchanged, with its `version`. Either three fixes:
+```json
+{
+  "version": "crie-unversioned-f924f6e1",
+  "fixes": [
+    {"action_id": "reset_credentials", "name": "Reset Credentials", "d3fend": {"id": "D3-RIC", "name": "Reissue Credential"},
+     "confidence": 0.9705, "rank": 1,
+     "reasons": [{"feature": "knowledge_base_evidence", "value": 1.0, "contribution": 0.75},
+                 {"feature": "ml_probability", "value": 0.8821, "contribution": 0.2205}],
+     "provenance": ["MITRE ATT&CK", "Elastic Detection Rules", "D3FEND"]}
+  ]
+}
+```
+or the fallback, when CRIE doesn't know the technique or no fix passes its feasibility and severity checks:
+```json
+{"version": "crie-unversioned-f924f6e1", "fallback": {"technique": "T9999", "mitigations": []}}
+```
+- `confidence` is CRIE's hybrid score: 0.75 × knowledge-base evidence + 0.25 × its ML probability. The two `reasons` are exactly those two parts.
+- `mitigations` is empty for now: CRIE's files have no technique → MITRE mitigation table. The dashboard lists MITRE's mitigations for the `technique` from its own table.
+- The version names the model file by its hash until the ML team hands over a VERSION.
+- The same incident with the same input within 60 s gets the cached answer.
+
+Errors:
+- 401 when not signed in.
+- 422 for a body outside the R0 shape.
+- **503 while CRIE is loading or if it failed to load**, with the reason in `detail`. The API itself stays up, and `GET /models` shows CRIE `pending` or `failed` with the same reason.
 
 ## 5. Alerts and incidents: the fields ATDE adds
 
