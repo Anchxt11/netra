@@ -3,6 +3,17 @@
 Checked against GitHub (github.com/Anchxt11/netra) on 2026-10-07. The frontend is done (light refinements at the end only), so this plan covers what is left: bringing the backend team's work in, model 1 on everything, Power BI, and the rehearsal.
 Paste the prompts into **Track 1** (the Claude Code session at the repo root) one at a time; each ends with tests and a commit, and asks before pushing.
 
+## Who does what now (split of 2026-10-07)
+Three pieces are left. They touch different folders, so they run at the same time:
+| piece | who | files | waits on |
+|---|---|---|---|
+| **Model 1, last stages**: replay the held-out flows onto `flows.raw` (B4), measure it (`docs/ML_EVAL.md`), drop in the final model | **teammate, Antigravity**, brief in `frontend/docs/TEAMMATE_MODEL1.md` | `replay/`, `ml/atde/`, `ml_scorer/`, root `tests/` for those, `docs/ML_EVAL.md` | Aliya's export of the test flows; the final model |
+| **Model 1 + 2 integration**: CRIE loaded and checked (R1), the fix endpoint (R2), fixes on screen (R3), the "Replayed flow logs" label and model 1's final class names on the dashboard | **you + Claude Code** (Track 1 for R1 and R2, Track 2 for R3 and the dashboard) | `api/`, `contracts/`, `frontend/`, `ml/crie/` | nothing for R1 (CRIE is in `model_2_temp/`); Aliya's final engine for the last check |
+| **Power BI**: practice page (P1), live report at the venue (P2) | **you** | `bi/NETRA_Ops.pbix` | CSVs from Anchit; the venue |
+| Rehearsal (E1) | everyone | `docs/DEMO_RUNBOOK.md` | all of the above |
+
+The two meeting points: the teammate's model alerts carry `"source": "replay"` (the dashboard labels them), and he sends the final model's class names (the dashboard maps them in `frontend/src/data/backend/model.ts`).
+
 ## Who runs what (Claude Code is only on your laptop)
 Claude Code cannot reach Anchit's laptop. Everything between the two laptops goes through GitHub and messages:
 1. **Your laptop, Claude Code** writes and tests the code (unit tests, the build, the stand-in API with `npm run live-backend`), commits, and pushes to `integration` once you say yes.
@@ -52,7 +63,7 @@ Model 1 was trained on **network-flow records** (packets, bytes, ports, protocol
 | E1 | runbook and rehearsal | everyone | everything |
 | F1 | frontend refinements and redeploy | Track 2 | last |
 
-**If time runs out, keep:** M1, B1, B2, C2, P2, E1. **Then:** R1, R2, R3, M2, B3, F1. **Later:** B4, B5.
+**If time runs out, keep:** R1, R2, R3, B4, P2, E1. **Then:** C2, F1. **Later:** B5. (M1 and B1 to B3 are done; M2 is the backend team's.)
 R and B don't depend on each other: start whichever model arrives first.
 
 ---
@@ -104,6 +115,8 @@ How it fits now: the rules flag known attacks; **model 1 scores every event**. F
 ---
 
 ## R. CRIE (model 2): recommended fixes
+**CRIE only recommends.** It returns its best 3 fixes; nothing is carried out. "Approve fix" records the analyst's decision in the log, and a person does the fix.
+
 How it fits: CRIE is called **per incident, by the API**, not by model 1. Many incidents come only from the rules (model 1 can't read Juice Shop's web events), so CRIE must work with or without model 1's output. The dashboard asks for fixes when an incident opens or changes, and shows the top 3; if CRIE can't recommend, it shows MITRE's mitigations. A person always approves.
 
 **R0 What was agreed with the ML team** (sent 2026-10-07)
