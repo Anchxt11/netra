@@ -75,7 +75,9 @@ log = logging.getLogger("ml-scorer")
 
 
 def clickhouse(sql: str, body: bytes | None = None):
-    req = urllib.request.Request(f"{CH_URL}/?{urllib.parse.urlencode({'query': sql})}", data=body,
+    # best_effort: scored_ts is ISO 8601 with a trailing Z, which the default 'basic' parser refuses.
+    params = {'query': sql, 'date_time_input_format': 'best_effort'}
+    req = urllib.request.Request(f"{CH_URL}/?{urllib.parse.urlencode(params)}", data=body,
                                  headers={"Authorization": CH_AUTH}, method="POST")
     with urllib.request.urlopen(req, timeout=10) as r:
         return r.read()
