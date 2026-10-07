@@ -326,6 +326,24 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
     restart: unless-stopped
 
+  # ─── Replay Profile: flow-replay (held-out test flows → flows.raw) ───────────
+  flow-replay:
+    build: ./replay
+    profiles: ["replay"]
+    depends_on:
+      topic-init:
+        condition: service_completed_successfully
+    environment:
+      KAFKA_BOOTSTRAP: redpanda:9092
+      FLOWS_TOPIC: flows.raw
+      FLOWS_FILE: /data/replay/flows_test.jsonl
+      SPEED: ${SPEED:-1}
+      LOOP: ${LOOP:-0}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      - ./data/replay:/data/replay:ro
+    restart: "no"
+
 volumes:
   redpanda-data:
   clickhouse-data:

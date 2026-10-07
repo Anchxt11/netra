@@ -4,7 +4,7 @@ PROFILE  := --profile sim
 LAB      := --profile lab
 VENV     := .venv/bin
 
-.PHONY: help up sim lab down restart logs logs-processor logs-generator \
+.PHONY: help up sim lab replay down restart logs logs-processor logs-generator \
         build test lint topics lag status clean lab-down lab-logs attack
 
 help: ## Show this help
@@ -19,8 +19,13 @@ up: ## Start infra (Redpanda, console, processor) — no generator
 sim: ## Start full stack including the traffic generator
 	$(COMPOSE) $(PROFILE) up -d --build
 
+REPLAY   := --profile replay
+
 lab: ## Start lab profile (Juice Shop + nginx + attackers + Vector + normalizer)
 	$(COMPOSE) $(LAB) up -d --build
+
+replay: ## Start replay profile (flow-replay: held-out flows → flows.raw)
+	$(COMPOSE) $(REPLAY) up -d --build
 
 lab-full: ## Start both sim and lab profiles together
 	$(COMPOSE) $(PROFILE) $(LAB) up -d --build

@@ -91,3 +91,29 @@ def test_severity_never_critical_from_the_model_alone():
     assert severity("DoS / Flooding", 0.95) == "high"
     assert severity("DoS / Flooding", 0.8) == "medium"
     assert "critical" not in {severity("x", p) for p in (0.5, 0.8, 0.99, 1.0)}
+
+
+# ── Task 1 addition: source field forwarding ───────────────────────────────────
+
+def test_replay_source_field_forwarded_to_alerts_and_scores(atde):
+    """A row that carries source='replay' must propagate that value to both the
+    alert dict and the ml_scores dict so the dashboard can tag replayed data."""
+    sc = Scorer(atde, cooldown_s=0)
+    replay_rows = [{**r, "source": "replay"} for r in flows("aws_vpc_flow_log")]
+    alerts, scores = sc.batch(replay_rows, now=0)
+    assert scores, "no scores produced — check the fixture"
+    assert all(s.get("source") == "replay" for s in scores), \
+        "at least one score row is missing source='replay'"
+    for a in alerts:
+        assert a.get("source") == "replay", f"alert {a['alert_id']} missing source='replay'"
+
+
+def test_live_rows_without_source_field_produce_no_source_key(atde):
+    """Live (non-replay) rows have no source field; the output must not invent one."""
+    sc = Scorer(atde, cooldown_s=0)
+    live_rows = [{k: v for k, v in r.items() if k != "source"} for r in flows("aws_vpc_flow_log")]
+    alerts, scores = sc.batch(live_rows, now=0)
+    for s in scores:
+        assert "source" not in s, f"score row has unexpected source key: {s.get('source')!r}"
+    for a in alerts:
+        assert "source" not in a, f"alert has unexpected source key: {a.get('source')!r}"
