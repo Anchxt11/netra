@@ -167,6 +167,9 @@ export interface PipelineHealth {
   freshnessMs: { p50: number; p95: number } | null; // null until the backend has measured it
   slaMs: 5000;
   freshnessHistory: { t: string; p95: number }[];
+  /** Event created to received by this browser, p95 per finished minute (docs/SLA.md). null when not measured. */
+  timeToScreenMs: { p95: number; minute: string } | null;
+  timeToScreenHistory: { t: string; p95: number }[];
   detections: { rule: number; ai: number };
   detectionsPerMin: { t: string; rule: number; ai: number }[];
   expiredToday: number;

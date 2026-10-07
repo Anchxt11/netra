@@ -2,6 +2,7 @@
 // Anything the backend does not measure stays empty (PENDING on screen): nothing here is made up.
 import type { PipelineHealth } from "../types";
 import type { FreshnessReport, ServerHealth } from "./types";
+import type { ScreenMinute } from "./screenTime";
 
 const STALLED_MS = 5_000; // no events for 5 s: stalled
 const DOWN_MS = 15_000; // 15 s: down
@@ -25,6 +26,12 @@ export class HealthTracker {
   private decisions = { approved: 0, rejected: 0 };
   private model: string | null = null;
   private unsavedAt = -Infinity;
+  private screen: ScreenMinute[] = [];
+
+  /** Time-to-screen minutes from the ScreenTimer. */
+  setScreenTime(minutes: ScreenMinute[]) {
+    this.screen = minutes;
+  }
 
   setConnected(connected: boolean, now: number) {
     if (connected !== this.connected) this.changedAt = now;
@@ -107,6 +114,8 @@ export class HealthTracker {
         f?.p95_seconds != null ? { p50: Math.round((f.p50_seconds ?? f.p95_seconds) * 1000), p95: Math.round(f.p95_seconds * 1000) } : null,
       slaMs: 5000, // the backend's freshness_sla_p95_seconds (api/db/init.sql)
       freshnessHistory: this.history,
+      timeToScreenMs: this.screen.length ? { p95: this.screen[this.screen.length - 1].p95, minute: this.screen[this.screen.length - 1].t } : null,
+      timeToScreenHistory: this.screen.map((m) => ({ t: m.t, p95: m.p95 })),
       detections: detectionsPerMin.reduce((acc, m) => ({ rule: acc.rule + m.rule, ai: acc.ai + m.ai }), { rule: 0, ai: 0 }),
       detectionsPerMin,
       expiredToday: this.expired,

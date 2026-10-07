@@ -68,6 +68,15 @@ export function SystemList({ health, now }: { health: PipelineHealth; now: numbe
           tone: over ? "fail" : "ok",
           spark: health.freshnessHistory.map((f) => f.p95),
         },
+    health.timeToScreenMs === null
+      ? { key: "screen", label: "Time to screen p95", value: "PENDING", tone: "muted" }
+      : {
+          key: "screen",
+          label: "Time to screen p95",
+          value: `${(health.timeToScreenMs.p95 / 1000).toFixed(1)}S/${health.slaMs / 1000}S${health.timeToScreenMs.p95 > health.slaMs ? " OVER" : ""}`,
+          tone: health.timeToScreenMs.p95 > health.slaMs ? "fail" : "ok",
+          spark: health.timeToScreenHistory.map((f) => f.p95),
+        },
     modelRow(health.models.find((m) => m.name === "ATDE"), "ATDE detection model"),
     modelRow(health.models.find((m) => m.name === "CRIE"), "CRIE remediation model"),
     retrain,

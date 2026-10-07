@@ -154,3 +154,36 @@ test("the alert toast says what crossed which line", () => {
   const a = { id: 7, kind: "threshold", origin: "api", kpi: "login_failure_rate", level: "crit", state: "firing", value: 0.46, threshold: 0.4, window: "1m", startedAt: "", updatedAt: "", clearedAt: null } as const;
   assert.equal(kpiAlertSentence(a), "Login failures: critical at 46%, over the 40% line.");
 });
+
+// ---------------------------------------------------------------- time to screen (docs/SLA.md)
+import { ScreenTimer, p95 } from "../src/data/backend/screenTime.ts";
+
+test("p95 is the value 95% of samples are at or under", () => {
+  assert.equal(p95([]), null);
+  assert.equal(p95(Array.from({ length: 100 }, (_, i) => i + 1)), 95);
+  assert.equal(p95([7]), 7);
+});
+
+test("time to screen: p95 per finished minute, on the server's clock; a minute over the SLA alerts, the next one within clears", () => {
+  const t0 = Date.UTC(2026, 9, 7, 10, 0, 0);
+  const s = new ScreenTimer(5000);
+  const sent = (ms: number) => new Date(ms).toISOString();
+  // Our clock runs 2 s behind the server: the offset puts it right, so these lags are 1 s, not -1 s.
+  for (let i = 0; i < 20; i++) assert.equal(s.record(sent(t0 + i * 1000), t0 + i * 1000 - 1000, 2000), null);
+  assert.equal(s.tick(t0 + 61_000), null); // minute closed, within the SLA
+  assert.deepEqual(s.minutes(), [{ t: sent(t0), p95: 1000, n: 20 }]);
+  for (let i = 0; i < 20; i++) s.record(sent(t0 + 61_000 + i * 1000), t0 + 61_000 + i * 1000 + 7000, 0); // 7 s late
+  const fired = s.tick(t0 + 121_000);
+  assert.deepEqual([fired?.kind, fired?.origin, fired?.state, fired?.value, fired?.threshold, fired?.id], ["sla", "browser", "firing", 7, 5, null]);
+  for (let i = 0; i < 5; i++) s.record(sent(t0 + 121_000 + i * 1000), t0 + 121_000 + i * 1000 + 500, 0);
+  const cleared = s.tick(t0 + 181_000);
+  assert.deepEqual([cleared?.state, cleared?.startedAt], ["cleared", fired?.startedAt]);
+  assert.equal(s.tick(t0 + 241_000), null); // an empty minute says nothing
+});
+
+test("the SLA alert reads in seconds", () => {
+  assert.equal(
+    kpiAlertSentence({ id: null, kind: "sla", origin: "browser", kpi: "time_to_screen_p95", level: "crit", state: "firing", value: 7, threshold: 5, window: "1m", startedAt: "", updatedAt: "", clearedAt: null }),
+    "Time to screen p95: critical at 7.0 s, over the 5.0 s line.",
+  );
+});

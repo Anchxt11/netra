@@ -5,6 +5,7 @@ import type { ConnectionStatus, DataSource, Decision, ServerMessage } from "../s
 import { ApiError, createApi } from "./api";
 import { Correlator } from "./correlate";
 import { HealthTracker } from "./health";
+import { ScreenTimer } from "./screenTime";
 import { kpiAlertFromApi, kpiHistoryFromApi, kpiSnapshotFromApi, thresholdsFromConfig } from "./kpi";
 import { isRealModel } from "./rules";
 import { TrafficMeter } from "./traffic";
@@ -56,6 +57,11 @@ export function createBackendSource({ apiUrl, wsUrl, getToken }: Options): DataS
 
       const health = new HealthTracker();
       const meter = new TrafficMeter();
+      const screen = new ScreenTimer(); // time to screen, p95 per minute (docs/SLA.md)
+      const screenAlert = (a: ReturnType<ScreenTimer["tick"]>) => {
+        health.setScreenTime(screen.minutes());
+        if (a) onMessage({ type: "kpi_alert", payload: a });
+      };
       const corr = new Correlator({
         upsert: (incident) => onMessage({ type: "incident.upsert", payload: incident }),
         remove: (id, into) => onMessage({ type: "incident.remove", payload: { id, into } }),
@@ -122,6 +128,8 @@ export function createBackendSource({ apiUrl, wsUrl, getToken }: Options): DataS
             break;
           case "events": {
             const batch = (msg.data ?? []).map(normalise);
+            const received = Date.now();
+            for (const ev of batch) screenAlert(screen.record(ev.event_ts, received, offset));
             corr.addEvents(batch, now());
             health.events(batch.length + (msg.dropped ?? 0), now());
             meter.addEvents(batch, msg.dropped ?? 0);
@@ -182,6 +190,7 @@ export function createBackendSource({ apiUrl, wsUrl, getToken }: Options): DataS
       const timers = [
         window.setInterval(() => {
           corr.tick(now());
+          screenAlert(screen.tick(now()));
           onMessage({ type: "health", payload: health.snapshot(now()) });
           onMessage({ type: "traffic", payload: meter.flush(now()) });
         }, 1000),

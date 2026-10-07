@@ -629,6 +629,9 @@ class MockEngine {
       freshnessMs: { p50: Math.round(p95 * 0.45), p95 },
       slaMs: 5000,
       freshnessHistory: history,
+      // Only the real backend source measures time to screen; the simulated feed has no real hops.
+      timeToScreenMs: null,
+      timeToScreenHistory: [],
       detections: this.sumDetections(perMin),
       detectionsPerMin: perMin,
       expiredToday: 0,

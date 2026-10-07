@@ -13,7 +13,10 @@ const KPI_TEXT: Record<KpiName, { label: string; input: string }> = {
 const isRate = (name: string) => name === "login_failure_rate" || name === "http_5xx_rate" || name === "rule_hit_rate";
 const known = (name: string): name is KpiName => name in KPI_TEXT;
 
-export const kpiLabel = (name: string) => (known(name) ? KPI_TEXT[name].label : name);
+// Not a strip KPI: the dashboard's own SLA alert (kind "sla", docs/SLA.md), in seconds.
+const SCREEN = "time_to_screen_p95";
+
+export const kpiLabel = (name: string) => (known(name) ? KPI_TEXT[name].label : name === SCREEN ? "Time to screen p95" : name);
 export const kpiInputUnit = (name: KpiName) => KPI_TEXT[name].input;
 
 /** One decimal under 10, whole numbers above: 0.4, 8.4, 46, 214. */
@@ -34,6 +37,7 @@ export function formatBytes(b: number): string {
 export function formatKpiValue(name: string, v: number): string {
   if (isRate(name)) return `${short(v * 100)}%`;
   if (name === "bytes_out_per_min") return formatBytes(v);
+  if (name === SCREEN) return `${(Math.round(v * 10) / 10).toFixed(1)} s`;
   return short(v);
 }
 
