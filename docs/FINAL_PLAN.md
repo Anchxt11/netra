@@ -41,15 +41,15 @@ One day, about 8 hours, 6 people. Everything goes to `main`; no other branches. 
 | # | goal | owner | done when |
 |---|---|---|---|
 | 1 | Model 1 risk score fixed; model 2 improved | ML duo | Both pass their tests, the contract is unchanged, `docs/ML_EVAL.md` is rerun with the new numbers |
-| 2 | Every known bug fixed | Lead (with Claude) for frontend and API; Anchit for Docker and lab | Each row of "Bugs" below is ticked |
+| 2 | Every known bug fixed | Lead for frontend and API; Anchit for Docker and lab | Each row of "Bugs" below is ticked |
 | 3 | Power BI remote and properly connected | Anchit sets up the access, lead builds the report | The lead opens a report from another city that refreshes by itself from the deployed database |
 | 4 | A better demo: auto attacks plus "judge, attack us" | Anchit (lab), lead (dashboard) | A judge launches an attack from a browser and sees it ranked, explained and fixed in under 30 s |
 | 5 | Proper deployment, not one laptop | Anchit | A public HTTPS link that works from any phone |
-| 6 | Final UI and refinement | Lead (with Claude) | A check at 1440x900, 1280x720 and on a projector |
+| 6 | Final UI and refinement | Lead | A check at 1440x900, 1280x720 and on a projector |
 | 7 (only if time) | Approve a fix and it is applied (Juice Shop only) | Lead + Anchit | See section 7 |
 
 ## Timeline
-| when | lead + Claude | Anchit (+ Claude on his laptop) | ML duo | research duo |
+| when | lead | Anchit | ML duo | research duo |
 |---|---|---|---|---|
 | H0 to H0.5 | Confirm decisions (bottom of this file); repo cleanup | Push last night's demo work to `main`; create the Azure VM | Agree on the risk-score fix (section 1) | Read this file; start R1 and R2 |
 | H0.5 to H3 | Bugs (frontend, API); "Launch attack" panel | Stack on the VM, HTTPS, the domain | Model 1 fix; model 2 work | Demo storyboard; Q&A bank |
@@ -73,13 +73,13 @@ One day, about 8 hours, 6 people. Everything goes to `main`; no other branches. 
 ## 2. Bugs (tick when fixed, add new ones here)
 | # | bug | owner |
 |---|---|---|
-| B1 ✅ | `bi_decisions` is always empty: the R3 decision line ends with "(recommended by …)", which the view's pattern (ops/bi.py) rejects | Claude (lead) |
+| B1 ✅ | `bi_decisions` is always empty: the R3 decision line ends with "(recommended by …)", which the view's pattern (ops/bi.py) rejects | Lead |
 | B2 ✅ | `sla_check` job fails with HTTP 503 right after start-up (the API isn't ready yet): retry, or skip the first minute | Anchit |
 | B3 ✅ | `make replay` and every `--build` fail when Docker Hub resolves over IPv6 (goes away on the VM; for laptops, a note in the README) | Anchit |
-| B4 ✅ | Same attack type from the same address joins the open incident (by design), so a repeated demo attack seems to do nothing: show "+N new alerts" on the row | Claude (lead) |
+| B4 ✅ | Same attack type from the same address joins the open incident (by design), so a repeated demo attack seems to do nothing: show "+N new alerts" on the row | Lead |
 | B5 | The dashboard has never been checked against the real CRIE engine (only the stand-in) | Anchit (on the VM) |
 | B6 | The attacker's "Artificial Risk Score" must never reach the screen or the pitch | everyone |
-| B7 | `bi_kpi_alerts` exported empty: confirm KPI alerts are written to Postgres when a KPI crosses its line | Claude (lead) |
+| B7 | `bi_kpi_alerts` exported empty: confirm KPI alerts are written to Postgres when a KPI crosses its line | Lead |
 | B8 | The "Add model 1 and model 2 files" push added `netra` as a link to a nested copy of the repo (a gitlink, mode 160000) and a folder named `model 2` with a space; remove the gitlink (`git rm --cached netra`) and rename the folder | ML duo |
 | … | add yours | |
 
@@ -90,7 +90,7 @@ The deployed VM fixes "not in the same city": Postgres is on the VM, and Power B
 - **"Judge, attack us" from the dashboard.** A small "Launch attack" panel (signed-in admin only) lists the 7 core attacks plus 2 evasion ones. A click asks the API to run that scenario in the attacker container. The judge watches it appear, rank and get a fix. That's safer than giving judges Juice Shop directly, and it works from their own phone.
 - **Hands-on option:** Juice Shop's login page behind our nginx on its own URL, so a judge can mistype the admin password five times on their phone. Rate-limited, only the needed paths open, and shut down after the event (security review: research duo).
 - **Automatic attacks** on a schedule (`ATTACKER_COMMAND=auto_attack`, slowed to one attack every 1 to 3 minutes) so the dashboard is never empty, paused while a judge attacks.
-- The research duo writes the storyboard; Claude turns it into DEMO_RUNBOOK.md.
+- The research duo writes the storyboard; the lead turns it into DEMO_RUNBOOK.md.
 
 ## 5. Deployment (and the answer to "what breaks at 10x?")
 **Recommendation: one Azure VM running the whole Docker stack.** Why:
@@ -121,7 +121,7 @@ An analyst approves "Block source IPs", and nginx starts refusing that address w
 
 ## End of day: repo hand-in
 - Delete the merged branches once everyone is on `main`. `feat/person-a-clickhouse` (one unmerged commit) is kept as a tag before its branch goes, so nothing is lost.
-- Remove Claude Code's files and mentions (CLAUDE.md files, `.claude/` folders, "Co-Authored-By" commit trailers) as the last step, after the code freeze. Commit trailers live in the history, so removing them means rewriting history and a force-push, and everyone re-clones afterwards. Do it once, last, together.
+- Final tidy-up of the repository after the code freeze.
 
 ## Research duo
 - **R1, the judging criteria:** map each criterion to what we show, and where. Flag any criterion we don't cover by H2.

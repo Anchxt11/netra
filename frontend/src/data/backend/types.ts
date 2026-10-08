@@ -1,5 +1,5 @@
 // What the backend actually sends: api/app on the backend branch (routes, ws.py, consumers.py).
-// Where these disagree with docs/DATA_CONTRACT.md, these win (CLAUDE.md: the backend files win).
+// Where these disagree with docs/DATA_CONTRACT.md, these win (the backend files win).
 
 /** One event after the processor: the raw event plus its features, score and rule hits. */
 export interface EnrichedEvent {
