@@ -122,6 +122,7 @@
   display: flex;
   gap: 10px;
   align-items: baseline;
+  line-height: 1.35;
   min-height: 20px;
   font-size: 13px;
   color: var(--text);
@@ -135,10 +136,13 @@
   flex: none;
 }
 
+/* The full sentence: it is the explanation, so it wraps (up to 3 lines) instead of being cut. */
 .sentence {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .list {

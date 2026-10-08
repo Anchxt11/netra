@@ -13,9 +13,9 @@
 
   /* text */
   --text-hi:   #F3F0EC;   /* bone: titles and big numbers */
-  --text:      #BDB8B2;   /* stone: sentences */
-  --muted:     #8B8680;   /* ash: labels, "PENDING" */
-  --faint:     #6E6A66;   /* trailing digits of big numbers */
+  --text:      #D3CEC8;   /* stone: sentences (lifted for projectors) */
+  --muted:     #ABA59F;   /* ash: labels, "PENDING" (lifted for projectors) */
+  --faint:     #8F8984;   /* trailing digits of big numbers (lifted for projectors) */
 
   /* brand: rust means act. Selection, primary action, ACT NOW. */
   --rust:      #E4572E;
