@@ -5,7 +5,7 @@ LAB      := --profile lab
 VENV     := .venv/bin
 
 .PHONY: help up sim lab replay down restart logs logs-processor logs-generator \
-        build test lint topics lag status clean lab-down lab-logs attack auto-on auto-off \
+        build test lint topics lag status clean lab-down lab-logs attack auto-on auto-off loadtest \
         azure-up azure-ps azure-logs azure-down
 
 help: ## Show this help
@@ -140,6 +140,17 @@ consume-lab: ## Consume live events from events.lab (Ctrl+C to stop)
 
 # ─── Azure VM (docs/DEPLOY.md) ────────────────────────────────────────────────
 AZURE := docker compose -f docker-compose.yaml -f docker-compose.azure.yaml --profile lab
+
+# ─── Load test (docs/SLA.md "Results"): run ON THE VM, with `make auto-off` first ─────────────
+RATE ?= 10
+CLIENTS ?= 1
+DURATION ?= 180
+loadtest: ## On the VM: one SLA row. make loadtest RATE=50 CLIENTS=25 (export LOADTEST_USER and LOADTEST_PASSWORD first)
+	@test -n "$$LOADTEST_USER" && test -n "$$LOADTEST_PASSWORD" || { echo "export LOADTEST_USER and LOADTEST_PASSWORD (the analyst account in .env)"; exit 1; }
+	$(COMPOSE) --profile sim run -d --rm --name netra-load-gen generator python web_traffic_sim.py --bootstrap redpanda:9092 --rate $(RATE) --no-attacks --labels /tmp/labels.jsonl --quiet
+	@echo "Warming up for 20 s at $(RATE) events/s..."; sleep 20
+	-docker run --rm --network host -e LOADTEST_USER -e LOADTEST_PASSWORD -v $(CURDIR)/tools/loadtest:/t python:3.12-slim sh -c "pip install -q websockets && python /t/ws_load.py --api http://localhost:8000 --clients $(CLIENTS) --seconds $(DURATION) --keep-every 5"
+	-docker stop netra-load-gen
 
 azure-up: ## On the VM: build and start the whole stack behind Caddy (HTTPS)
 	$(AZURE) up -d --build
