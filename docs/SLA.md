@@ -43,7 +43,7 @@ The screen path, in order. The budget adds up to 5 s with room left over; a hop 
 ## Results 
 Each step runs 3 minutes. Pass = time to screen p95 at most 5 s.
 
-Measured on the Azure VM (`netra-vm`, 4 vCPU, 16 GB) on 2026-10-08 with `make loadtest`. The generator adds the stated rate on top of the live stack (the lab's benign user, background attacks and the flow replay), so each client receives a little more than the stated rate: 13.1 events/s in the 1× row.
+Measured on the Azure VM (`netra-vm`, 4 vCPU, 16 GB) on 2026-10-08 with `make loadtest`. The generator adds the stated rate on top of the live stack (the lab's benign user, background attacks and the flow replay), so each client receives a little more than the stated rate: 13.1 events/s in the 1× row and 119.6 in the 10× row.
 
 | load | events/s | dashboards | time to screen p50 | p95 | pipeline freshness p95 | WebSocket lag p95 | dropped | pass |
 |---|---|---|---|---|---|---|---|---|
@@ -55,7 +55,7 @@ Measured on the Azure VM (`netra-vm`, 4 vCPU, 16 GB) on 2026-10-08 with `make lo
 | 5× | 50 | 100 | | | | | | |
 | 10× | 100 | 1 | | | | | | |
 | 10× | 100 | 25 | | | | | | |
-| 10× | 100 | 100 | | | | | | |
+| 10× | 100 | 100 | 0.23 s | 0.38 s | 0.59 s | 0.065 s | 0 | yes |
 
 ## Concurrency check (docs/CONCURRENCY_PLAN.md, step 5)
 Real HTTP traffic only: `make lab`, wait for the lab to settle, note the counts below, run `make attack SCENARIO=http_flood`, wait 30 s after it ends, and note them again. The difference at each hop should be the same N, give or take the benign user's background requests, which you can see by taking the counts twice without an attack.
