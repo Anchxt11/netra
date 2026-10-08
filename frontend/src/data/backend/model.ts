@@ -56,13 +56,17 @@ export interface ModelView {
   reasons?: ModelReason[] | null;
 }
 
-/** "AI engine: unusual for this address, score 0.81. Most unusual: 42 connections in 60 s, 9 ports tried in 60 s" */
+/**
+ * "AI engine: more unusual than 81% of normal traffic from this source. Most unusual: 42 connections in 60 s".
+ * The score is model 1's calibrated risk: the share of normal validation traffic (same log source) it exceeds
+ * (ml/model1/model_card.md). Not a probability of attack, so it is never worded as one.
+ */
 export function aiSentence(v: ModelView, hits: number): string {
   const named = namedClass(v.cls);
-  const what = named
-    ? `looks like ${named}${v.probability != null ? ` (probability ${v.probability.toFixed(2)})` : ""}`
-    : "unusual for this address";
-  const score = v.score != null ? `, score ${v.score.toFixed(2)}` : "";
+  const pct = v.score != null ? Math.min(99, Math.round(v.score * 100)) : null;
+  const rarer = pct != null ? `more unusual than ${pct}% of normal traffic from this source` : "unusual for this source";
+  const what = named ? `looks like ${named}${v.probability != null ? ` (probability ${v.probability.toFixed(2)})` : ""}` : rarer;
+  const score = named && pct != null ? `, ${rarer}` : "";
   const reasons = (v.reasons ?? []).slice(0, 3).map(reasonText).filter(Boolean);
   const why = reasons.length ? `. Most unusual: ${reasons.join(", ")}` : "";
   return `AI engine: ${what}${score}${why}${hits > 1 ? ` (${hits} times)` : ""}`;

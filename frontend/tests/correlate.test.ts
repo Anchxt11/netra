@@ -139,7 +139,7 @@ test("the placeholder scorer is never shown as AI; a real model is", () => {
   inc = [...live.values()][0];
   assert.equal(inc.detectedBy, "both");
   assert.equal(inc.signals[1].ruleId, "ATDE");
-  assert.equal(inc.signals[1].sentence, "AI engine: unusual for this address, score 0.81");
+  assert.equal(inc.signals[1].sentence, "AI engine: more unusual than 81% of normal traffic from this source");
   assert.equal(inc.severity, 5);
 });
 
@@ -177,7 +177,7 @@ test("a model alert on an event a rule flagged gives that incident the model's s
   assert.deepEqual(inc.signals.map((s) => s.ruleId), ["SCAN", "ATDE"]);
   assert.equal(
     inc.signals[1].sentence,
-    "AI engine: unusual for this address, score 0.81. Most unusual: 9 ports tried in 60 s, 42 connections in 60 s, 40.5 bytes per packet",
+    "AI engine: more unusual than 81% of normal traffic from this source. Most unusual: 9 ports tried in 60 s, 42 connections in 60 s, 40.5 bytes per packet",
   );
 });
 
@@ -199,7 +199,7 @@ test("a model alert that names a known attack opens that attack; other classes o
   const brute = [...live.values()][0];
   assert.equal(brute.attackType, "brute_force");
   assert.equal(brute.name, "Brute force");
-  assert.equal(brute.signals[0].sentence, "AI engine: looks like Credential Attack / Brute Force (probability 0.93), score 0.74");
+  assert.equal(brute.signals[0].sentence, "AI engine: looks like Credential Attack / Brute Force (probability 0.93), more unusual than 74% of normal traffic from this source");
 
   c.addAlert(modelAlert({ class: "DoS / Flooding", probability: 0.95, ip: "10.0.4.99", reasons: [] }), T0);
   assert.equal(live.size, 1);
