@@ -280,7 +280,7 @@ def test_ssrf_rule_ignores_normal_paths():
 def test_regex_rules_ignore_case_and_url_encoding():
     """Path patterns match on the decoded, case-folded path (B9): encoded or lowercase keywords still match."""
     from processor.rule_engine import match
-    pattern = "(UNION|SELECT|169\.254\.169\.254)"
+    pattern = r"(UNION|SELECT|169\.254\.169\.254)"
     assert match('/search?q=1 union select 1', pattern, 'regex')
     assert match('/search?q=1%20UNION%20SELECT%201', pattern, 'regex')
     assert match('/search?q=1%2520UNION%2520SELECT', pattern, 'regex')  # double-encoded
