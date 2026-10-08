@@ -4,7 +4,7 @@ Opens CLIENTS WebSocket connections to the API, exactly as the dashboard does, f
 measures for every event each client receives:
   time to screen = receive time - event_ts        (the SLA: p95 at most 5 s)
   WebSocket lag  = receive time - server_ts       (the API's push to arrival)
-plus the `dropped` counts the API reports when it skips events to protect a slow client, and
+plus the `dropped` count the API reports when it caps a push (per client, the most any client saw), and
 pipeline freshness from GET /freshness at the end.
 
 Run it ON THE VM, so the receive clock is the clock that stamped event_ts (docs/SLA.md, "Clock offset").
@@ -52,7 +52,7 @@ class Stats:
         self.screen: list[float] = []
         self.lag: list[float] = []
         self.events = 0
-        self.dropped = 0
+        self.dropped: list[int] = []  # per client: every client gets the same batches, so don't add them up
         self.errors = 0
         self.connected = 0
 
@@ -61,7 +61,7 @@ async def client(ws_url: str, until: float, stats: Stats, keep_every: int):
     try:
         async with websockets.connect(ws_url, max_size=None, open_timeout=15) as ws:
             stats.connected += 1
-            n = 0
+            n = dropped = 0
             while time.time() < until:
                 try:
                     raw = await asyncio.wait_for(ws.recv(), timeout=max(0.1, until - time.time()))
@@ -71,7 +71,7 @@ async def client(ws_url: str, until: float, stats: Stats, keep_every: int):
                 msg = json.loads(raw)
                 if msg.get("type") != "events":
                     continue
-                stats.dropped += int(msg.get("dropped") or 0)
+                dropped += int(msg.get("dropped") or 0)
                 server = iso_to_epoch(msg.get("server_ts", ""))
                 if server is not None:
                     stats.lag.append(now - server)
@@ -83,6 +83,7 @@ async def client(ws_url: str, until: float, stats: Stats, keep_every: int):
                     t = iso_to_epoch(str(ev.get("event_ts", "")))
                     if t is not None:
                         stats.screen.append(now - t)
+        stats.dropped.append(dropped)
     except Exception as e:  # a refused or dropped connection counts, it is part of the result
         stats.errors += 1
         if stats.errors <= 3:
@@ -107,7 +108,7 @@ async def main():
     start = time.time()
     until = start + a.seconds
     await asyncio.gather(*(client(ws_url, until, stats, a.keep_every) for _ in range(a.clients)))
-    elapsed = max(1.0, time.time() - start)
+    elapsed = max(1.0, min(time.time(), until) - start)  # not the close handshakes after the window
 
     try:
         fresh = http_json(f"{a.api}/freshness")
@@ -123,7 +124,7 @@ async def main():
         "time_to_screen_p95_s": pct(stats.screen, 0.95),
         "websocket_lag_p95_s": pct(stats.lag, 0.95),
         "pipeline_freshness_p95_s": fresh.get("p95_seconds"),
-        "dropped": stats.dropped,
+        "dropped": max(stats.dropped, default=0),
         "pass": (pct(stats.screen, 0.95) or 99) <= 5.0 and stats.errors == 0,
         "median_screen_s": round(statistics.median(stats.screen), 3) if stats.screen else None,
     }))

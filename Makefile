@@ -124,10 +124,10 @@ attack: ## Run an attack scenario: make attack SCENARIO=brute_force (or evasion_
 	docker compose exec attacker attack-runner $(SCENARIO)
 
 auto-on: ## Background attacks ON (attacker2, 172.30.0.11, one every 1 to 3 min; AUTO_MIN_S, AUTO_MAX_S, AUTO_EXCLUDE)
-	$(COMPOSE) $(LAB) up -d attacker2
+	$(STACK) up -d --no-deps attacker2
 
 auto-off: ## Background attacks OFF, e.g. before a judge runs their own attack
-	$(COMPOSE) $(LAB) stop -t 1 attacker2
+	$(STACK) stop -t 1 attacker2
 
 attack-full: ## Run all core attack scenarios in sequence
 	docker compose exec attacker attack-runner full
@@ -140,6 +140,9 @@ consume-lab: ## Consume live events from events.lab (Ctrl+C to stop)
 
 # ─── Azure VM (docs/DEPLOY.md) ────────────────────────────────────────────────
 AZURE := docker compose -f docker-compose.yaml -f docker-compose.azure.yaml --profile lab
+# The Azure files when the VM's Caddy container is up, so a lab target there doesn't recreate
+# services without the VM's overrides (restart policy, localhost-only ports).
+STACK = $(if $(shell docker ps -q -f label=com.docker.compose.project=$(notdir $(CURDIR)) -f label=com.docker.compose.service=web 2>/dev/null),$(AZURE),$(COMPOSE) $(LAB))
 
 # ─── Load test (docs/SLA.md "Results"): run ON THE VM, with `make auto-off` first ─────────────
 RATE ?= 10
@@ -147,7 +150,7 @@ CLIENTS ?= 1
 DURATION ?= 180
 loadtest: ## On the VM: one SLA row. make loadtest RATE=50 CLIENTS=25 (export LOADTEST_USER and LOADTEST_PASSWORD first)
 	@test -n "$$LOADTEST_USER" && test -n "$$LOADTEST_PASSWORD" || { echo "export LOADTEST_USER and LOADTEST_PASSWORD (the analyst account in .env)"; exit 1; }
-	$(COMPOSE) --profile sim run -d --rm --name netra-load-gen generator python web_traffic_sim.py --bootstrap redpanda:9092 --rate $(RATE) --no-attacks --labels /tmp/labels.jsonl --quiet
+	$(AZURE) --profile sim run -d --rm --no-deps --name netra-load-gen generator python web_traffic_sim.py --bootstrap redpanda:9092 --rate $(RATE) --no-attacks --labels /tmp/labels.jsonl --quiet
 	@echo "Warming up for 20 s at $(RATE) events/s..."; sleep 20
 	-docker run --rm --network host -e LOADTEST_USER -e LOADTEST_PASSWORD -v $(CURDIR)/tools/loadtest:/t python:3.12-slim sh -c "pip install -q websockets && python /t/ws_load.py --api http://localhost:8000 --clients $(CLIENTS) --seconds $(DURATION) --keep-every 5"
 	-docker stop netra-load-gen
