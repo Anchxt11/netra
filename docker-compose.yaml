@@ -259,7 +259,7 @@ services:
     image: nginx:stable
     profiles: ["lab"]
     depends_on: [juice-shop]
-    ports: ["127.0.0.1:8888:80"]
+    ports: ["8888:80"]
     # Writes the lab's 60 MB bulk export (lab/nginx.conf) before starting nginx.
     command: ["sh", "-c", "mkdir -p /srv/rest/export && head -c 62914560 /dev/urandom > /srv/rest/export/customers.csv && exec nginx -g 'daemon off;'"]
     volumes:
