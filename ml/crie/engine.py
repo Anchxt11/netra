@@ -89,13 +89,45 @@ def recommend(incident: dict) -> dict:
     e = _engine()
     ctx = incident.get("context") or {}
     model = incident.get("model")
-    severity = SEVERITY.get(int(incident.get("severity") or 3), "medium")
+
+    # Safety fix 1: Benign suppression
+    if model and e.DEFAULT_CRIE_CONFIG.get("benign_suppression", True):
+        is_attack = model.get("is_attack")
+        is_anomaly = model.get("is_anomaly")
+        if (
+            is_attack is False
+            or (is_attack is None and is_anomaly is False)
+            or str(model.get("attack_family", "")).lower() == "benign"
+        ):
+            return {
+                "version": version(),
+                "fallback": {"technique": None, "mitigations": []},
+                "human_approval_required": True,
+            }
+
+    # Safety fix 2: Unknown -> manual
+    if e.DEFAULT_CRIE_CONFIG.get("unknown_to_manual", True):
+        m = model or {}
+        if m.get("is_unknown") and not incident.get("mitre_technique"):
+            return {
+                "version": version(),
+                "fallback": {"technique": None, "mitigations": []},
+                "human_approval_required": True,
+            }
+
+    # Safety fix 3: Severity mapper
+    sev_name, num_sev = e.normalize_severity(incident.get("severity") or 3)
     technique = _technique(incident, e)
     if technique is None:
-        return {"version": version(), "fallback": {"technique": None, "mitigations": []}}
+        return {
+            "version": version(),
+            "fallback": {"technique": None, "mitigations": []},
+            "human_approval_required": True,
+        }
+
     result = e.final_crie_inference(
         technique_id=technique,
-        severity=severity,
+        severity=num_sev,
         confidence=float(model["confidence"]) if model and model.get("confidence") is not None else 1.0,
         alert_context={
             "src_ip": _first(ctx.get("src_ips")),
@@ -107,26 +139,44 @@ def recommend(incident: dict) -> dict:
         top_k=3,
     )
     recs = result.get("recommendations") or []
-    if result.get("fallback_used") or not recs:
-        return {"version": version(), "fallback": {
-            "technique": re.sub(r"\..*$", "", technique),
-            # CRIE's files have no technique -> MITRE mitigation table (build_knowledge.py builds it from the
-            # ATT&CK bundle, which was not handed over), so it names the technique and the dashboard lists
-            # MITRE's mitigations for it from its own table.
-            "mitigations": [],
-        }}
+    if result.get("fallback_used") or not recs or len(recs) < 3:
+        return {
+            "version": version(),
+            "fallback": {
+                "technique": re.sub(r"\..*$", "", technique),
+                # CRIE's files have no technique -> MITRE mitigation table (build_knowledge.py builds it from the
+                # ATT&CK bundle, which was not handed over), so it names the technique and the dashboard lists
+                # MITRE's mitigations for it from its own table.
+                "mitigations": [],
+            },
+            "human_approval_required": True,
+        }
     w_ev, w_ml = float(e.CRIE_EVIDENCE_WEIGHT), float(e.CRIE_ML_WEIGHT)
     d3 = _d3fend()
-    fixes = [{
-        "action_id": r["action_id"],
-        "name": r["label"],
-        "d3fend": d3.get(r["action_id"], {"id": None, "name": None}),
-        "confidence": r["score"],  # CRIE's hybrid score: 0.75 x knowledge-base evidence + 0.25 x ML probability
-        "rank": r["rank"],
-        "reasons": [
+    fixes = []
+    for r in recs:
+        reasons = [
             {"feature": "knowledge_base_evidence", "value": r["evidence_score"], "contribution": round(w_ev * r["evidence_score"], 4)},
             {"feature": "ml_probability", "value": r["ml_probability"], "contribution": round(w_ml * r["ml_probability"], 4)},
-        ],
-        "provenance": r["provenance"],
-    } for r in recs]
-    return {"version": version(), "fixes": fixes}
+        ]
+        if r.get("containment_status_reason"):
+            reasons.append({
+                "feature": "containment_status",
+                "value": r["containment_status_reason"],
+                "contribution": 0.0,
+            })
+        fixes.append({
+            "action_id": r["action_id"],
+            "name": r["label"],
+            "d3fend": d3.get(r["action_id"], {"id": None, "name": None}),
+            "confidence": r["score"],  # CRIE's hybrid score: 0.75 x knowledge-base evidence + 0.25 x ML probability
+            "rank": r["rank"],
+            "reasons": reasons,
+            "provenance": r["provenance"],
+            "human_approval_required": True,
+        })
+    return {
+        "version": version(),
+        "fixes": fixes,
+        "human_approval_required": True,
+    }

@@ -43,6 +43,60 @@ CRIE_ML_WEIGHT = _artifact["CRIE_ML_WEIGHT"]
 
 
 # ============================================================
+# CRIE SAFETY DEFAULTS & CONFIGURATION
+# ============================================================
+
+DEFAULT_CRIE_CONFIG = {
+    "severity_mapper": True,
+    "benign_suppression": True,
+    "unknown_to_manual": True,
+    "human_approval_required": True,
+    "insufficient_evidence_threshold": 0.10,  # X: top evidence score below X triggers fallback
+    "min_required_fixes": 3,
+    "require_critical_containment": True,  # Severity 5 requires at least 1 containment action
+}
+
+CONTAINMENT_PHASES = {"containment"}
+CONTAINMENT_KEYWORDS = ("block", "isolate", "lock", "disable")
+
+
+def is_containment_action(action_id: str, action_to_phase_map: dict | None = None) -> bool:
+    """Determine whether an action is a containment action (block, isolate, lock, or disable)."""
+    if action_to_phase_map is None:
+        action_to_phase_map = action_to_phase
+    if action_to_phase_map.get(action_id) in CONTAINMENT_PHASES:
+        return True
+    return any(kw in action_id for kw in CONTAINMENT_KEYWORDS)
+
+
+def normalize_severity(severity_input) -> tuple[str, int]:
+    """Map any input severity representation to canonical (name, int_rank 1..5)."""
+    if severity_input is None:
+        return ("medium", 3)
+    if isinstance(severity_input, (int, float)):
+        val = int(severity_input)
+        val = max(1, min(5, val))
+        name_map = {1: "info", 2: "low", 3: "medium", 4: "high", 5: "critical"}
+        return (name_map[val], val)
+    s = str(severity_input).strip().lower()
+    if s.isdigit():
+        val = max(1, min(5, int(s)))
+        name_map = {1: "info", 2: "low", 3: "medium", 4: "high", 5: "critical"}
+        return (name_map[val], val)
+    word_map = {
+        "info": ("info", 1),
+        "informational": ("info", 1),
+        "low": ("low", 2),
+        "medium": ("medium", 3),
+        "warning": ("medium", 3),
+        "high": ("high", 4),
+        "alert": ("high", 4),
+        "critical": ("critical", 5),
+    }
+    return word_map.get(s, ("medium", 3))
+
+
+# ============================================================
 # MODEL 1 FAMILY NORMALIZATION
 # ============================================================
 
@@ -229,13 +283,20 @@ def final_crie_inference(
     severity="medium",
     confidence=1.0,
     alert_context=None,
-    top_k=3
+    top_k=3,
+    config=None
 ):
     """
     Standalone CRIE inference entry point.
 
     Returns ranked remediation recommendations.
     """
+    cfg = dict(DEFAULT_CRIE_CONFIG)
+    if config:
+        cfg.update(config)
+
+    canonical_sev_name, numeric_sev = normalize_severity(severity)
+    severity = canonical_sev_name
 
     if technique_id not in technique_to_index:
         return {
@@ -244,7 +305,8 @@ def final_crie_inference(
             "confidence": confidence,
             "fallback_used": True,
             "fallback_level": "unknown_technique",
-            "recommendations": []
+            "recommendations": [],
+            "human_approval_required": True,
         }
 
     idx = technique_to_index[technique_id]
@@ -361,7 +423,7 @@ def final_crie_inference(
 
         current_rank = severity_rank.get(
             severity,
-            severity_rank.get("medium", 1)
+            severity_rank.get("medium", 2)
         )
 
         minimum_rank = severity_rank.get(
@@ -414,10 +476,57 @@ def final_crie_inference(
             "severity_allowed": severity_allowed
         })
 
+    # --------------------------------------------------------
+    # Insufficient evidence check (Step 1)
+    # --------------------------------------------------------
+
+    ev_threshold = float(cfg.get("insufficient_evidence_threshold", 0.10))
+    min_fixes = int(cfg.get("min_required_fixes", top_k))
+    max_ev = max((item["evidence_score"] for item in results), default=0.0)
+
+    if len(results) < min_fixes or max_ev < ev_threshold:
+        return {
+            "technique_id": technique_id,
+            "severity": severity,
+            "confidence": confidence,
+            "fallback_used": True,
+            "fallback_level": "insufficient_evidence",
+            "fallback_reason": (
+                f"Top evidence score {max_ev:.4f} is below threshold {ev_threshold}"
+                if max_ev < ev_threshold
+                else f"Fewer than {min_fixes} feasible actions ({len(results)} available)"
+            ),
+            "recommendations": [],
+            "human_approval_required": True,
+        }
+
     results.sort(
         key=lambda x: x["score"],
         reverse=True
     )
+
+    # --------------------------------------------------------
+    # Containment for critical incidents (Step 2)
+    # --------------------------------------------------------
+
+    containment_status_reason = None
+    if (numeric_sev == 5 or severity == "critical") and cfg.get("require_critical_containment", True):
+        initial_top = results[:top_k]
+        has_containment = any(
+            is_containment_action(item["action_id"])
+            for item in initial_top
+        )
+        if not has_containment:
+            remaining = results[top_k:]
+            containment_candidates = [
+                item for item in remaining
+                if is_containment_action(item["action_id"])
+            ]
+            if containment_candidates:
+                # Promote highest-scoring feasible containment candidate to replace the last slot in top_k
+                results = results[:top_k - 1] + [containment_candidates[0]]
+            else:
+                containment_status_reason = "No containment action feasible for this technique"
 
     results = results[:top_k]
 
@@ -469,7 +578,7 @@ def final_crie_inference(
                 "despite limited explicit evidence."
             )
 
-        recommendations.append({
+        rec = {
             "rank": rank,
             "action_id": item["action_id"],
             "label": item["label"],
@@ -488,7 +597,10 @@ def final_crie_inference(
             "human_approval_required": True,
             "source": "hybrid_ml_evidence",
             "rationale": rationale
-        })
+        }
+        if containment_status_reason:
+            rec["containment_status_reason"] = containment_status_reason
+        recommendations.append(rec)
 
     return {
         "technique_id": technique_id,
@@ -496,7 +608,8 @@ def final_crie_inference(
         "confidence": confidence,
         "fallback_used": False,
         "fallback_level": None,
-        "recommendations": recommendations
+        "recommendations": recommendations,
+        "human_approval_required": True,
     }
 
 

@@ -6,6 +6,7 @@ argon2-cffi>=23.1
 aiokafka>=0.11
 clickhouse-connect[async]>=0.8
 pydantic-settings>=2.4
+httpx==0.28.1
 # CRIE (model 2, ml/crie/engine.py): the versions its crie_model.joblib loads with on Python 3.12
 # (the ML team's root requirements.txt). pyarrow and dill are needed to unpickle it.
 joblib==1.6.0

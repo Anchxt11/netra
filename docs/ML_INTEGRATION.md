@@ -90,3 +90,48 @@ Their `Detector.score_event` in `src/score.py` no longer scores rule-flagged eve
 - `labels_test.jsonl`: `event_id`, `label_binary` (3,824 malicious, 53,934 suspicious) and `incident_ids`.
 
 `make replay` streams the flows onto `flows.raw` with `source: "replay"`. ml-scorer forwards that field to its alerts and to `ml_scores`, which got a `source` column so replay rows are not refused. The evaluation numbers are in `docs/ML_EVAL.md`.
+
+---
+
+# Model 2 (CRIE) Remediation Engine
+
+## What CRIE does and doesn't do
+
+### 1. Hybrid Ranking Architecture and Real Weights
+- CRIE scores remediation actions through a hybrid ranker combining structured knowledge-base evidence and ML predictions.
+- **Real hybrid weights:** `0.75 evidence + 0.25 ML`
+  $$\text{score} = 0.75 \times \text{knowledge\_base\_evidence} + 0.25 \times \text{ml\_probability}$$
+- Knowledge-base evidence is derived from fused mappings across MITRE ATT&CK mitigations, Elastic Detection Rules, and MITRE D3FEND defensive techniques.
+- The ML model is a MultiOutputClassifier baseline using TF-IDF over technique descriptions and OneHotEncoded tactics.
+
+### 2. Baseline Performance on Unseen Techniques
+- The ML ranker **does not beat a popularity baseline on unseen techniques**.
+- On techniques not seen during training, ML probability outputs correlate with general action frequency rather than technique-specific suitability. Therefore, grounding in explicit knowledge-base evidence is primary (weighted at 0.75).
+
+### 3. What the Fallback Does Now (Insufficient Evidence Rule)
+- When CRIE cannot recommend with sufficient evidence, it returns the existing fallback contract (`{"version": "...", "fallback": {"technique": "...", "mitigations": []}, "human_approval_required": true}`) rather than outputting 3 weak, ungrounded fixes.
+- **Exact Insufficient Evidence Rule:**
+  An incident triggers the fallback outcome if:
+  1. The technique is unknown to CRIE (`technique_id not in technique_to_index`), OR
+  2. Fewer than 3 actions pass alert context feasibility and severity gating, OR
+  3. The highest knowledge-base evidence score among feasible candidates is below $X = 0.10$ (`top evidence score below 0.10`).
+- The dashboard already displays MITRE's standard mitigations for a fallback, so the incident keeps standard authoritative mitigations for analyst review without inventing weak recommendations.
+
+### 4. Containment for Critical Incidents (Severity 5)
+- For severity 5 (critical) incidents, CRIE guarantees that the top 3 recommendations include at least one containment action (`block`, `isolate`, `lock`, or `disable`), unless none is feasible for that technique and context.
+- If a containment action is available among feasible candidates, the highest-scoring containment action is promoted into the top 3.
+- If no containment action is feasible for that technique/context, CRIE explicitly states this in a reason (`containment_status: "No containment action feasible for this technique"` with `contribution: 0.0`).
+
+### 5. Explanations and SHAP
+- **SHAP is not in the deployed path.**
+- Feature contributions returned in reasons are the exact linear components of the hybrid score:
+  - `knowledge_base_evidence` contribution: $0.75 \times \text{value}$
+  - `ml_probability` contribution: $0.25 \times \text{value}$
+- SHAP tree explainers are not evaluated or executed in the live CRIE inference path.
+
+### 6. Human Review and Evaluation Status
+- **No human-labelled evaluation yet; the planned next step is two independent reviewers labelling a gold set.**
+- CRIE accuracy numbers are not claimed because independent human evaluation has not yet been performed.
+- **Human approval required:** CRIE only recommends; it never carries out an action. Every response explicitly carries `human_approval_required: true`.
+- **Safety fixes enabled by default:** Severity mapper (normalizing 1..5, string numbers, and severity names), benign suppression (suppressing automated remediation when Model 1 classifies an event as benign), unknown $\rightarrow$ manual review fallback, and human approval required in the response.
+
