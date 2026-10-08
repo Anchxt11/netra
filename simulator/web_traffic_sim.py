@@ -395,6 +395,7 @@ def main():
     ap.add_argument("--speedup", type=float, default=1, help="simulated seconds per real second (default 1)")
     ap.add_argument("--fast", action="store_true", help="don't sleep; generate as fast as possible")
     ap.add_argument("--start-hour", type=float, default=None, help="UTC hour to start the sim clock at (default: now)")
+    ap.add_argument("--flat", action="store_true", help="no time-of-day curve: --rate all day (load tests)")
     ap.add_argument("--attack-every", type=float, default=90, help="mean real seconds between attacks (default 90)")
     ap.add_argument("--warmup", type=float, default=120, help="real seconds of clean traffic before attacks start")
     ap.add_argument("--scenario", choices=list(ATTACKS) + ["random"], default="random")
@@ -430,7 +431,7 @@ def main():
 
     def session_gap(t):
         mult = st["flash_mult"] if t < st["flash_until"] else 1.0
-        lam = args.rate * diurnal(hour_of(t)) * mult / (EPS_PER_SESSION * sp)
+        lam = args.rate * (1.0 if args.flat else diurnal(hour_of(t))) * mult / (EPS_PER_SESSION * sp)
         return random.expovariate(max(lam, 1e-9))
 
     def spawn_session(t):

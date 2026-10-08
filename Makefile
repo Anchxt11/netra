@@ -150,7 +150,7 @@ CLIENTS ?= 1
 DURATION ?= 180
 loadtest: ## On the VM: one SLA row. make loadtest RATE=50 CLIENTS=25 (export LOADTEST_USER and LOADTEST_PASSWORD first)
 	@test -n "$$LOADTEST_USER" && test -n "$$LOADTEST_PASSWORD" || { echo "export LOADTEST_USER and LOADTEST_PASSWORD (the analyst account in .env)"; exit 1; }
-	$(AZURE) --profile sim run -d --rm --no-deps --name netra-load-gen generator python web_traffic_sim.py --bootstrap redpanda:9092 --rate $(RATE) --no-attacks --labels /tmp/labels.jsonl --quiet
+	$(AZURE) --profile sim run -d --rm --no-deps --build --name netra-load-gen generator python web_traffic_sim.py --bootstrap redpanda:9092 --rate $(RATE) --flat --no-attacks --labels /tmp/labels.jsonl --quiet
 	@echo "Warming up for 20 s at $(RATE) events/s..."; sleep 20
 	-docker run --rm --network host -e LOADTEST_USER -e LOADTEST_PASSWORD -v $(CURDIR)/tools/loadtest:/t python:3.12-slim sh -c "pip install -q websockets && python /t/ws_load.py --api http://localhost:8000 --clients $(CLIENTS) --seconds $(DURATION) --keep-every 5"
 	-docker stop netra-load-gen
