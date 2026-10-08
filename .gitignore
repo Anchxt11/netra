@@ -58,3 +58,6 @@ elastic/
 
 # Power BI CSV snapshots (made by export_csvs.sh): local only
 powerbi_exports/
+
+# nested copy of the repo (was a gitlink)
+netra/
