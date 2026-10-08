@@ -275,3 +275,14 @@ def test_ssrf_rule_ignores_normal_paths():
     x = {'event_type': 'http_request', 'ip': '10.0.0.96', 'user': '-', 'status': 'success',
          'path': '/api/Products?q=apple', 'http_status': 200}
     assert not any(h.rule_id == 'ssrf_metadata_probe' for h in e.evaluate(x, now=0))
+
+
+def test_regex_rules_ignore_case_and_url_encoding():
+    """Path patterns match on the decoded, case-folded path (B9): encoded or lowercase keywords still match."""
+    from processor.rule_engine import match
+    pattern = "(UNION|SELECT|169\.254\.169\.254)"
+    assert match('/search?q=1 union select 1', pattern, 'regex')
+    assert match('/search?q=1%20UNION%20SELECT%201', pattern, 'regex')
+    assert match('/search?q=1%2520UNION%2520SELECT', pattern, 'regex')  # double-encoded
+    assert match('/profile?url=http%3A%2F%2F169.254.169.254%2F', pattern, 'regex')
+    assert not match('/api/Products?q=apple', pattern, 'regex')

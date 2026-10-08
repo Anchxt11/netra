@@ -1,4 +1,5 @@
 import re, time
+from urllib.parse import unquote_plus
 from collections import defaultdict, deque
 from dataclasses import dataclass
 from pathlib import Path
@@ -24,6 +25,17 @@ def value_at(event, field):
 def split_modifier(key):
     return key.split('|',1) if '|' in key else (key,'equals')
 
+def _decoded_forms(value):
+    """The value as logged, then URL-decoded up to twice (catches %-encoding and double encoding).
+    Canonicalise before matching, like a web application firewall: an encoded keyword is still the keyword."""
+    forms = [str(value or '')]
+    for _ in range(2):
+        nxt = unquote_plus(forms[-1])
+        if nxt == forms[-1]:
+            break
+        forms.append(nxt)
+    return forms
+
 def match(value, expected, modifier):
     if modifier=='equals': return value==expected
     if modifier=='contains': return str(expected).lower() in str(value or '').lower()
@@ -34,7 +46,8 @@ def match(value, expected, modifier):
     if modifier=='lt': return value is not None and float(value)<float(expected)
     if modifier=='lte': return value is not None and float(value)<=float(expected)
     if modifier=='in': return value in expected
-    if modifier=='regex': return re.search(str(expected),str(value or '')) is not None
+    if modifier=='regex':  # case-insensitive, like contains/startswith/endswith, and on the decoded value too
+        return any(re.search(str(expected), v, re.IGNORECASE) for v in _decoded_forms(value))
     raise ValueError(f'Unsupported modifier: {modifier}')
 
 def _check_criteria(event, detection):

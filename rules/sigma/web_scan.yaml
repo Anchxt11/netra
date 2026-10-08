@@ -3,7 +3,7 @@ title: Web vulnerability scanning detected
 severity: high
 detection:
   event_type: http_request
-  path|regex: "(\\.env|\\.git|wp-login|phpmyadmin|xmlrpc|actuator|UNION|SELECT|DROP|SLEEP|etc/passwd|\\.\\.)"
+  path|regex: "(\\.env|\\.git|wp-login|phpmyadmin|xmlrpc|actuator|\\bunion\\b|\\bselect\\b|\\bdrop\\b|\\bsleep\\b|etc/passwd|\\.\\.)"
 condition: all
 timeframe: 60
 count: 10
