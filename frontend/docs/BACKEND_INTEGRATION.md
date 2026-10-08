@@ -43,6 +43,7 @@ Set `VITE_DATA_SOURCE=ws` (or use the `:live` scripts below). Code: `src/data/ba
 | `malicious_process` | PROC | admin abuse | 30 | account |
 | `data_exfiltration` | EXF | data exfiltration (admin abuse if that admin is already open) | 30 | account |
 | `web_scan` | SCAN | web scan | 20 | address |
+| `ssrf_metadata_probe` | SSRF | server-side request forgery (MITRE T1552.005) | 30 | address |
 | `excessive_requests` | RATE | HTTP flood | 15 | site |
 | `http_flood` | FLOOD | HTTP flood | 25 | site |
 | `suspicious_ip` | IOC | adds to that address's incident | 15 | address |

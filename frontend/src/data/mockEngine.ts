@@ -571,6 +571,7 @@ class MockEngine {
       case "account_takeover":
         return { users: [c.user], ips: [c.ip], hosts: ["auth-01", "web-01"] };
       case "web_scan":
+      case "ssrf": // never simulated (ATTACK_TYPES leaves it out)
         return { users: [], ips: [c.ip], hosts: [c.host] };
       case "data_exfiltration":
         return { users: [c.user], ips: [c.ip], hosts: ["db-01", "web-01"] };

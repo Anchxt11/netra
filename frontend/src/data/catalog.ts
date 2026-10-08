@@ -203,6 +203,22 @@ export const SCENARIOS: Record<AttackType, ScenarioDef> = {
       { id: "M1016", name: "Vulnerability Scanning" },
     ],
   },
+  // Live backend only (rule ssrf_metadata_probe): the simulated feed never plays it.
+  // MITRE: Cloud Instance Metadata API (T1552.005); mitigations from its ATT&CK page (security lead to double-check).
+  ssrf: {
+    name: "Server-side request forgery",
+    mitre: { id: "T1552.005", name: "Cloud Instance Metadata API", tactic: "Credential Access" },
+    severity: 5,
+    windowMin: 10,
+    path: [],
+    aiPattern: "request",
+    fixes: [],
+    reasons: () => [],
+    mitigations: [
+      { id: "M1042", name: "Disable or Remove Feature or Program" },
+      { id: "M1035", name: "Limit Access to Resource Over Network" },
+    ],
+  },
   data_exfiltration: {
     name: "Data exfiltration",
     mitre: { id: "T1567", name: "Exfiltration Over Web Service", tactic: "Exfiltration" },
@@ -269,8 +285,8 @@ export const SCENARIOS: Record<AttackType, ScenarioDef> = {
   },
 };
 
-/** The attacks the simulated feed plays. "Unusual activity" only comes from a real model on the live backend. */
-export const ATTACK_TYPES = (Object.keys(SCENARIOS) as AttackType[]).filter((t) => t !== "unusual_activity");
+/** The attacks the simulated feed plays. "Unusual activity" (a real model) and SSRF (a lab rule) only come from the live backend. */
+export const ATTACK_TYPES = (Object.keys(SCENARIOS) as AttackType[]).filter((t) => t !== "unusual_activity" && t !== "ssrf");
 
 export const BENIGN = {
   flash_crowd: {

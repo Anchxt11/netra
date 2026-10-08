@@ -27,6 +27,7 @@ ATTACKS = [
     {"name": "sqli",                     "severity": "high",     "weight": 5,  "risk_range": (0.75, 0.85)},
     {"name": "data_exfiltration",        "severity": "high",     "weight": 3,  "risk_range": (0.80, 0.90)},
     {"name": "account_takeover",         "severity": "critical", "weight": 2,  "risk_range": (0.85, 0.90)},
+    {"name": "ssrf",                     "severity": "critical", "weight": 5,  "risk_range": (0.85, 0.90)},
     
     # --- Evasion Scenarios (ML Test Set) ---
     {"name": "evasion_account_enum",     "severity": "evasion",  "weight": 5,  "risk_range": (0.10, 0.25)},

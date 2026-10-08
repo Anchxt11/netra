@@ -63,9 +63,9 @@ Check, top bar: LIVE is ticking, Freshness reads under 5 s. Dashboard: the live 
 2. Email `admin@juice-sh.op`, any wrong password. The first failure opens **Admin abuse** (a failed login on an admin account). Five failures within a minute open **Brute force** from the judge's own address, a new row, within seconds.
 3. Then log in with the right admin password (Anchit has it): the incident becomes **account taken over**, severity 5, and jumps to Act now.
 
-Only the 7 core attacks fire rules: `brute_force`, `credential_stuffing`, `account_takeover`, `web_scan`, `sqli`, `http_flood`, `data_exfiltration`. The 8 `evasion_*` attacks are built to slip past the rules, and model 1 reads network flows, not web logs, so they show in the live feed only. Say so if asked: it's why NETRA pairs rules with ML.
+Only the 8 core attacks fire rules: `brute_force`, `credential_stuffing`, `account_takeover`, `web_scan`, `sqli`, `http_flood`, `data_exfiltration`, `ssrf`. The 8 `evasion_*` attacks are built to slip past the rules, and model 1 reads network flows, not web logs, so they show in the live feed only. Say so if asked: it's why NETRA pairs rules with ML.
 
-Other attacks, if you have time: `web_scan`, `sqli`, `account_takeover`. With the background on, run `credential_stuffing` and `http_flood` only after `make auto-off` (they group across addresses by design), and the ML-test ones `evasion_low_slow_brute`, `evasion_slow_exfil`. To run all of them: `make attack-full`.
+Other attacks, if you have time: `web_scan`, `sqli`, `account_takeover`, `ssrf` (a probe of the cloud metadata address, which on Azure is exactly what an attacker would try). With the background on, run `credential_stuffing` and `http_flood` only after `make auto-off` (they group across addresses by design), and the ML-test ones `evasion_low_slow_brute`, `evasion_slow_exfil`. To run all of them: `make attack-full`.
 
 ## 7. If something breaks
 | problem | do |

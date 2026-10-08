@@ -307,3 +307,15 @@ test("a user-grouped attack with no known account is grouped by address, not mer
   hit(c, "data_exfiltration", { ip: "172.30.0.10", user: "-", event_type: "data_transfer", bytes_out: 60_000_000 });
   assert.equal(live.size, 2); // the same address again joins its own incident
 });
+
+test("an SSRF probe opens its own incident with the path it tried", () => {
+  const { c, live } = setup();
+  hit(c, "ssrf_metadata_probe", { ip: "172.30.0.10", event_type: "http_request", path: "/profile?url=http://169.254.169.254/latest/meta-data/" }, T0, { severity: "critical" });
+  const inc = [...live.values()][0];
+  assert.equal(inc.attackType, "ssrf");
+  assert.equal(inc.name, "Server-side request forgery");
+  assert.equal(inc.mitre.id, "T1552.005");
+  assert.equal(inc.severity, 5);
+  assert.equal(inc.signals[0].ruleId, "SSRF");
+  assert.equal(inc.signals[0].sentence, "172.30.0.10 tried to make the server fetch an internal address: /profile?url=http://169.254.169.254/latest/meta-data/");
+});

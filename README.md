@@ -88,6 +88,7 @@ make attack SCENARIO=brute_force
 #   sqli                  (SQL injection)
 #   data_exfiltration     (Huge file downloads)
 #   account_takeover      (Successful login from high-risk IP)
+#   ssrf                  (Server-side request forgery: cloud metadata and internal-address probes)
 #
 #   --- Evasion Scenarios (ML Test Set) ---
 #   evasion_low_slow_brute    (≤4 failed logins / 60s)

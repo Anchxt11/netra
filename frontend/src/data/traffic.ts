@@ -30,6 +30,7 @@ export function attackEvent(type: AttackType, ctx: Ctx, ruleId: string, ts: numb
     data_exfiltration: "GET /export?type=customers · 200",
     admin_abuse: `${ctx.user} ran ${ctx.command}`,
     http_flood: `GET / · 503 on ${HOSTS[0]}`,
+    ssrf: "GET /profile?url=http://169.254.169.254/ · 200",
     unusual_activity: "unusual network flow",
   };
   const ai = ruleId.startsWith("ATDE");

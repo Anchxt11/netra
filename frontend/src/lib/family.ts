@@ -22,6 +22,7 @@ const FAMILY_OF: Record<AttackType, Family> = {
   credential_stuffing: "IDENTITY",
   account_takeover: "IDENTITY",
   web_scan: "WEB",
+  ssrf: "WEB",
   http_flood: "FLOOD",
   data_exfiltration: "DATA",
   admin_abuse: "ADMIN",

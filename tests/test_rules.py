@@ -260,3 +260,18 @@ def test_cooldown_is_per_address():
     for ip in ('10.0.0.1', '10.0.0.2'):
         hits = [e.evaluate({**base, 'ip': ip}, now=float(i)) for i in range(5)]
         assert any(h.rule_id == 'brute_force' for h in hits[-1])
+
+
+def test_ssrf_rule():
+    e = RuleEngine.from_directory(RULES)
+    x = {'event_type': 'http_request', 'ip': '10.0.0.95', 'user': '-', 'status': 'success',
+         'path': '/profile?url=http://169.254.169.254/latest/meta-data/', 'http_status': 200}
+    hits = e.evaluate(x, now=0)
+    assert any(h.rule_id == 'ssrf_metadata_probe' for h in hits)
+
+
+def test_ssrf_rule_ignores_normal_paths():
+    e = RuleEngine.from_directory(RULES)
+    x = {'event_type': 'http_request', 'ip': '10.0.0.96', 'user': '-', 'status': 'success',
+         'path': '/api/Products?q=apple', 'http_status': 200}
+    assert not any(h.rule_id == 'ssrf_metadata_probe' for h in e.evaluate(x, now=0))

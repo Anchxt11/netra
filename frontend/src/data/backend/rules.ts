@@ -23,6 +23,8 @@ export const BACKEND_RULES: Record<string, BackendRule> = {
   malicious_process: { code: "PROC", attackType: "admin_abuse", points: 30, key: "user" },
   data_exfiltration: { code: "EXF", attackType: "data_exfiltration", points: 30, key: "user" },
   web_scan: { code: "SCAN", attackType: "web_scan", points: 20, key: "ip" },
+  // One probe of an internal or cloud-metadata address is already serious: 30 points, like exfiltration.
+  ssrf_metadata_probe: { code: "SSRF", attackType: "ssrf", points: 30, key: "ip" },
   // One flood comes from many addresses at every web host, so it is one attack on the site.
   excessive_requests: { code: "RATE", attackType: "http_flood", points: 15, key: "site" },
   http_flood: { code: "FLOOD", attackType: "http_flood", points: 25, key: "site" },

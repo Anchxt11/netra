@@ -29,6 +29,7 @@ const SHORT: Record<AttackType, string> = {
   data_exfiltration: "EX",
   admin_abuse: "AA",
   http_flood: "HF",
+  ssrf: "SR",
   unusual_activity: "AI",
 };
 

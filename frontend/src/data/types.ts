@@ -27,6 +27,7 @@ export type AttackType =
   | "data_exfiltration"
   | "admin_abuse"
   | "http_flood"
+  | "ssrf" // server-side request forgery: making the server fetch internal or cloud-metadata addresses (live backend only)
   | "unusual_activity"; // the AI engine alone, naming no known attack (live backend only)
 export type BenignKind = "flash_crowd" | "nightly_backup";
 

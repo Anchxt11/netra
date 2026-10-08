@@ -481,6 +481,8 @@ export class Correlator {
           : `${user} sent ${formatBytes(s.bytes)} out in one transfer`;
       case "web_scan":
         return `${ip} requested sensitive or injection paths, like ${clip(ev?.path ?? "/", 40)}${times(s.hits)}`;
+      case "ssrf_metadata_probe":
+        return `${ip} tried to make the server fetch an internal address: ${clip(ev?.path ?? "", 60)}${times(s.hits)}`;
       case "excessive_requests":
         return `100 or more requests within a minute, from ${addresses(d.ips.size)}`;
       case "http_flood":
