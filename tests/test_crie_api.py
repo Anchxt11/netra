@@ -45,7 +45,8 @@ def test_a_rule_only_incident(client):
     r = client.post("/crie/recommend", json=INCIDENT)
     assert r.status_code == 200
     body = r.json()
-    assert set(body) == {"version", "fixes"} and len(body["fixes"]) == 3
+    assert {"version", "fixes"} <= set(body) and len(body["fixes"]) == 3
+    assert body.get("human_approval_required") is True
     assert body["version"] == crie.state["version"]
 
 
@@ -58,7 +59,15 @@ def test_an_incident_with_model_1_output(client):
 
 def test_the_fallback(client):
     body = client.post("/crie/recommend", json={**INCIDENT, "mitre_technique": "T9999"}).json()
-    assert body == {"version": crie.state["version"], "fallback": {"technique": "T9999", "mitigations": []}}
+    assert body["version"] == crie.state["version"]
+    assert body["fallback"] == {"technique": "T9999", "mitigations": []}
+    assert body.get("human_approval_required") is True
+
+
+def test_severity_5_incident_containment(client):
+    body = client.post("/crie/recommend", json={**INCIDENT, "severity": 5}).json()
+    assert len(body["fixes"]) == 3
+    assert any("block" in f["action_id"] or "isolate" in f["action_id"] for f in body["fixes"])
 
 
 def test_answers_are_cached_for_60_s(client):
