@@ -12,6 +12,7 @@ import {
   type ThresholdControl,
 } from "../data/source";
 import { rankIncidents } from "../lib/rank";
+import { formatHM } from "../lib/time";
 import { SCENARIO_LENGTH_MS, type ScenarioName } from "../data/scenarios/demo";
 import { SESSION_ENDED, useSession } from "./useSession";
 import { kpiAlertSentence } from "../lib/kpiFormat";
@@ -39,10 +40,13 @@ export interface Toast {
   tone: "ok" | "neutral";
 }
 
-const TOAST_TEXT = {
-  approve: "Fix approved. Saved as training data for both engines.",
-  reject: "Fix rejected. Saved as training data for both engines.",
-};
+/** "Approved: Block source IPs, by analyst at 10:42. Logged." Who, what and when: the decision is on record. */
+function decisionToast(d: Decision, inc: Incident | undefined, now: number): string {
+  const fix = inc?.fixes.find((f) => f.actionId === d.actionId)?.name ?? d.actionId.replace(/_/g, " ");
+  const who = useSession.getState().session?.user.username ?? "analyst";
+  const at = formatHM(now);
+  return d.decision === "approve" ? `Approved: ${fix}, by ${who} at ${at}. Logged.` : `Rejected: ${fix}, by ${who} at ${at}. Logged.`;
+}
 
 interface NetraState {
   /** True on mock data: shows the SIMULATED FEED chip. The only place the source leaks into the UI. */
@@ -134,7 +138,7 @@ export const useNetra = create<NetraState>()((set) => ({
         decisions: { ...s.decisions, [d.incidentId]: record },
         incidents: inc && d.decision === "approve" ? { ...s.incidents, [inc.id]: { ...inc, status: "approved" as const } } : s.incidents,
         health,
-        toast: { id: (s.toast?.id ?? 0) + 1, text: TOAST_TEXT[d.decision], tone: d.decision === "approve" ? "ok" : "neutral" },
+        toast: { id: (s.toast?.id ?? 0) + 1, text: decisionToast(d, inc, s.now), tone: d.decision === "approve" ? "ok" : "neutral" },
       };
     });
     source?.sendDecision(d);

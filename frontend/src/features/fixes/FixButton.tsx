@@ -16,7 +16,7 @@ export function FixButton({ incident }: { incident: Incident }) {
   const crieReady = !crie || crie.status === "ready";
   const fixes = crieReady ? incident.fixes.filter((f) => !record?.rejected.includes(f.actionId)) : [];
   const approved = record?.approved && incident.fixes.find((f) => f.actionId === record.approved?.actionId);
-  const sub = approved ? "approved" : fixes.length > 0 ? `${fixes.length} ready` : "MITRE";
+  const sub = approved ? "approved" : fixes.length > 0 ? `${fixes.length} ${fixes.length === 1 ? "fix" : "fixes"}` : "standard fixes";
 
   // Open: focus moves into the dialog. Close: back to the button.
   useEffect(() => {

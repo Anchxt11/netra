@@ -54,6 +54,13 @@
   color: var(--ai);
 }
 
+/* The source address: a new attacker reads as a new row. */
+.source {
+  font-family: var(--font-data);
+  font-size: 11px;
+  color: var(--text);
+}
+
 .mitre {
   font-family: var(--font-data);
   font-size: 11px;

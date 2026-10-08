@@ -127,6 +127,7 @@ export function Queue() {
                   selected={isSelected({ kind: "incident", id: i.id })}
                   dimmed={tier === "WATCH"}
                   bump={bumpOf(i.id)}
+                  source={i.entities.ips.length === 1 ? i.entities.ips[0] : i.entities.ips.length > 1 ? `${i.entities.ips.length} addresses` : undefined}
                   onSelect={() => select({ kind: "incident", id: i.id })}
                 />
               </motion.div>
