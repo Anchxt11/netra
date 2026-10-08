@@ -40,12 +40,14 @@ The screen path, in order. The budget adds up to 5 s with room left over; a hop 
 - **On the server (A3, to build):** the `ops` service's `sla_check` every 30 s compares `/freshness` p95 with the SLA; 2 checks in a row over it raise an `ops_alert` of kind `sla_breach`, posted to `ALERT_WEBHOOK_URL`.
 - **What an operator does:** look at the per-hop table above for the hop over its budget (processor lag, events the API drops (the `dropped` count on `events` messages), ClickHouse inserts, Redpanda consumer lag), fix or scale that hop, and record the breach in the results below if it happened during a test.
 
-## Results (filled by the backend team's load test)
+## Results 
 Each step runs 3 minutes. Pass = time to screen p95 at most 5 s.
+
+Measured on the Azure VM (`netra-vm`, 4 vCPU, 16 GB) on 2026-10-08 with `make loadtest`. The generator adds the stated rate on top of the live stack (the lab's benign user, background attacks and the flow replay), so each client receives a little more than the stated rate: 13.1 events/s in the 1× row.
 
 | load | events/s | dashboards | time to screen p50 | p95 | pipeline freshness p95 | WebSocket lag p95 | dropped | pass |
 |---|---|---|---|---|---|---|---|---|
-| 1× | 10 | 1 | | | | | | |
+| 1× | 10 | 1 | 0.22 s | 0.56 s | 0.98 s | 0.001 s | 0 | yes |
 | 1× | 10 | 25 | | | | | | |
 | 1× | 10 | 100 | | | | | | |
 | 5× | 50 | 1 | | | | | | |
