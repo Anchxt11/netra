@@ -13,5 +13,22 @@
   },
   "xgboost": {
     "unknown_confidence_below": 0.9
+  },
+  "calibration": {
+    "reference": "split == 'val' and label not malicious, per stream",
+    "risk_score": "share of the stream's reference anomaly scores <= this row's anomaly score",
+    "alert": "anomaly_score > alert_cutoff_anomaly_score (the 0.99 quantile of the reference, numpy method \"higher\")",
+    "built": "2026-10-08 06:52 UTC",
+    "file": "calibration.json",
+    "aws_vpc_flow_log": {
+      "alert_cutoff_anomaly_score": 0.66206,
+      "n_reference": 1466,
+      "false_alarm_rate_on_reference": 0.0095
+    },
+    "cisco_asa": {
+      "alert_cutoff_anomaly_score": 0.6858,
+      "n_reference": 25218,
+      "false_alarm_rate_on_reference": 0.01
+    }
   }
 }

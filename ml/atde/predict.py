@@ -7,6 +7,10 @@
 Features come only from the bundle's own preprocess.py (never re-implemented here). Each result:
   anomaly_score  -score_samples, the bundle's definition (thresholds.json)
   is_anomaly     decision_function < 0
+  risk_score     the calibrated risk: the share of the stream's benign validation rows whose anomaly score
+                 is <= this row's (calibration.json, built by ml/model1/build_calibration.py). 0.97 means
+                 "more unusual than 97% of normal traffic for that stream". Not a probability of attack.
+  above_alert_cutoff  anomaly_score > the stream's alert cutoff (the 99th percentile of that reference)
   family         the XGBoost family, or "UNKNOWN": below the 0.9 confidence line, not anomalous,
                  or not run because the row has no per-direction packet and byte split (true for
                  every AWS VPC and Cisco ASA row: see ml/model1/replay_score.py and metrics.json)
@@ -44,6 +48,10 @@ class ATDE:
         self.version = (self.bundle / "VERSION").read_text().strip()
         self.pp = _load_preprocess(self.bundle)
         self.thresholds = json.loads((self.bundle / "thresholds.json").read_text())
+        cal = self.thresholds["calibration"]
+        self.reference = {s: np.asarray(v["reference_scores"], dtype="float64") for s, v in
+                          json.loads((self.bundle / cal["file"]).read_text())["streams"].items()}
+        self.alert_cutoff = {s: float(cal[s]["alert_cutoff_anomaly_score"]) for s in self.reference}
         self.iforest = {s: joblib.load(self.bundle / f"iforest_{s}.joblib") for s in self.pp.FEATURES}
         for s, m in self.iforest.items():  # the bundle's column order must match the saved model's
             if list(m.feature_names_in_) != self.pp.FEATURES[s]:
@@ -57,6 +65,11 @@ class ATDE:
     @property
     def model_id(self) -> str:
         return f"atde-{self.version}"  # the `model` value on its alerts (contracts/LIVE_API.md 5.1)
+
+    def risk_score(self, stream: str, anomaly_score: float) -> float:
+        """Percentile rank of the anomaly score among the stream's benign validation rows, 0..1."""
+        ref = self.reference[stream]
+        return round(float(np.searchsorted(ref, anomaly_score, side="right")) / len(ref), 4)
 
     def _explainer(self, stream):
         if stream not in self._explainers:
@@ -96,6 +109,7 @@ class ATDE:
         results = []
         for k, (eid, r, d) in enumerate(zip(ids, raw, dec)):
             anomalous = bool(float(d) < 0.0)
+            a = round(float(-r), 6)
             fam, prob, why = UNKNOWN, None, "not anomalous"
             if anomalous:
                 f = (flows or {}).get(eid)
@@ -105,7 +119,8 @@ class ATDE:
                     fam, prob, why = self._family(f)
             results.append({
                 "event_id": eid, "stream_name": stream, "model": self.model_id,
-                "anomaly_score": round(float(-r), 6), "is_anomaly": anomalous,
+                "anomaly_score": a, "is_anomaly": anomalous,
+                "risk_score": self.risk_score(stream, a), "above_alert_cutoff": a > self.alert_cutoff[stream],
                 "family": fam, "probability": prob, "family_note": why,
                 "reasons": self._reasons(Xf.iloc[k], contrib[k]) if k in contrib else [],
             })

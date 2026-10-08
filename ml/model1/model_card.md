@@ -100,6 +100,18 @@ An event is anomalous when:
 
 
 
+\## Risk Score
+
+
+
+`risk\_score` (0 to 1) is the share of the same stream's benign validation rows (AWS VPC and Cisco ASA ranked separately) whose Isolation Forest anomaly score is at or below this row's, so 0.97 means "more unusual than 97% of normal traffic for that stream"; it is not a probability of attack and not XGBoost's confidence.
+
+
+
+Built by `ml/model1/build\_calibration.py` from the validation split only (`calibration.json`, and the `calibration` block in `thresholds.json`); no model was retrained. The 99th-percentile cutoff (anomaly score 0.662060 AWS, 0.685800 Cisco) catches too few attacks on the test split to use as the alert line (docs/ML\_EVAL.md), so alerts still use `decision\_function < 0`.
+
+
+
 \## Intended Use
 
 

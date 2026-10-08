@@ -85,7 +85,7 @@ class Scorer:
                 self.totals["scored"] += 1
                 src, dst = flow_ips(stream, r["message_sanitized"])
                 rule_flagged = bool(r.get("rule_hits"))
-                risk = round(min(max(res["anomaly_score"], 0.0), 1.0), 4)
+                risk = res["risk_score"]
                 row_source = r.get("source")  # present on replay rows; absent on live rows
                 scores.append({
                     "event_id": str(r["event_id"]), "stream_name": stream, "model": res["model"],

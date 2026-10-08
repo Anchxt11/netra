@@ -5,11 +5,13 @@ Needs the ML libraries at the bundle's versions (root requirements.txt); skipped
 import json
 from pathlib import Path
 
+
 import pytest
 
 pytest.importorskip("sklearn")
 pytest.importorskip("shap")
 pd = pytest.importorskip("pandas")
+np = pytest.importorskip("numpy")
 
 from ml.atde.predict import ATDE, UNKNOWN  # noqa: E402
 
@@ -57,3 +59,50 @@ def test_xgboost_runs_when_flow_counts_exist(atde):
     flows = {s["event_id"]: {"src_packets": 1, "dst_packets": 0, "src_bytes": 40, "dst_bytes": 0, "proto": "tcp"}}
     r = atde.score_features(pd.DataFrame([s["features"]]), s["stream_name"], [s["event_id"]], flows)[0]
     assert r["probability"] is not None and (r["family"] in atde.classes or r["family"] == UNKNOWN)
+
+
+ROOT = Path(__file__).resolve().parents[1]
+STREAMS = ("aws_vpc_flow_log", "cisco_asa")
+
+
+def test_risk_score_rises_with_the_anomaly_score_and_stays_in_0_1(atde):
+    """The calibrated risk score (percentile rank among benign validation rows) never falls as the raw
+    anomaly score rises, and is always between 0 and 1. samples.jsonl keeps checking the raw score."""
+    for stream in STREAMS:
+        ref = atde.reference[stream]
+        grid = sorted(set(np.linspace(ref.min() - 0.1, ref.max() + 0.1, 2001).round(6)) | set(ref.tolist()))
+        risk = [atde.risk_score(stream, a) for a in grid]
+        assert all(0.0 <= r <= 1.0 for r in risk), stream
+        assert all(b >= a for a, b in zip(risk, risk[1:])), stream
+        assert risk[0] == 0.0 and risk[-1] == 1.0, stream
+    rows = [s for s in SAMPLES if s["stream_name"] == "cisco_asa"]
+    out = atde.score_features(pd.DataFrame([s["features"] for s in rows]), "cisco_asa", [s["event_id"] for s in rows])
+    by_score = sorted(out, key=lambda r: r["anomaly_score"])
+    assert all(b["risk_score"] >= a["risk_score"] for a, b in zip(by_score, by_score[1:]))
+    assert all(r["above_alert_cutoff"] == (r["anomaly_score"] > atde.alert_cutoff["cisco_asa"]) for r in out)
+
+
+def test_alert_cutoff_gives_about_1_percent_false_alarms_on_benign_validation_rows(atde):
+    """The reference scores are the benign validation rows' scores: at the cutoff about 1% of them alert."""
+    cal = atde.thresholds["calibration"]
+    for stream in STREAMS:
+        ref = atde.reference[stream]
+        assert len(ref) == cal[stream]["n_reference"] and (np.diff(ref) >= 0).all()
+        far = float((ref > atde.alert_cutoff[stream]).mean())
+        assert 0.005 <= far <= 0.0105, (stream, far)
+        assert far == pytest.approx(cal[stream]["false_alarm_rate_on_reference"], abs=1e-4)
+
+
+def test_reference_scores_match_the_validation_split_when_available(atde):
+    """With data/interim/pool_split.parquet (on the ML laptop), the stored reference is exactly the saved
+    models' scores on the benign validation rows, with features built over each stream's full history."""
+    path = ROOT / "data/interim/pool_split.parquet"
+    if not path.exists():
+        pytest.skip("data/interim/pool_split.parquet is not in the repo (ML laptop)")
+    d = pd.read_parquet(path)
+    for stream in STREAMS:
+        g = d[d.stream_name == stream].reset_index(drop=True)
+        X = atde.features(g[["stream_name", "timestamp", "event_id", "message_sanitized"]], stream)
+        ref_idx = g.index[(g.split == "val") & (g.label_binary.str.lower() != "malicious")]
+        got = np.sort([r["anomaly_score"] for r in atde.score_features(X.loc[ref_idx], stream)])
+        assert np.array_equal(got, atde.reference[stream]), stream
