@@ -154,3 +154,15 @@ function mockTimers() {
     },
   };
 }
+
+test("CRIE's containment note for a critical incident reads as a sentence", () => {
+  const fix = toFix({
+    action_id: "collect_evidence", name: "Collect Evidence", d3fend: null, confidence: 0.6, rank: 3,
+    reasons: [
+      { feature: "knowledge_base_evidence", value: 0.5, contribution: 0.375 },
+      { feature: "ml_probability", value: 0.4, contribution: 0.1 },
+      { feature: "containment_status", value: "No containment action feasible for this technique", contribution: 0 },
+    ],
+  });
+  assert.equal(fix.reasons[2].sentence, "No containment action feasible for this technique.");
+});

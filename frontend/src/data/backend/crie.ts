@@ -53,6 +53,8 @@ function reasonSentence(feature: string, value: unknown, provenance: string[]): 
     return `Knowledge-base evidence ${two(value)}${provenance.length ? `, from ${provenance.join(", ")}` : ""}`;
   }
   if (feature === "ml_probability") return `CRIE's model rates it ${two(value)}`;
+  // A critical incident with no containment fix available: CRIE says so in words (not a score).
+  if (feature === "containment_status" && typeof value === "string") return value.endsWith(".") ? value : `${value}.`;
   return `${feature.replace(/_/g, " ")} ${two(value)}`.trim();
 }
 
